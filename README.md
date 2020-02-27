@@ -1,4 +1,4 @@
-# Interface library for comm.ai's USB panda.
+# Interface library for comma.ai's USB panda.
 
 A library that handles communication with a comma.ai Panda interface device.  Simple demos collect data from the panda (grey version) to the screen.
 
