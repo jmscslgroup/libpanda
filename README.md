@@ -1,6 +1,6 @@
 # Interface library for comm.ai's USB panda.
 
-A library that handle communication with a comma.ai Panda interface device.  Simple demos collect data from the panda (grey version) to the screen.
+A library that handles communication with a comma.ai Panda interface device.  Simple demos collect data from the panda (grey version) to the screen.
 
 ## Dependencies:
 1. Required - libusb-1.0-0-dev
@@ -11,14 +11,14 @@ A library that handle communication with a comma.ai Panda interface device.  Sim
 The core of this library is based on libusb, the default version installable through Ubuntu's apt-get.
 
 ### libcurses5-dev
-An optional exmaple for data visualization is based on ncurses.  If desired to run this example, libcurses needs tobe installed but is not required
+An optional example for data visualization is based on ncurses.  If desired to run this example, libcurses needs to be installed but is not required
 
 ### NMEAParser
 The NMEAParser is already included as a modified version with some bug fixes and added features.
 1. Bugs fixed:
 * Incomplete time precision for seconds in RMC strings
 * Year calculation incorrect byte offset resulting in incorrect year parsings
-2. Additional eatures:
+2. Additional features:
 * ZDA NMEA message parsing
 
 ## Setup:
@@ -50,7 +50,7 @@ An example that currently plots GPS data to the console in a pretty fashion.  Th
 
 `$ sudo ./pandaCurses`
 
-Save NMEA strings to a file anmed nmeaFile.txt:
+Save NMEA strings to a file named nmeaFile.txt:
 
 `$ sudo ./pandaCurses -g nmeaFile.txt`
 
@@ -59,7 +59,7 @@ Run with USB in synchronous mode (default is asynchronous):
 `$ sudo ./pandaCurses -u s`
 
 ## Setup:
-The lobrary is self-documenting using Doxygen, producing both HTML and LaTex.  Generate the documentation as follows:
+The library is self-documenting using Doxygen, producing both HTML and LaTex.  Generate the documentation as follows:
 
 `$ doxygen doxygen.conf`
 
@@ -68,7 +68,7 @@ If you do not have doxyen, you may install using, on Ubuntu:
 `$ sudo apt-get install doxygen`
 On macOS with amcport:
 
-`$ sud port install doxygen`
+`$ sudo port install doxygen`
 
 ## Todo
 - [x] Panda GPS interface
