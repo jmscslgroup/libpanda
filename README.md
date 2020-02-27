@@ -23,17 +23,17 @@ The NMEAParser is already included as a modified version with some bug fixes and
 
 ## Setup:
 These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04
-### install libusb-1.0-0-dev
+### Install libusb-1.0-0-dev
 `$ sudo apt-get install libusb-1.0-0-dev`
 
-### Optional: installlibsurses5-dev
+### Optional: install libsurses5-dev
 `$ sudo apt-get install libncurses5-dev`
 
 ### Compile
-`$ mkdir build`
-`$ cd build`
-`$ cmake ..`
-`$ make`
+1. `$ mkdir build`
+2. `$ cd build`
+3. `$ cmake ..`
+4. `$ make`
 
 ## Examples
 ### panda
@@ -42,25 +42,32 @@ Barebones example showing a minimal implementation
 
 ### pandaSetTime
 This example listens to the GPS and when data is valid, synchronizes the system clock to the GPS's UTC if the difference is larger than a defined delta.
+
 `$ sudo ./pandaSetTime`
 
 ### pandaCurses
 An example that currently plots GPS data to the console in a pretty fashion.  This also takes arguments for various data collection and tuning.
+
 `$ sudo ./pandaCurses`
 
 Save NMEA strings to a file anmed nmeaFile.txt:
+
 `$ sudo ./pandaCurses -g nmeaFile.txt`
 
 Run with USB in synchronous mode (default is asynchronous):
+
 `$ sudo ./pandaCurses -u s`
 
 ## Setup:
 The lobrary is self-documenting using Doxygen, producing both HTML and LaTex.  Generate the documentation as follows:
+
 `$ doxygen doxygen.conf`
 
 If you do not have doxyen, you may install using, on Ubuntu:
+
 `$ sudo apt-get install doxygen`
 On macOS with amcport:
+
 `$ sud port install doxygen`
 
 ## Todo
