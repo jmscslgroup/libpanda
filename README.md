@@ -37,15 +37,18 @@ These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04
 
 ## Examples
 ### simplecan
-Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Can
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Can (no GPS)
+
 `$ sudo ./simplecan`
 
 ### simplegps
-Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Gps
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Gps (no CAN)
+
 `$ sudo ./simplegps`
 
 ### panda
 Barebones example showing a minimal implementation of class Panda::Handler, utilizing Panda::Usb, Panda::Can, and Panda::Gps
+
 `$ sudo ./panda`
 
 ### pandaSetTime
