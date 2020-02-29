@@ -58,6 +58,8 @@ target_link_libraries(strym    ${LIBUSB_1_LIBRARIES}
 add_executable(listdevs      example/listdevs.c)
 add_executable(panda         example/pandaMain.cpp)
 add_executable(pandaSetTime  example/pandaSetSystemTime.cpp)
+add_executable(simplegps     example/simpleGPS.cpp)
+add_executable(simplecan     example/simpleCAN.cpp)
 
 
 target_link_libraries(listdevs  ${LIBS})
@@ -71,6 +73,16 @@ target_link_libraries(pandaSetTime    ${LIBS}
                                       mogithread
                                       strym
                                       NMEAParserLib )
+target_link_libraries(simplegps    ${LIBS}
+                                   pandac
+                                   mogithread
+                                   strym
+                                   NMEAParserLib )
+target_link_libraries(simplecan    ${LIBS}
+                                   pandac
+                                   mogithread
+                                   strym
+                                   NMEAParserLib )
 
 if(${CURSES_FOUND})
      add_executable(pandaCurses  example/pandaCurses.cpp

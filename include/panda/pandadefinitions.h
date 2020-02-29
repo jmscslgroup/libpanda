@@ -35,11 +35,27 @@
 
 // These are from the Panda python init:
 // Request Types:
-#define REQUEST_TYPE_IN (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE)
+// The difference between out and in is determined by LIBUSB_ENDPOINT_DIR_MASK (0x80)
+// The address is determeined by LIBUSB_ENDPOINT_ADDRESS_MASK (0x0F)
+// i.e. from libusb:
+/** Bits 0:4 determine recipient, see libusb_request_recipient.
+ * Bits 5:6 determine type, see libusb_request_type.
+ * Bit 7 determines data transfer direction, see libusb_endpoint_direction.
+ */
+#define REQUEST_TYPE_IN (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE) // = 0xC0
 //#define REQUEST_OUT (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE)
-#define REQUEST_TYPE_OUT 0xc0
-#define REQUEST_TYPE_WRITE 0x40	//	Not sure of the difference when this is called vs REQUEST_TYPE_OUT
+//#define REQUEST_TYPE_OUT 0xc0	// NOT EQUAL TO (LIBUSB_ENDPOINT_OUT | TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE)
+// Not sure about this but it's what boardd.cc does, same as REQUEST_TYPE_IN
+#define REQUEST_TYPE_OUT (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE) // = 0x40 <= ptyhon Panda class
+//#define REQUEST_TYPE_WRITE 0x40 //	Not sure of the difference why this is called vs REQUEST_TYPE_OUT
 
+// Endpoints:
+// The difference between out and in is determined by LIBUSB_ENDPOINT_DIR_MASK (0x80)
+// The address is determined by LIBUSB_ENDPOINT_ADDRESS_MASK (0x0F)
+#define ENDPOINT_CAN_OUT  0x03	// = LIBUSB_ENDPOINT_OUT | 0x03
+#define ENDPOINT_CAN_IN   0x81	// = LIBUSB_ENDPOINT_IN | 0x01
+#define ENDPOINT_UART_OUT 0x02	// = LIBUSB_ENDPOINT_OUT | 0x02
+#define ENDPOINT_UART_IN  0x86	// NOT DONE IN PANDA: uhhh maybe this value? only for isoc. no luck yet
 
 
 #define REQUEST_RTC              0xa0 // Reading panda's built-in RTC
@@ -82,12 +98,6 @@
 #define REQUEST_RTC_HOUR         0xa5
 #define REQUEST_RTC_MINUTE       0xa6
 #define REQUEST_RTC_SECONDS      0xa7
-
-// Endpoints:
-#define ENDPOINT_CAN_IN 0x81
-#define ENDPOINT_CAN_OUT 0x03
-#define ENDPOINT_UART_OUT 0x02
-#define ENDPOINT_UART_IN 0x86	// NOT DONE IN PANDA: uhhh maybe this value? only for isoc
 
 // From openpilot/panda/board/safety:20
 #define SAFETY_NOOUTPUT 0U

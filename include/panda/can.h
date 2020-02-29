@@ -128,6 +128,7 @@ namespace Panda {
 		void sendMessage( CanFrame& frame );
 
 	private:
+		bool currentlyRequesting = false;
 		std::list<CanFrame> canFrames;
 
 		std::vector<CanListener*> listeners;

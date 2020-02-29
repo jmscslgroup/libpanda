@@ -28,7 +28,7 @@
 #include <time.h>
 #include <cstring> // memcpy
 
-#define CAN_VERBOSE
+//#define CAN_VERBOSE
 
 using namespace Panda;
 
@@ -48,7 +48,7 @@ Can::~Can() {
 
 void Can::initialize() {
 	std::cout << "Initializing CAN" <<std::endl;
-
+	// false promises
 	std::cout << " - CAN Done." << std::endl;
 }
 
@@ -119,35 +119,44 @@ void Can::doAction() {
 		usleep(1000);
 		return;
 	}
-	usbHandler->requestCanData();
+
+	if (!currentlyRequesting) {
+		currentlyRequesting = true;
+		usbHandler->requestCanData(); // only request data when we have nothing to process
+	}
 	
 	if (canFrames.size() == 0) {
 		usleep(100);	// some breathing room maybe?
 		return;
 	}
 
-	// Copy first packet:
-	lock();
-	CanFrame canFrame(canFrames.front()); // FIFO read
-	canFrames.pop_front();                 // FIFO remove
-	unlock();
+	while (canFrames.size() > 0) {
 
-	if (canCsv.is_open()) {
-		time_t epochTime = time(NULL);
-		canCsv	<< epochTime << ","
-				// raw data
-				<< canFrame.bus << ","
-				<< canFrame.messageID << ","
-				<< canFrame.data << ","
-				<< canFrame.dataLength << std::endl;
 
-	}
+		// Copy first packet:
+		lock();
+		CanFrame canFrame(canFrames.front()); // FIFO read
+		canFrames.pop_front();                 // FIFO remove
+		unlock();
 
-	// Now we have a packet to parse.
+		if (canCsv.is_open()) {
+			time_t epochTime = time(NULL);
+			canCsv	<< epochTime << ","
+			// raw data
+			<< canFrame.bus << ","
+			<< canFrame.messageID << ","
+			<< canFrame.data << ","
+			<< canFrame.dataLength << std::endl;
 
-	// Once parsed, notify observers:
-	for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
-		(*it)->newDataNotification(&canFrame);
+		}
+
+
+		// Now we have a packet to parse.
+
+		// Once parsed, notify observers:
+		for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
+			(*it)->newDataNotification(&canFrame);
+		}
 	}
 
 }
@@ -198,15 +207,16 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 }
 
 void Can::notificationCanRead(char* buffer, size_t bufferLength) {
+	currentlyRequesting = false;
 	if (canDump.is_open()) {
 		canDump.write(buffer, bufferLength);
 	}
 #ifdef CAN_VERBOSE
 	std::cout << "Got a CAN::notificationCanRead()!" << std::endl;
 	std::cout << " - Received " << bufferLength <<	" Bytes :";
-	for (int i = 0; i < bufferLength; i++) {
-		printf("0x%02X ", buffer[i]);
-	}
+//	for (int i = 0; i < bufferLength; i++) {
+//		printf("0x%02X ", buffer[i]);
+//	}
 	std::cout << std::endl;
 #endif
 
@@ -215,6 +225,16 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 	for (int index = 0; index < bufferLength; index += 16) {
 		remainingBytes = bufferLength - index;
 		lengthOfFrame = remainingBytes > 16 ? 16 : remainingBytes;
+#ifdef CAN_VERBOSE
+		std::cout << " - Gonna pare this: ";
+		for (int i = 0; i < lengthOfFrame; i++) {
+					printf("0x%02X ", buffer[index+i]);
+				}
+		std::cout << std::endl;
+#endif
+		if (((unsigned char)buffer[index]) == 0xFF) {
+			continue;
+		}
 		canFrames.push_back(bufferToCanFrame(&buffer[index], lengthOfFrame));	// FIFO insert
 	}
 	unlock();

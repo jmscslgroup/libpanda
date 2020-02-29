@@ -4,7 +4,7 @@ A library that handles communication with a comma.ai Panda interface device.  Si
 
 ## Dependencies:
 1. Required - libusb-1.0-0-dev
-2.  Optional - libcurses5-dev
+2. Optional - libcurses5-dev
 3. Included - NMEAParser
 
 ### libusb-1.0-0-dev
@@ -36,8 +36,16 @@ These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04
 4. `$ make`
 
 ## Examples
+### simplecan
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Can
+`$ sudo ./simplecan`
+
+### simplegps
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Gps
+`$ sudo ./simplegps`
+
 ### panda
-Barebones example showing a minimal implementation
+Barebones example showing a minimal implementation of class Panda::Handler, utilizing Panda::Usb, Panda::Can, and Panda::Gps
 `$ sudo ./panda`
 
 ### pandaSetTime
@@ -66,7 +74,7 @@ The library is self-documenting using Doxygen, producing both HTML and LaTex.  G
 If you do not have doxyen, you may install using, on Ubuntu:
 
 `$ sudo apt-get install doxygen`
-On macOS with amcport:
+On macOS with macports:
 
 `$ sudo port install doxygen`
 

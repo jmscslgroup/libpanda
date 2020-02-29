@@ -66,7 +66,7 @@ void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
 		nmeaDump << std::string(buffer,bufferLength);
 	}
 
-	usbHandler->requestUartData();	// buffer may still have more, make an immediate new request
+	//usbHandler->requestUartData();	// buffer may still have more, make an immediate new request
 }
 
 void Gps::doAction() {
@@ -91,7 +91,7 @@ void Gps::doAction() {
 //	}
 	usbHandler->requestUartData();
 
-	usleep(5000);	// thread does not need to be particularly fast
+	usleep(1000);	// thread does not need to be particularly fast
 }
 
 bool Gps::isReady() {
@@ -360,7 +360,7 @@ void Gps::initialize() {
 	usleep(100000);
 	usbHandler->uartPurge();
 
-	usbHandler->setUartBaud(1, 9600);
+	usbHandler->setUartBaud(UART_DEVICE_GPS, 9600);
 
 	usbHandler->setEspPower(1);
 	usleep(500000);
@@ -382,7 +382,7 @@ void Gps::initialize() {
 	usleep(100000);
 
 	std::cerr << " - Reconnecting with new baudrate" << std::endl;
-	usbHandler->setUartBaud(1, 460800);
+	usbHandler->setUartBaud(UART_DEVICE_GPS, 460800);
 	usleep(100000);
 
 	std::cerr << " - Sending config" << std::endl;

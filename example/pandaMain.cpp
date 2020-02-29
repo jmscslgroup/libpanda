@@ -33,6 +33,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <getopt.h>
+
 #include "panda.h"
 
 //#include <time.h>
@@ -46,6 +48,8 @@ void killPanda(int killSignal) {
 
 // a simple concrete instance of a usb listener for debugging
 class SimpleCanObserver : public Panda::CanListener {
+public:
+
 private:
 	void newDataNotification( Panda::CanFrame* frame ) {
 		printf("Can Success! Received frame %d,%d,", frame->messageID, frame->bus);
@@ -54,6 +58,7 @@ private:
 		}
 		printf(",%d\tBusTime: %d", frame->dataLength, frame->busTime);
 		std::cout << std::endl;
+
 	}
 };
 
@@ -73,10 +78,61 @@ private:
 	}
 };
 
+/*
+ Argument setup
+ */
+void printUsage(const char* binary) {
+	std::cout << "Usage: " << binary << " -[v] [-u <usbmode>] [-g <gpsfile>]" << std::endl;
+	std::cout << "   -v            : Verbose mode" << std::endl;
+	std::cout << "   -u <usbmode>  : USB operating mode:" << std::endl;
+	std::cout << "                     a: Asynchronous" << std::endl;
+	std::cout << "                     s: Synchronous" << std::endl;
+	std::cout << "                     i: Isochronous" << std::endl;
+	std::cout << "   -g <gpsfile>  : Filename to output GPS NMEA strings" << std::endl;
+}
 
+int verboseFlag = false;
+
+static struct option long_options[] =
+{
+	{"verbose",    no_argument, &verboseFlag, 0},
+	{"usbmode",    required_argument, NULL, 'u'},
+	{"gpsfile",    required_argument, NULL, 'g'},
+	{"cancsvfile", required_argument, NULL, 'c'},
+	{"canrawfile", required_argument, NULL, 'r'},
+	{NULL, 0, NULL, 0}
+};
 
 using namespace std;
 int main(int argc, char **argv) {
+	// Argument parsing
+	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
+	const char*    gpsFilename = NULL;
+	const char* canCsvFilename = NULL;
+	const char* canRawFilename = NULL;
+	int ch;
+	// loop over all of the options
+	while ((ch = getopt_long(argc, argv, "u:g:c:r: ", long_options, NULL)) != -1)
+	{
+		// check to see if a single character or long option came through
+		switch (ch)
+		{
+			case 'u':
+				switch (optarg[0]) {
+					case 'a': usbMode = Panda::MODE_ASYNCHRONOUS; break;
+					case 's': usbMode =  Panda::MODE_SYNCHRONOUS; break;
+					case 'i': usbMode =  Panda::MODE_ISOCHRONOUS; break; };
+				break;
+			case 'g':    gpsFilename = optarg; break;
+			case 'c': canCsvFilename = optarg; break;
+			case 'r': canRawFilename = optarg; break;
+			default:
+				printUsage(argv[0]);
+				exit(EXIT_FAILURE);
+				break;
+		}
+	}
+
 	std::cout << "Starting " << argv[0] << std::endl;
 
 	//Set up graceful exit
@@ -87,10 +143,19 @@ int main(int argc, char **argv) {
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
+	pandaHandler.getUsb().setOperatingMode(usbMode);
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
 
-	pandaHandler.getGps().saveToFile("nmeaDump.txt");
+	if (gpsFilename != NULL) {
+		pandaHandler.getGps().saveToFile(gpsFilename);
+	}
+	if (canCsvFilename != NULL) {
+		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
+	}
+	if (canRawFilename != NULL) {
+		pandaHandler.getCan().saveToFile(canRawFilename);
+	}
 
 	pandaHandler.initialize();
 
@@ -116,17 +181,18 @@ int main(int argc, char **argv) {
 //
 //		usleep(50000);
 
-		Panda::CanFrame garbage;
-		char testData[] = "\x7a\x1d\x10\xfe\xcc\x03\xe1\xde";
-		garbage.messageID = 384;
-		garbage.bus = 1;
-		garbage.dataLength = 8;
-		for (int i = 0; i < garbage.dataLength; i++) {
-			garbage.data[i] = testData[i];
-		}
-		pandaHandler.getCan().sendMessage(garbage);
-
+//		Panda::CanFrame garbage;
+//		char testData[] = "\x7a\x1d\x10\xfe\xcc\x03\xe1\xde";
+//		garbage.messageID = 384;
+//		garbage.bus = 1;
+//		garbage.dataLength = 8;
+//		for (int i = 0; i < garbage.dataLength; i++) {
+//			garbage.data[i] = testData[i];
+//		}
+		//pandaHandler.getCan().sendMessage(garbage);
+		pandaHandler.getUsb().requestCanData();
 		usleep(500000);
+		
 		//std::cerr << "."; //heartbeat
 	}
 	//pandaHandler.stop();

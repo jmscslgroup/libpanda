@@ -38,26 +38,7 @@ Usb::Usb(UsbMode mode)
 }
 
 Usb::~Usb() {
-//	int status;
-
-	stop();
-//	if((status = libusb_release_interface(handler, 0) != LIBUSB_SUCCESS)) {
-//		std::cerr << "FAILED: Usb::end() libusb_release_interface() had an error:" << std::endl;
-//		printError(status);
-//	};
-//	if (handler != NULL) {
-//		libusb_close(handler);
-//	}
-	WaitForInternalThreadToExit();
-
-//	if (transfer != NULL) {
-//		libusb_cancel_transfer(transfer);	// incase it is busy
-//		libusb_free_transfer(transfer);
-//	}
-//	if (outgoingTransfer != NULL) {
-//		libusb_cancel_transfer(outgoingTransfer);	// incase it is busy
-//		libusb_free_transfer(outgoingTransfer);
-//	}
+	stopRecording();	// closes libusb
 
 	libusb_exit(NULL);
 }
@@ -139,11 +120,15 @@ void Usb::initialize() {
 	// Void function:
 	libusb_free_device_list(devices, 1);
 
-	std::cout << " - Setting Safety:" << std::endl;
-	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+//	std::cout << " - Setting Safety:" << std::endl;
+//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+	std::cout << " - Setting Safety elm327:" << std::endl;
+	setSafetyMode(SAFETY_ELM327);	// OBD II port
 //
-	std::cout << " - Enabling CAN Loopback:" << std::endl;
-	setCanLoopback(true);
+//	std::cout << " - Enabling CAN Loopback:" << std::endl;
+//	setCanLoopback(true);
+	std::cout << " - Disabling CAN Loopback:" << std::endl;
+	setCanLoopback(false);
 
 	std::cerr << " - USB Done." << std::endl;
 }
@@ -230,10 +215,12 @@ int asyncControlTransfer(libusb_device_handle *dev_handle,
 }
 
 // Again, the below is a truncated version of libusb's do_sync_bulk_transfer
+// This has also been modified to create a new separate buffer to prevent race conditions
 int asyncBulkTransfer(struct libusb_device_handle *dev_handle,
 					  unsigned char endpoint, unsigned char *buffer, int length, unsigned int timeout, unsigned char type, libusb_transfer_cb_fn callback, void *user_data)
 {
 	struct libusb_transfer *transfer = libusb_alloc_transfer(0);
+	unsigned char *newBuffer; // I added this
 	//int completed = 0;
 	int r;
 
@@ -241,9 +228,20 @@ int asyncBulkTransfer(struct libusb_device_handle *dev_handle,
 		return LIBUSB_ERROR_NO_MEM;
 	}
 
-	libusb_fill_bulk_transfer(transfer, dev_handle, endpoint, buffer, length,
+	newBuffer = (unsigned char*)malloc(length);	// also added
+	if (!newBuffer) {		// also added
+		libusb_free_transfer(transfer);
+		return LIBUSB_ERROR_NO_MEM;
+	}
+
+	libusb_fill_bulk_transfer(transfer, dev_handle, endpoint, newBuffer, length,
 							  callback, user_data, timeout);
+
 	transfer->type = type;
+	if ((endpoint & LIBUSB_ENDPOINT_DIR_MASK) == LIBUSB_ENDPOINT_OUT) {	// I added this too
+		memcpy( newBuffer, buffer, length);
+	}
+	transfer->flags = LIBUSB_TRANSFER_FREE_BUFFER;	// also added this
 
 	r = libusb_submit_transfer(transfer);
 	if (r < 0) {
@@ -251,7 +249,7 @@ int asyncBulkTransfer(struct libusb_device_handle *dev_handle,
 		return r;
 	}
 	// <- Truncated here
-	return LIBUSB_SUCCESS;
+	return r;
 }
 
 int isocControlTransfer(libusb_device_handle *dev_handle,
@@ -301,7 +299,7 @@ int isocControlTransfer(libusb_device_handle *dev_handle,
 		return status;
 	}
 	// <- Truncated here
-	return LIBUSB_SUCCESS;
+	return status;
 }
 
 
@@ -344,6 +342,7 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 	int status, actualLength;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
+			lock();
 			if((status = libusb_bulk_transfer(handler,
 											  ENDPOINT_CAN_OUT,
 											  buffer,
@@ -356,6 +355,7 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 			}
 			// No callbacks are called here, so perform notifications manually:
 			processNewCanSend(actualLength);
+			unlock();
 			break;
 
 		case MODE_ASYNCHRONOUS:
@@ -363,7 +363,7 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 										   ENDPOINT_CAN_OUT,
 										   buffer,
 										   length,
-										   0,
+										   TIMEOUT,
 										   LIBUSB_TRANSFER_TYPE_BULK,
 										   Usb::transferCallbackSendCan,
 										   (void*)this)) != LIBUSB_SUCCESS) {
@@ -383,6 +383,7 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 }
 
 void Usb::requestCanData() {
+	//std::cout << "In requestCanData()" << std::endl;
 //	struct libusb_transfer* transfer = libusb_alloc_transfer(0); // num_iso_packets set to 0 for bulk per libusb1 API
 //	if (transfer == NULL) {
 //		std::cerr << "ERROR: libusb_alloc_transfer() for transfer returned NULL" << std::endl;
@@ -414,7 +415,9 @@ void Usb::requestCanData() {
 	int status, actualLength;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
-			if((status = libusb_bulk_transfer(handler,
+			lock();	// This is done not for libusb, but for bufferSynchronousCan
+
+			if((status = libusb_bulk_transfer(handler,		// Returns LIBUS_ERROR_***
 											  ENDPOINT_CAN_IN,
 											  bufferSynchronousCan,
 											  sizeof(bufferSynchronousCan),
@@ -422,20 +425,27 @@ void Usb::requestCanData() {
 											  TIMEOUT)) != LIBUSB_SUCCESS) {
 				std::cerr << "ERROR: Usb::requestCanData()->libusb_bulk_transfer():" << std::endl;
 				printError(status);
-				return;
-			}
-			// No callbacks are called here, so perform notifications manually:
-			if (actualLength > 0) {
+				if(status == LIBUSB_ERROR_OVERFLOW) {
+					std::cerr << " |-- Overflow: Received: " << actualLength << "Requested: " << (int)sizeof(bufferSynchronousCan) << std::endl;
+				} else if (status == LIBUSB_ERROR_TIMEOUT) {
+					// Still received data, according to boardd.cc code:
+					processNewCanRead((char*)bufferSynchronousCan, actualLength);
+				}
+			} else {
+				// No callbacks are called here, so perform notifications manually:
 				processNewCanRead((char*)bufferSynchronousCan, actualLength);
 			}
+			unlock();
+
 			break;
 
 		case MODE_ASYNCHRONOUS:
-			if((status = asyncBulkTransfer(handler,
+			//std::cout << " - requesting bulk Asynchronous" << std::endl;
+			if((status = asyncBulkTransfer(handler,		// Returns LIBUS_ERROR_***
 										   ENDPOINT_CAN_IN,
-										   bufferSynchronousCan,
+										   NULL,
 										   sizeof(bufferSynchronousCan),
-										   0,
+										   TIMEOUT,
 										   LIBUSB_TRANSFER_TYPE_BULK,
 										   Usb::transferCallbackReadCan,
 										   (void*)this)) != LIBUSB_SUCCESS) {
@@ -462,6 +472,9 @@ void Usb::transferCallbackSendCan(struct libusb_transfer *transfer) {
 	Usb* This = (Usb*) transfer->user_data;
 
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
+		std::cout << " - Incomplete: transferCallbackSendCan()" << std::endl;
+		printErrorTransfer(transfer->status);
+		libusb_free_transfer(transfer);
 		// be patient
 		return;
 	}
@@ -475,12 +488,14 @@ void Usb::transferCallbackReadCan(struct libusb_transfer *transfer) {
 	Usb* This = (Usb*) transfer->user_data;
 
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
+		std::cout << " - Incomplete: transferCallbackReadCan()" << std::endl;
+		printErrorTransfer(transfer->status);
+		libusb_free_transfer(transfer);
 		// be patient
 		return;
 	}
-	if (transfer->actual_length > 0) {
-		This->processNewCanRead((char*)transfer->buffer, transfer->actual_length);
-	}
+
+	This->processNewCanRead((char*)transfer->buffer, transfer->actual_length);
 
 	libusb_free_transfer(transfer);
 }
@@ -489,6 +504,9 @@ void Usb::transferCallbackSendUart(struct libusb_transfer *transfer) {
 	Usb* This = (Usb*) transfer->user_data;
 
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
+		std::cout << " - Incomplete: transferCallbackSendUart()" << std::endl;
+		printErrorTransfer(transfer->status);
+		libusb_free_transfer(transfer);
 		return;
 	}
 
@@ -502,6 +520,8 @@ void Usb::transferCallbackReadUart(struct libusb_transfer *transfer) {
 	//std::cout << "In Usb::transferCallbackReadUart()" << std::endl;
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackReadUart()" << std::endl;
+		printErrorTransfer(transfer->status);
+		libusb_free_transfer(transfer);
 		return;
 	}
 	if (transfer->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
@@ -515,12 +535,7 @@ void Usb::transferCallbackReadUart(struct libusb_transfer *transfer) {
 		}
 
 	} else {
-
-		//std::cout << " - Actual Length: " << transfer->actual_length << std::endl;
-		if (transfer->actual_length > 0) {
-//			This->processNewUartRead((char*)transfer->buffer, transfer->actual_length);
-			This->processNewUartRead((char*)libusb_control_transfer_get_data(transfer), transfer->actual_length);
-		}
+		This->processNewUartRead((char*)libusb_control_transfer_get_data(transfer), transfer->actual_length);
 	}
 
 	libusb_free_transfer(transfer);
@@ -531,7 +546,7 @@ void Usb::transferCallbackReadUart(struct libusb_transfer *transfer) {
  */
 void Usb::processNewCanRead(char* buffer, size_t length) {
 	bytesReceivedCan += length;
-	std::cout << "Read CAN data! Bytes:" << length << std::endl;
+	//std::cout << "Read CAN data! Bytes:" << length << std::endl;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationCanRead(buffer, length);
@@ -540,7 +555,7 @@ void Usb::processNewCanRead(char* buffer, size_t length) {
 
 void Usb::processNewCanSend(size_t length) {
 	bytesSentCan += length;
-	std::cout << "Sent CAN Data! Bytes:" << length << std::endl;
+	//std::cout << "Sent CAN Data! Bytes:" << length << std::endl;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationCanWrite();
@@ -578,18 +593,20 @@ void Usb::startRecording() {
 
 void Usb::stopRecording() {
 	stop();
-	int status;
-	if((status = libusb_release_interface(handler, 0) != LIBUSB_SUCCESS)) {
-		std::cerr << "FAILED: Usb::end() libusb_release_interface() had an error:" << std::endl;
-		printError(status);
-	};
 
+	int status;
 	if (handler != NULL) {
-		libusb_close(handler);
+		if((status = libusb_release_interface(handler, 0) != LIBUSB_SUCCESS)) {
+			std::cerr << "FAILED: Usb::end() libusb_release_interface() had an error:" << std::endl;
+			printError(status);
+		};
+
+		libusb_close(handler);	// causes libusb_handle_events to exit
 		handler = NULL;
 	}
+
 	WaitForInternalThreadToExit();
-	//WaitForInternalThreadToExit();	// This cannot happen, since libusb_handle_events() needs an event or will block forever
+
 }
 
 // Thread entry:
@@ -607,8 +624,11 @@ void Usb::doAction() {
 	}
 
 	int status;
-	int completed = 0;
-	status = libusb_handle_events_completed(NULL, &completed);
+//	int completed = 0;
+//	while (!completed) {
+//		status = libusb_handle_events_completed(NULL, &completed);
+//	}
+	status = libusb_handle_events(NULL);
 
 	if (status != LIBUSB_SUCCESS) {
 		std::cerr << "ERROR: libusb_handle_events() != LIBUSB_SUCCESS, exiting" << std::endl;
@@ -669,6 +689,32 @@ void Usb::printError(int status) {
 	}
 }
 
+void Usb::printErrorTransfer(libusb_transfer_status status) {
+	switch (status) {
+		case LIBUSB_TRANSFER_COMPLETED:
+			std::cerr << " - LIBUSB_TRANSFER_COMPLETED" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_ERROR:
+			std::cerr << " - LIBUSB_TRANSFER_ERROR" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_TIMED_OUT:
+			std::cerr << " - LIBUSB_TRANSFER_TIMED_OUT" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_CANCELLED:
+			std::cerr << " - LIBUSB_TRANSFER_CANCELLED" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_STALL:
+			std::cerr << " - LIBUSB_TRANSFER_STALL" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_NO_DEVICE:
+			std::cerr << " - LIBUSB_TRANSFER_NO_DEVICE" << std::endl;
+			break;
+		case LIBUSB_TRANSFER_OVERFLOW:
+			std::cerr << " - LIBUSB_TRANSFER_OVERFLOW" << std::endl;
+			break;
+	}
+}
+
 
 /*
  UART handling:
@@ -677,6 +723,7 @@ void Usb::requestUartData() {
 	int status;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
+			lock();	// This is not for libusb, but for bufferSynchronousUart
 			bufferLengthSynchronousUart = libusb_control_transfer(handler,
 																  REQUEST_TYPE_IN,
 																  REQUEST_UART_READ,
@@ -687,6 +734,7 @@ void Usb::requestUartData() {
 																  TIMEOUT);
 			// No callbacks are performed, so perform notification now:
 			processNewUartRead((char*)bufferSynchronousUart, bufferLengthSynchronousUart);
+			unlock();
 			break;
 
 		case MODE_ASYNCHRONOUS:
@@ -740,29 +788,31 @@ void Usb::uartWrite(const char* buffer, int length) {
 
 		switch (mode) {
 			case MODE_SYNCHRONOUS:
+				lock();
 				if((status = libusb_bulk_transfer(handler,
 												  ENDPOINT_UART_OUT,
 												  (unsigned char*)bufferPrepended,
 												  lengthThisTransfer + 1,
 												  &sentLength,
-												  0)) < 0) {
+												  TIMEOUT)) < 0) {
 					std::cerr << "ERROR: uartWrite() libusb_bulk_transfer() reutrned status:" << std::endl;
 					printError(status);
 				}
+				unlock();
 				break;
 
 			case MODE_ASYNCHRONOUS:
 				if((status = asyncBulkTransfer(handler,
 											   ENDPOINT_UART_OUT,
 											   (unsigned char*)bufferPrepended,
-											   lengthThisTransfer+1,
-											   0,
+											   lengthThisTransfer + 1,
+											   TIMEOUT,
 											   LIBUSB_TRANSFER_TYPE_BULK,
 											   &transferCallbackSendUart,
 											   (void*)this)) != LIBUSB_SUCCESS) {
 
 				}
-				sentLength = UART_BUFFER_WRITE_LENGTH+1;	// HACK: this is not read here, it is reported int eh callback
+				sentLength = UART_BUFFER_WRITE_LENGTH+1;	// HACK: this is not read here, it is reported in the callback
 				break;
 
 			case MODE_ISOCHRONOUS:
@@ -801,7 +851,7 @@ void Usb::uartPurge() {
 
 
 void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index) {
-	int status = libusb_control_transfer(handler, requestType, request, value, index, NULL, 0, 0);
+	int status = libusb_control_transfer(handler, requestType, request, value, index, NULL, 0, TIMEOUT);
 	if (status < 0) {
 		std::cerr << " FAILED: sendPandaHardwareSimple() libusb_control_tranfer error" << std::endl;
 		printError(status);
@@ -810,7 +860,7 @@ void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t
 
 
 void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
-	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, 0);
+	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
 	if (status < 0) {
 		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_tranfer error" << std::endl;
 		printError(status);
@@ -839,7 +889,6 @@ void Usb::espReset(int uart, int bootmode) {
 }
 
 void Usb::getPandaSerial( unsigned char* serial16 ) {
-//	libusb_control_transfer(handler, REQUEST_TYPE_OUT, REQUEST_SERIAL, 0, 0, firmware16, 64, 0);
 	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SERIAL, serial16, 16);
 }
 
@@ -851,8 +900,6 @@ void Usb::setCanLoopback( int enable ) {
 void Usb::getFirmware( unsigned char* firmware128 ) {
 	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_FIRMWARE_LOW, firmware128, 64);
 	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_FIRMWARE_HIGH, &firmware128[64], 64);
-//	libusb_control_transfer(handler, REQUEST_TYPE_OUT, REQUEST_FIRMWARE_LOW, 0, 0, firmware128, 64, 0);
-//	libusb_control_transfer(handler, REQUEST_TYPE_OUT, REQUEST_FIRMWARE_HIGH, 0, 0, firmware128 + 64, 64, 0);
 }
 
 unsigned char Usb::getHardware() {
@@ -868,5 +915,6 @@ struct tm Usb::getRtc() {
 }
 
 void Usb::setSafetyMode(uint16_t mode) {
-	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);
+//	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 0);	// python Panda class has this
 }

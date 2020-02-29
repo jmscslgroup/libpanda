@@ -131,7 +131,7 @@ namespace Panda {
 		//struct libusb_transfer *outgoingTransfer;
 //		struct libusb_transfer *uartTransfer;
 
-		unsigned char bufferSynchronousCan[2048];	// I think Rahul wanted this at 16, which seems a bit small...
+		unsigned char bufferSynchronousCan[16*16];	// I think Rahul wanted this at 16, which seems a bit small...
 		unsigned char bufferSynchronousUart[64];
 		unsigned int bufferLengthSynchronousUart;
 
@@ -155,7 +155,8 @@ namespace Panda {
 		static void transferCallbackSendUart(struct libusb_transfer *transfer);
 
 		// prints libusb status errors from most libsusb functions
-		void printError(int status);
+		static void printError(int status);
+		static void printErrorTransfer(libusb_transfer_status status);
 
 		// Override from Mogi::Thread
 		void entryAction();
