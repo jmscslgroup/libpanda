@@ -48,13 +48,13 @@ bool sortId(const IdInfo *i, const IdInfo *j) {
 	return i->ID < j->ID;
 }
 bool sortIdCount(const IdInfo *i, const IdInfo *j) {
-	return i->count < j->count || ((i->ID == j->ID) && sortId(i, j));
+	return i->count < j->count || ((i->count == j->count) && sortId(i, j));
 }
 bool sortIdRate(const IdInfo *i, const IdInfo *j) {
-	return i->currentRate < j->currentRate || ((i->ID == j->ID) && sortId(i, j));
+	return i->currentRate < j->currentRate || ((i->currentRate == j->currentRate) && sortId(i, j));
 }
 bool sortUniqueMessageCount(const IdInfo *i, const IdInfo *j) {
-	return i->data.size() < j->data.size() || ((i->ID == j->ID) && sortId(i, j));
+	return i->data.size() < j->data.size() || ((i->data.size() == j->data.size()) && sortId(i, j));
 }
 
 void CanFrameStats::sortById() {
@@ -79,6 +79,21 @@ void CanFrameStats::sortByUniqueMessageCount() {
 
 }
 
+void CanFrameStats::resetUniqueCount() {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		it->second.data.clear();
+	}
+}
+void CanFrameStats::highlightUniqueCount(int countToHighlight) {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		if (it->second.data.size() == countToHighlight) {
+			it->second.highlight = true;
+		} else {
+			it->second.highlight = false;
+		}
+	}
+}
+
 void CanFrameStats::doAction() {
 	if (canFrameFifo.size() > 0) {
 
@@ -91,7 +106,7 @@ void CanFrameStats::doAction() {
 		double currentTime = (double)(sysTime.tv_usec)/1000000.0 + (double)(sysTime.tv_sec - t0.tv_sec);
 
 		lock();
-		Panda::CanFrame* canFrame = *canFrameFifo.begin();
+		Panda::CanFrame* canFrame = canFrameFifo.front();
 		canFrameFifo.pop_front();
 		memcpy(&data, canFrame->data, canFrame->dataLength);
 		IdInfo* messageStats = &canStats[canFrame->messageID];

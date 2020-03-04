@@ -53,9 +53,11 @@ void Gps::setUsb( Panda::Usb* usbHandler ) {
 }
 
 void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
-	if (bufferLength == 0) {
-		return;
-	}
+	resume();	// will request more data
+
+//	if (bufferLength == 0) {
+//		return;
+//	}
 
 	CNMEAParserData::ERROR_E nErr;
 	if ((nErr = this->ProcessNMEABuffer((char*)buffer, bufferLength)) != CNMEAParserData::ERROR_OK) {
@@ -67,6 +69,8 @@ void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
 	}
 
 	//usbHandler->requestUartData();	// buffer may still have more, make an immediate new request
+
+	//std::cout << "done with notificationUartRead()" << std::endl;
 }
 
 void Gps::doAction() {
@@ -75,20 +79,10 @@ void Gps::doAction() {
 		usleep(1000);
 		return;
 	}
-//	int lengthRead;
-//	if((lengthRead = usbHandler->uartRead((unsigned char*)uartBuffer)) > 0 ) {
-//		uartBuffer[lengthRead] = 0;	// just for printing to the terminal
-//
-//		CNMEAParserData::ERROR_E nErr;
-//		if ((nErr = this->ProcessNMEABuffer((char*)uartBuffer, lengthRead)) != CNMEAParserData::ERROR_OK) {
-//			std::cerr << "NMEA Parser Gps::ProcessNMEABuffer Failed and returned error: " << nErr << std::endl;
-//
-//		}
-//		if (nmeaDump.is_open()) {
-//			nmeaDump << uartBuffer;
-//		}
-//		//std::cerr << uartBuffer;
-//	}
+
+	// Tell this thread to pause, wait for request to complete
+	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
+
 	usbHandler->requestUartData();
 
 	usleep(1000);	// thread does not need to be particularly fast
@@ -318,7 +312,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 }
 
 
-//  an nmea string starting with '$', checkum delimited with '*', and has placeholder for 2 bytes for the checksum.
+//  An nmea string starting with '$', is checkum delimited with '*', and has placeholder for 2 bytes for the checksum.
 //  May want the carriage return/newline as well.
 //  i.e: packet[] = "$<Cmd>,<Data1>,..,<DataN>*<2 Byte Checksum>\r\n"
 void setNmeaChecksum(char* packet) {
@@ -368,7 +362,7 @@ void Gps::initialize() {
 //	std::cerr << " - Enabling ZDA messages" << std::endl;
 	char nmeaString[100];
 //
-//	// Bunting: the following was added by me after failing to accomplish thte same using UBX commands further down.
+//	// Bunting: the following was added by me after failing to accomplish the same using UBX commands further down.
 //	sprintf(nmeaString, "$PUBX,40,ZDA,0,1,0,0,0,0*FF\r\n");
 //	setNmeaChecksum(nmeaString);
 //	usbHandler->uartWrite(nmeaString, strlen(nmeaString));

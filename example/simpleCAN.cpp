@@ -43,7 +43,7 @@ private:
 	int notificationCount = 0;
 	void newDataNotification( Panda::CanFrame* canData ) {
 		notificationCount++;
-		if(notificationCount > 100) {
+		if(notificationCount > 1000) {
 			std::cerr << "*";
 			notificationCount = 0;
 		}
@@ -65,16 +65,18 @@ int main(int argc, char **argv) {
 	Panda::Can mCan;
 	mCan.setUsb(&mUsb);
 	mUsb.addObserver(&mCan);
+	mCan.addObserver(&mSimpleCanObserver);
 
+	// provaning any argument makes this run in synchronous mode
 	if (argc == 2) {
 		std::cout << "Setting mode to MODE_SYNCHRONOUS" << std::endl;
 		mUsb.setOperatingMode(Panda::MODE_SYNCHRONOUS);
 	}
 
-	mCan.addObserver(&mSimpleCanObserver);
-
-	std::cout << "Saving CSV to canCsv.txt" << std::endl;
-	mCan.saveToCsvFile("canCsv.txt");
+	std::cout << "Saving CSV to csvDump.txt" << std::endl;
+	mCan.saveToCsvFile("csvDump.txt");
+	std::cout << "Saving raw to rawDump.txt" << std::endl;
+	mCan.saveToFile("rawDump.txt");
 
 	// Initialization:
 	mUsb.initialize();
@@ -83,13 +85,8 @@ int main(int argc, char **argv) {
 	mCan.startParsing();
 
 	std::cout << "Each \'.\' represents a manual CAN message request." << std::endl;
-	std::cout << "Each \'*\' represents 10 notifications received.  " << std::endl;
-//	int lastNmeaMessageCount = 0;
+	std::cout << "Each \'*\' represents 1000 notifications received.  " << std::endl;
 	while (keepRunning == true) {
-//		if (mCan.getData().successfulParseCount-lastNmeaMessageCount > 100) {
-//			std::cerr << ".";
-//			lastNmeaMessageCount = mCan.getData().successfulParseCount;
-//		}
 		mUsb.requestCanData();
 		std::cerr << ".";
 		usleep(500000);

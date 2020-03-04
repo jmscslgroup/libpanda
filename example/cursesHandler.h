@@ -61,6 +61,10 @@ private:
 	CanSortMode canSortMode;
 	volatile bool reverseSortEnable;
 
+	bool resetUniqueData;
+
+	int highlight = -1;
+
 public:
 	// Singleton:
 	static CursesHandler* getInstance();

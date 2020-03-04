@@ -22,7 +22,7 @@ The NMEAParser is already included as a modified version with some bug fixes and
 * ZDA NMEA message parsing
 
 ## Setup:
-These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04
+These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04.
 ### Install libusb-1.0-0-dev
 `$ sudo apt-get install libusb-1.0-0-dev`
 
@@ -37,19 +37,33 @@ These instructions were successful on a Raspberry pi 4 running Ubuntu 18.04
 
 ## Examples
 ### simplecan
-Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Can (no GPS)
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Can (no GPS).
 
 `$ sudo ./simplecan`
 
 ### simplegps
-Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Gps (no CAN)
+Minimal example showing a minimal implementation of classes Panda::Usb and Panda::Gps (no CAN).
 
 `$ sudo ./simplegps`
 
 ### panda
-Barebones example showing a minimal implementation of class Panda::Handler, utilizing Panda::Usb, Panda::Can, and Panda::Gps
+Barebones example showing a minimal implementation of class Panda::Handler, utilizing Panda::Usb, Panda::Can, and Panda::Gps.  Command line arguments can be specified to record log files.
+
+Simple Execution:
 
 `$ sudo ./panda`
+
+Saving CSV CAN data to file:
+
+`$ sudo ./panda -c csvData.txt`
+
+Saving GPS NMEA data to file, and also run USB in synchronous mode:
+
+`$ sudo ./panda -u s -g nmeaStrings.txt`
+
+Saving GPS NMEA, CSV CAN, and raw CAN data simultaneously:
+
+`$ sudo ./panda -c csvData.txt -g nmeaStrings.txt -r rawCANdata.txt`
 
 ### pandaSetTime
 This example listens to the GPS and when data is valid, synchronizes the system clock to the GPS's UTC if the difference is larger than a defined delta.
@@ -57,7 +71,7 @@ This example listens to the GPS and when data is valid, synchronizes the system 
 `$ sudo ./pandaSetTime`
 
 ### pandaCurses
-An example that currently plots GPS data to the console in a pretty fashion.  This also takes arguments for various data collection and tuning.
+An example that plots GPS and CAN data to the console in a pretty fashion.  This also takes arguments for various data collection and hardware modes.
 
 `$ sudo ./pandaCurses`
 
@@ -69,7 +83,11 @@ Run with USB in synchronous mode (default is asynchronous):
 
 `$ sudo ./pandaCurses -u s`
 
-## Setup:
+Run with faked CAN data (i.e. when not connected to a car):
+
+`$ sudo ./pandaCurses -f`
+
+## Documentation:
 The library is self-documenting using Doxygen, producing both HTML and LaTex.  Generate the documentation as follows:
 
 `$ doxygen doxygen.conf`
@@ -77,14 +95,16 @@ The library is self-documenting using Doxygen, producing both HTML and LaTex.  G
 If you do not have doxyen, you may install using, on Ubuntu:
 
 `$ sudo apt-get install doxygen`
-On macOS with macports:
+
+Or on macOS with macports:
 
 `$ sudo port install doxygen`
 
 ## Todo
 - [x] Panda GPS interface
 - [ ] Isochronous USB transfer
+- [ ] Timestamped libusb error logging
 - [x] CAN frame parsing
-- [ ] CAN frame handling
+- [x] CAN frame handling
 - [ ] ROS based publishing
 - [ ] Testing

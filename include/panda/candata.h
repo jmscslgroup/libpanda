@@ -51,6 +51,9 @@ namespace Panda {
 		/*! \brief The data for the CAN message
 		 */
 		unsigned char data[CAN_MAX_LENGTH];
+		/*! \brief The system time upon rec
+		 */
+		struct timeval sysTime;
 	} CanFrame;
 
 }

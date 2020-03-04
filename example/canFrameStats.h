@@ -45,6 +45,7 @@ typedef struct _IdInfo {
 	int ID = -1;
 	double priorTime = 0;
 	double currentRate = 1;
+	bool highlight = false;
 
 	// mapping of individual 64-bit data messages to data informaiton (count, bus)
 	// The size of thie corresponds to the number of unique data sent under the parent message ID (see canStats below)
@@ -65,6 +66,10 @@ public:
 	void sortByIdCount();
 	void sortByIdRate();
 	void sortByUniqueMessageCount();
+
+
+	void resetUniqueCount();
+	void highlightUniqueCount(int countToHighlight);
 
 	void newDataNotification(Panda::CanFrame* canFrame);
 

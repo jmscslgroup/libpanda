@@ -91,7 +91,7 @@ namespace Panda {
 		void initialize();	// needs USB device
 
 		/*! \brief Saves raw CANBus data to a file.
-		 More correctly, this saves data read by the UART via the Panda USB interface to file.
+		 More correctly, this saves data read by the Panda USB interface to file.
 		 \param filename The filename and path for data to be saved.
 		 */
 		void saveToFile(const char* filename);
@@ -128,14 +128,17 @@ namespace Panda {
 		void sendMessage( CanFrame& frame );
 
 	private:
-		bool currentlyRequesting = false;
+//		bool currentlyRequesting = false;
 		std::list<CanFrame> canFrames;
 
 		std::vector<CanListener*> listeners;
 		Usb* usbHandler = NULL;
 
-		std::ofstream canDump;
-		std::ofstream canCsv;
+		FILE* canDump;
+		FILE* csvDump;
+
+		void writeCsvToFile(CanFrame* frame, unsigned char* buffer, int bufLength);
+		void writeRawToFile(char* buffer, size_t length);
 
 		// Overload frum UsbListener
 		void notificationCanRead(char* buffer, size_t bufferLength);

@@ -62,7 +62,7 @@ private:
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] [-u <usbmode>] [-g <gpsfile>]" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] [-u <usbmode>] [-g <gpsfile>] [-c <csvfile>]" << std::endl;
 	//std::cout << "   -v            : Verbose mode" << std::endl;
 	std::cout << "   -f            : Fake CAN data for debugging" << std::endl;
 	std::cout << "   -u <usbmode>  : USB operating mode:" << std::endl;
@@ -70,6 +70,7 @@ void printUsage(const char* binary) {
 	std::cout << "                     s: Synchronous" << std::endl;
 	std::cout << "                     i: Isochronous" << std::endl;
 	std::cout << "   -g <gpsfile>  : Filename to output GPS NMEA strings" << std::endl;
+	std::cout << "   -c <csvfile>  : Filename to output CAN in CSV" << std::endl;
 }
 
 int verboseFlag = false;
@@ -81,6 +82,7 @@ static struct option long_options[] =
 	{"fakedata", no_argument, NULL, 0},
 	{"usbmode", required_argument, NULL, 'u'},
 	{"gpsfile", required_argument, NULL, 'g'},
+	{"csvfile", required_argument, NULL, 'c'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -101,9 +103,10 @@ int main(int argc, char **argv) {
 	bool fakeData = false;
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
 	const char* gpsFilename = NULL;
+	const char* csvFilename = NULL;
 	int ch;
 	// loop over all of the options
-	while ((ch = getopt_long(argc, argv, "u:g:f", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:f", long_options, NULL)) != -1)
 	{
 		// check to see if a single character or long option came through
 		switch (ch)
@@ -116,6 +119,9 @@ int main(int argc, char **argv) {
 				break;
 			case 'g':
 				gpsFilename = optarg;
+				break;
+			case 'c':
+				csvFilename = optarg;
 				break;
 			case 'f':
 				fakeData = true;
@@ -147,6 +153,9 @@ int main(int argc, char **argv) {
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	if (gpsFilename != NULL) {
 		pandaHandler.getGps().saveToFile(gpsFilename);
+	}
+	if (csvFilename != NULL) {
+		pandaHandler.getCan().saveToCsvFile(csvFilename);
 	}
 
 	pandaHandler.initialize();

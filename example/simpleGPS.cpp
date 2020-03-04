@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 			std::cerr << ".";
 			lastNmeaMessageCount = mGps.getData().successfulParseCount;
 		}
-		usleep(10000);
+		usleep(100000);
 	}
 	std::cout << std::endl;
 

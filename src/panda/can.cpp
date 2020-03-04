@@ -32,17 +32,18 @@
 
 using namespace Panda;
 
-Can::Can() {
+Can::Can()
+:canDump(NULL), csvDump(NULL) {
 }
 
 Can::~Can() {
 	stop();
 	WaitForInternalThreadToExit();
-	if (canDump.is_open()) {
-		canDump.close();
+	if (canDump != NULL) {
+		fclose(canDump);
 	}
-	if (canCsv.is_open()) {
-		canCsv.close();
+	if (csvDump != NULL) {
+		fclose(csvDump);
 	}
 }
 
@@ -53,12 +54,12 @@ void Can::initialize() {
 }
 
 void Can::saveToFile( const char* filename ) {
-	canDump.open(filename);
+	canDump = fopen(filename, "w");
 }
 
 void Can::saveToCsvFile(const char* filename) {
-	canCsv.open(filename);
-	canCsv << "Time,Bus,MessageID,Message,MessageLength\n";
+	csvDump = fopen(filename, "w");
+	fprintf(csvDump, "Time,Buffer,Bus,MessageID,Message,MessageLength\n");
 }
 
 void Can::setUsb( Panda::Usb* usbHandler ) {
@@ -85,20 +86,6 @@ void Can::stopParsing() {
 	WaitForInternalThreadToExit();
 }
 
-void Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer) {	// TODO lots of testing
-	uint32_t* message = (uint32_t*)buffer;
-
-	if (frame.messageID > 0x0800) {
-		message[0] = (frame.messageID << 3) | 5;
-	} else {
-		message[0] = (frame.messageID << 21) | 1;
-	}
-
-	message[1] = (frame.bus << 4) | frame.dataLength;
-	//message[2] = frame.busTime << 16;	// Not needed
-	memcpy(&message[2], frame.data, frame.dataLength);
-}
-
 void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 	if (usbHandler == NULL) {
 		std::cerr << "ERROR: Can::sendMessage(): No Usb Handler set for Panda::Can!" << std::endl;
@@ -111,7 +98,27 @@ void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 	usbHandler->sendCanData(message, 16);
 }
 
+void Can::writeCsvToFile(CanFrame* frame, unsigned char* converted, int bufLength) {
+	if (csvDump != NULL) {
+		fprintf(csvDump, "%d.%06d,", (unsigned int)frame->sysTime.tv_sec, (int)frame->sysTime.tv_usec);
+		for (int i = 0; i < bufLength; i++) {
+			fprintf(csvDump, "%02x", converted[i]);
+		}
 
+		fprintf(csvDump,",%d,%d,", (int)frame->bus, frame->messageID);
+
+		for (int i =0; i < frame->dataLength; i++) {
+			fprintf(csvDump, "%02x", frame->data[i]);
+		}
+		fprintf(csvDump, ",%d\n", frame->dataLength);
+
+	}
+}
+void Can::writeRawToFile(char* buffer, size_t length) {
+	if (canDump != NULL) {
+		fwrite(buffer, sizeof(char), length, canDump);
+	}
+}
 
 void Can::doAction() {
 	if (usbHandler == NULL) {
@@ -120,10 +127,12 @@ void Can::doAction() {
 		return;
 	}
 
-	if (!currentlyRequesting) {
-		currentlyRequesting = true;
-		usbHandler->requestCanData(); // only request data when we have nothing to process
-	}
+	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
+
+	//if (!currentlyRequesting) {
+	//	currentlyRequesting = true;
+	usbHandler->requestCanData(); // only request data when we have nothing to process
+	//}
 	
 	if (canFrames.size() == 0) {
 		usleep(100);	// some breathing room maybe?
@@ -132,38 +141,42 @@ void Can::doAction() {
 
 	while (canFrames.size() > 0) {
 
-
 		// Copy first packet:
 		lock();
 		CanFrame canFrame(canFrames.front()); // FIFO read
 		canFrames.pop_front();                 // FIFO remove
 		unlock();
 
-		if (canCsv.is_open()) {
-			time_t epochTime = time(NULL);
-			canCsv	<< epochTime << ","
-			// raw data
-			<< canFrame.bus << ","
-			<< canFrame.messageID << ","
-			<< canFrame.data << ","
-			<< canFrame.dataLength << std::endl;
-
-		}
-
-
-		// Now we have a packet to parse.
-
-		// Once parsed, notify observers:
+		// Notify observers:
 		for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 			(*it)->newDataNotification(&canFrame);
 		}
+
+		// Save data to log
+		//writeCsvToFile(&canFrame);
 	}
 
 }
 
+void Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer) {	// TODO lots of testing
+	uint32_t* message = (uint32_t*)buffer;
+
+	// From comma.ai board.cc code.
+	// This may also set bits for designating a write?
+	if (frame.messageID > 0x0800) {
+		message[0] = (frame.messageID << 3) | 5;
+	} else {
+		message[0] = (frame.messageID << 21) | 1;
+	}
+
+	message[1] = (frame.bus << 4) | frame.dataLength;
+	//message[2] = frame.busTime << 16;	// Not needed
+	memcpy(&message[2], frame.data, frame.dataLength);
+}
+
 CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 	// The following translation is ported from Rahul's parse_can_buffer
-	CanFrame canFrame;			// TODO packet parsing logic here
+	CanFrame canFrame;
 	uint32_t repackedBuffer[4];		// we only expect to ever get 16 byte maximum, this looks at first 2 bytes
 	memcpy(repackedBuffer, buffer, bufferLength);
 
@@ -176,13 +189,16 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 	std::cout << std::endl;
 #endif
 
+	// From comma.ai board.cc code:
 	if (repackedBuffer[0] & 0x04) {	// Check for extended frame
 		canFrame.messageID = repackedBuffer[0] >> 3;
 	} else {
 		canFrame.messageID = repackedBuffer[0] >> 21;
-		// Ok I'm confused, if we retrive this then the frame formation is completly different according to this:
+		// Ok I'm confused, if we retrieve this then the frame formation is completly different according to this:
 		// https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
 		// the the following methods only work for extended remote frames.
+		// My conclusion here is that twe are NOT forming a CAN packet, but rather enought for the Panda
+		// or even a potential ELM327 chip to understand, therefore the above link is meaningless
 	}
 
 	canFrame.busTime = repackedBuffer[1] >> 16;
@@ -191,11 +207,6 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 	canFrame.bus = (repackedBuffer[1] >> 4) & 0x00000FF;
 
 #ifdef CAN_VERBOSE
-//	std::cout << " |-- Parsed: Message ID:" << canFrame.messageID << " Bus:" << canFrame.bus << " Bus Time:" << canFrame.busTime << " Data:";
-//	for (int i = 0; i < canFrame.dataLength; i++) {
-//		printf("0x%02X ", canFrame.data[i]);
-//	}
-//	std::cout << std::endl;
 	printf(" |-- Parsed Frame: %d,%d,", canFrame.messageID, canFrame.bus);
 	for (int i = canFrame.dataLength-1; i >= 0; i--) {
 		printf("%02x", canFrame.data[i]);
@@ -207,10 +218,12 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 }
 
 void Can::notificationCanRead(char* buffer, size_t bufferLength) {
-	currentlyRequesting = false;
-	if (canDump.is_open()) {
-		canDump.write(buffer, bufferLength);
-	}
+//	currentlyRequesting = false;
+	resume();	// Invoke another CAN request
+	struct timeval sysTime;
+	gettimeofday(&sysTime, NULL);
+
+	writeRawToFile(buffer, bufferLength);
 #ifdef CAN_VERBOSE
 	std::cout << "Got a CAN::notificationCanRead()!" << std::endl;
 	std::cout << " - Received " << bufferLength <<	" Bytes :";
@@ -226,16 +239,19 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		remainingBytes = bufferLength - index;
 		lengthOfFrame = remainingBytes > 16 ? 16 : remainingBytes;
 #ifdef CAN_VERBOSE
-		std::cout << " - Gonna pare this: ";
+		std::cout << " - Gonna parse this: ";
 		for (int i = 0; i < lengthOfFrame; i++) {
 					printf("0x%02X ", buffer[index+i]);
 				}
 		std::cout << std::endl;
 #endif
-		if (((unsigned char)buffer[index]) == 0xFF) {
-			continue;
-		}
-		canFrames.push_back(bufferToCanFrame(&buffer[index], lengthOfFrame));	// FIFO insert
+//		if (((unsigned char)buffer[index]) == 0xFF) {	// TODO test if this is needed, preliminary testing failure showed this but may be an unrelated problem now resolved
+//			continue;
+//		}
+		CanFrame newFrame = bufferToCanFrame(&buffer[index], lengthOfFrame);
+		newFrame.sysTime = sysTime;
+		writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
+		canFrames.push_back(newFrame);	// FIFO insert
 	}
 	unlock();
 }

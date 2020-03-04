@@ -39,7 +39,7 @@ namespace Panda {
 	/*! \class Handler
 	 \brief A class that handles the Usb, GPS, and CAN data
 
-	 This class deals with initiazlizing objects for USB device handling, GPS parsing, and
+	 This class deals with initializing objects for USB device handling, GPS parsing, and
 	 CAN parsing.  The implementation is multithreaded.  The observer software pattern is
 	 used for each contained object (GPS, USB, CAN) as the intended method to retrieve
 	 Data-In-Real-Time (DIRT).

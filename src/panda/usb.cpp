@@ -151,7 +151,7 @@ int Usb::openDeviceByManufacturer(libusb_device **devices, const char* manufactu
 		}
 
 		char usbManufacturer[200];	// Bunting: I assume 200 is plenty big
-		if(libusb_open(device, &handler) == 0) {
+		if((status = libusb_open(device, &handler)) == LIBUSB_SUCCESS) {
 			libusb_get_string_descriptor_ascii(handler, desc.iManufacturer, (unsigned char*)usbManufacturer, 200);
 			//std::cout << " |-- Found: " << usbManufacturer << std::endl;
 			if(strcmp(usbManufacturer, manufacturerName) == 0) {	// Check if comma.ai device
@@ -173,12 +173,12 @@ int Usb::openDeviceByManufacturer(libusb_device **devices, const char* manufactu
 }
 
 /*
- Libusb converted commands: truncated synchronous to become asynchronous:
+ Libusb converted commands:
+ These have been truncated from synchronous libusb methods to noe be asynchronous:
  */
-
 // This is a truncation of a direct copy from libusb's sync.c libusb_control_transfer()
 // Only the first half is performed, up to a transfer sumbission, thus letting the libusb_handle_event()
-// handle the transfers in an aynchronous fashion.
+// in doAction() handle the transfers in an aynchronous fashion.
 int asyncControlTransfer(libusb_device_handle *dev_handle,
 						 uint8_t bmRequestType, uint8_t bRequest, uint16_t wValue, uint16_t wIndex,
 						 unsigned char *data, uint16_t wLength, unsigned int timeout, libusb_transfer_cb_fn callback, void *user_data) {
@@ -214,7 +214,7 @@ int asyncControlTransfer(libusb_device_handle *dev_handle,
 	return LIBUSB_SUCCESS;
 }
 
-// Again, the below is a truncated version of libusb's do_sync_bulk_transfer
+// Again, the below is a truncated version of libusb's do_sync_bulk_transfer() (i.e. libusb_bulk_transfer())
 // This has also been modified to create a new separate buffer to prevent race conditions
 int asyncBulkTransfer(struct libusb_device_handle *dev_handle,
 					  unsigned char endpoint, unsigned char *buffer, int length, unsigned int timeout, unsigned char type, libusb_transfer_cb_fn callback, void *user_data)
@@ -306,39 +306,9 @@ int isocControlTransfer(libusb_device_handle *dev_handle,
 /*
  CAN data handling
  */
-
-
 int Usb::sendCanData( unsigned char* buffer, int length) {
-//	int status;
-//	struct libusb_transfer* outgoingTransfer = libusb_alloc_transfer(0);
-//	if (outgoingTransfer == NULL) {
-//		std::cerr << "ERROR: libusb_alloc_transfer() for outgoingTransfer returned NULL" << std::endl;
-//	}
-//	//lock();	// thread safety
 //	// "libusb_bulk_transfer(dev_handle, 3, (uint8_t*)send, msg_count*0x10, &sent, TIMEOUT)"
 //	// comma.ai code uses the endpoint setting of 3
-//	libusb_fill_bulk_transfer(	outgoingTransfer,
-//							  	handler,
-//							  	ENDPOINT_CAN_OUT,// LIBUSB_ENDPOINT_OUT | 0x02, // ENDPOINT_WRITE maybe?
-//							  	buffer,
-//								length,
-//							  	Usb::transferCallbackSendCan, (void*)this,
-//							  	0);
-//
-//	status = libusb_submit_transfer(outgoingTransfer);
-//	//unlock();	// thread safety
-//
-//	if(status != LIBUSB_SUCCESS) {
-//		std::cerr << "ERROR: libusb_submit_transfer(outgoingTransfer) unsuccessful" << std::endl;
-//		printError(status);
-//		// Fail gracfully somehow?
-//		//exit(EXIT_FAILURE);
-//
-//		return -1;
-//	}
-//
-//	//resume();	// should handle events
-//	return 0;
 	int status, actualLength;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
@@ -383,35 +353,10 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 }
 
 void Usb::requestCanData() {
-	//std::cout << "In requestCanData()" << std::endl;
-//	struct libusb_transfer* transfer = libusb_alloc_transfer(0); // num_iso_packets set to 0 for bulk per libusb1 API
-//	if (transfer == NULL) {
-//		std::cerr << "ERROR: libusb_alloc_transfer() for transfer returned NULL" << std::endl;
-//	}
-//	//	lock();	// thread safety
-//	// I am uncomfortable with the following
-//	// Rahul's code had usb1.ENDPOINT_IN | self.ENDPOINT_READ
-//	// LIBUSB_ENDPOINT_IN is already defined.  not sure about the bitwise OR with Rahul's defined ENDPOINT_READ
-//	// the python code uses setBulk(), which is a simple wrapper for the following
-//	// My goal is to port Rahul's code first, then figure these issues out later
-//	// Note: comma.ai uses an endpoint value of 0x81 for reads.  Thats the same as what's used here
-//	libusb_fill_bulk_transfer(transfer,
-//							  handler,
-//							  ENDPOINT_CAN_IN,
-//							  bufferSynchronousCan,
-//							  sizeof(bufferSynchronousCan),
-//							  Usb::transferCallbackReadCan, (void*)this,
-//							  0);
-//
-//
-//	int status = libusb_submit_transfer(transfer);
-//	//	unlock();	// thread safety
-//
-//	if(status != LIBUSB_SUCCESS) {
-//		std::cerr << "ERROR: libusb_submit_transfer() unsuccessful" << std::endl;
-//		printError(status);
-//		//	this->stopRecording();
-//	}
+	// Rahul's code had usb1.ENDPOINT_IN | self.ENDPOINT_READ
+	// LIBUSB_ENDPOINT_IN is already defined.  not sure about the bitwise OR with Rahul's defined ENDPOINT_READ
+	// the python code uses setBulk(), which is a simple wrapper for the following
+	// Note: comma.ai uses an endpoint value of 0x81 for reads.  Thats the same as what's used here
 	int status, actualLength;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
@@ -474,13 +419,13 @@ void Usb::transferCallbackSendCan(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackSendCan()" << std::endl;
 		printErrorTransfer(transfer->status);
-		libusb_free_transfer(transfer);
-		// be patient
-		return;
+		if (transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
+			This->processNewCanSend(0);
+			libusb_free_transfer(transfer);
+			return;
+		}
 	}
-
 	This->processNewCanSend(transfer->actual_length);
-
 	libusb_free_transfer(transfer);
 }
 
@@ -490,13 +435,13 @@ void Usb::transferCallbackReadCan(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackReadCan()" << std::endl;
 		printErrorTransfer(transfer->status);
-		libusb_free_transfer(transfer);
-		// be patient
-		return;
+		if (transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
+			This->processNewCanRead(NULL, 0);
+			libusb_free_transfer(transfer);
+			return;
+		}
 	}
-
 	This->processNewCanRead((char*)transfer->buffer, transfer->actual_length);
-
 	libusb_free_transfer(transfer);
 }
 
@@ -506,12 +451,13 @@ void Usb::transferCallbackSendUart(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackSendUart()" << std::endl;
 		printErrorTransfer(transfer->status);
-		libusb_free_transfer(transfer);
-		return;
+		if (transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
+			This->processNewUartSend(0);
+			libusb_free_transfer(transfer);
+			return;
+		}
 	}
-
 	This->processNewUartSend(transfer->actual_length);
-
 	libusb_free_transfer(transfer);
 }
 
@@ -521,8 +467,11 @@ void Usb::transferCallbackReadUart(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackReadUart()" << std::endl;
 		printErrorTransfer(transfer->status);
-		libusb_free_transfer(transfer);
-		return;
+		if (transfer->status == LIBUSB_TRANSFER_TIMED_OUT) {
+			This->processNewUartRead(NULL, 0);
+			libusb_free_transfer(transfer);
+			return;
+		}
 	}
 	if (transfer->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
 		std::cout << "ISOCHRONOUS UART READ! " << std::endl;
@@ -624,6 +573,8 @@ void Usb::doAction() {
 	}
 
 	int status;
+//  libusb API recommends doing something like the following, however doAction is a threaded,
+//	effective infinite loop so it's not necessary.  Copied for convenience:
 //	int completed = 0;
 //	while (!completed) {
 //		status = libusb_handle_events_completed(NULL, &completed);
@@ -633,7 +584,7 @@ void Usb::doAction() {
 	if (status != LIBUSB_SUCCESS) {
 		std::cerr << "ERROR: libusb_handle_events() != LIBUSB_SUCCESS, exiting" << std::endl;
 		printError(status);
-		// Exit cleanly:
+		// Exit cleanly: TODO
 		//this->stopRecording();
 	}
 }
@@ -720,6 +671,7 @@ void Usb::printErrorTransfer(libusb_transfer_status status) {
  UART handling:
  */
 void Usb::requestUartData() {
+	//std::cout << "In requestUartData()" << std::endl;
 	int status;
 	switch (mode) {
 		case MODE_SYNCHRONOUS:
@@ -728,7 +680,7 @@ void Usb::requestUartData() {
 																  REQUEST_TYPE_IN,
 																  REQUEST_UART_READ,
 																  UART_DEVICE_GPS,
-																  0,
+																  0,	// no index needed for UART command
 																  bufferSynchronousUart,
 																  UART_BUFFER_READ_LENGTH,
 																  TIMEOUT);
@@ -742,8 +694,8 @@ void Usb::requestUartData() {
 											  REQUEST_TYPE_IN,
 											  REQUEST_UART_READ,
 											  UART_DEVICE_GPS,
-											  0,	// no index needed for UARt command
-											  NULL,	// will allocate/free buffer automatically
+											  0,	// no index needed for UART command
+											  NULL,	// will allocate/free buffer automagically
 											  UART_BUFFER_READ_LENGTH,
 											  TIMEOUT,
 											  &transferCallbackReadUart,
@@ -758,7 +710,7 @@ void Usb::requestUartData() {
 											 0x82,//ENDPOINT_UART_IN,
 											 NULL,
 											 UART_BUFFER_READ_LENGTH,
-											 0,
+											 0,	// no index needed for UART command
 											 &transferCallbackReadUart,
 											 (void*)this) != LIBUSB_SUCCESS)) {
 				std::cerr << "Error in Usb::requestUartData() isocControlTransfer()" << std::endl;
@@ -824,30 +776,9 @@ void Usb::uartWrite(const char* buffer, int length) {
 }
 
 void Usb::uartPurge() {
-//	unsigned char dummybuffer[10000];
-//	uartRead(dummybuffer);
+//	comma.ai code calls this "clearing the ring buffer."  It could do more than just clear this UART's ring buffer.
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
 }
-
-//int Usb::uartRead(unsigned char* buffer) {
-////	def serial_read(self, port_number):
-////	ret = []
-////	while 1:
-////		lret = bytes(self._handle.controlRead(Panda.REQUEST_IN, 0xe0, port_number, 0, 0x40))
-////		if len(lret) == 0:
-////			break
-////		ret.append(lret)
-////	return b''.join(ret)
-//	int runningLength = 0, lastReadlength = 0;
-//
-////	lock();	// thread safety
-//	while ((lastReadlength = libusb_control_transfer(handler, REQUEST_TYPE_IN, REQUEST_UART_READ, 1, 0, buffer+runningLength, 0x40, 0)) > 0) {
-//		runningLength += lastReadlength;
-//	}
-////	unlock();	// thread safety
-//
-//	return runningLength;
-//}
 
 
 void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index) {
@@ -857,7 +788,6 @@ void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t
 		printError(status);
 	}
 }
-
 
 void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
 	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
@@ -915,6 +845,7 @@ struct tm Usb::getRtc() {
 }
 
 void Usb::setSafetyMode(uint16_t mode) {
+	// comma.ai code has a discrepency in the two following calls:
 //	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 0);	// python Panda class has this
 }

@@ -26,69 +26,56 @@
 #include <iostream>
 #include <signal.h>
 #include <unistd.h>
-#include <iomanip>
-#include <fstream>
-#include <cmath>
-
-#include <string.h>
-#include <time.h>
-
 #include <getopt.h>
 
 #include "panda.h"
 
-//#include <time.h>
-
-
 static volatile bool keepRunning = true;
 void killPanda(int killSignal) {
-	std::cerr <<  "Caught SIGINT: Terminating..." << std::endl;
+	std::cerr << std::endl << "Caught SIGINT: Terminating..." << std::endl;
 	keepRunning = false;
 }
 
-// a simple concrete instance of a usb listener for debugging
+// A simple concrete instance of a CAN listener
 class SimpleCanObserver : public Panda::CanListener {
-public:
-
 private:
-	void newDataNotification( Panda::CanFrame* frame ) {
-		printf("Can Success! Received frame %d,%d,", frame->messageID, frame->bus);
-		for (int i = frame->dataLength-1; i >= 0; i--) {	// flipped direction
-			printf("%02x", frame->data[i]);
+	int notificationCount = 0;
+	void newDataNotification( Panda::CanFrame* canData ) {
+		notificationCount++;
+		if(notificationCount > 1000) {
+			std::cerr << "c";
+			notificationCount = 0;
 		}
-		printf(",%d\tBusTime: %d", frame->dataLength, frame->busTime);
-		std::cout << std::endl;
-
 	}
 };
 
+// A simple concrete instance of a GPS listener
 class SimpleGpsObserver : public Panda::GpsListener {
-
 private:
-	void newDataNotification( Panda::GpsData* gpsData) {
-		//std::cout << std::endl << "Gps Notification Success! ";
-
-		//		std::cout << std::endl << "\rGPS status:" << gpsData->info.status;
-		////		std::cout << " - GPS Time:" << ctime(&(gpsData->time.time));
-		////		std::cout << " - My  Time:" << ctime(&rawTime);
-		//		std::cout << " - GPS Time:" << gpsData->time.month << "/" << gpsData->time.day << "/" << gpsData->time.year << " " << gpsData->time.hour << ":" << gpsData->time.minute << ":" << gpsData->time.second << std::endl;
-		//		std::cout << " - Time:" << timeinfo->tm_mon+1 << "/" << timeinfo->tm_mday << "/" << timeinfo->tm_year+1900 << " " << timeinfo->tm_hour << ":" << timeinfo->tm_min << ":" << (double)tv.tv_sec + (double)tv.tv_usec/1000000.0 << std::endl;
-		//		std::cout << " - Long:" << gpsData->pose.longitude << "\tLat:" << gpsData->pose.latitude << std::endl;
-
+	int notificationCount = 0;
+	void newDataNotification( Panda::GpsData* gpsData ) {
+		notificationCount++;
+		if(notificationCount > 10) {
+			std::cerr << "g";
+			notificationCount = 0;
+		}
 	}
 };
+
 
 /*
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] [-u <usbmode>] [-g <gpsfile>]" << std::endl;
-	std::cout << "   -v            : Verbose mode" << std::endl;
-	std::cout << "   -u <usbmode>  : USB operating mode:" << std::endl;
-	std::cout << "                     a: Asynchronous" << std::endl;
-	std::cout << "                     s: Synchronous" << std::endl;
-	std::cout << "                     i: Isochronous" << std::endl;
-	std::cout << "   -g <gpsfile>  : Filename to output GPS NMEA strings" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] [-u usbmode] [-g gpsfile] [-c csvfile] [-r canfile]" << std::endl;
+	std::cout << "   -v          : Verbose mode" << std::endl;
+	std::cout << "   -u usbmode  : USB operating mode:" << std::endl;
+	std::cout << "                   a: Asynchronous" << std::endl;
+	std::cout << "                   s: Synchronous" << std::endl;
+	std::cout << "                   i: Isochronous (not supported)" << std::endl;
+	std::cout << "   -g gpsfile  : Filename to output GPS NMEA strings" << std::endl;
+	std::cout << "   -c csvfile  : Filename to output CSV format CAN data" << std::endl;
+	std::cout << "   -r canfile  : Filename to save raw messages from Panda CAN reads" << std::endl;
 }
 
 int verboseFlag = false;
@@ -111,10 +98,8 @@ int main(int argc, char **argv) {
 	const char* canCsvFilename = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	// loop over all of the options
-	while ((ch = getopt_long(argc, argv, "u:g:c:r: ", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:r:", long_options, NULL)) != -1)
 	{
-		// check to see if a single character or long option came through
 		switch (ch)
 		{
 			case 'u':
@@ -157,43 +142,19 @@ int main(int argc, char **argv) {
 		pandaHandler.getCan().saveToFile(canRawFilename);
 	}
 
+	// Let's roll
 	pandaHandler.initialize();
-
+	std::cout << std::endl << "Press ctrl-c to exit" << std::endl;
+	std::cout << " - Each \'c\' represents 1000 CAN notifications received." << std::endl;
+	std::cout << " - Each \'.\' represents 100 NMEA messages received." << std::endl;
+	std::cout << " - Each \'g\' represents 10 GPS notifications received." << std::endl;
+	int lastNmeaMessageCount = 0;
 	while (keepRunning == true) {
-////		std::cerr << "Total bytes Read: " << usb.getBytesReceived() << ", Total bytes Sent: " << usb.getBytesSent() << "\r";//std::endl;
-//
-//		if((lengthRead = usb.serialRead(inputdata)) > 0 ) {
-//			inputdata[lengthRead] = 0;	// just for printing to the terminal
-//			//std::cerr << "Read bytes:" << lengthRead << std::endl;
-//			//std::cerr << inputdata;// << "|||" << std::endl << std::endl;
-//			nmeaFile << inputdata;
-//			CNMEAParserData::ERROR_E nErr;
-//			if ((nErr = NMEAParser.ProcessNMEABuffer((char*)inputdata, lengthRead)) != CNMEAParserData::ERROR_OK) {
-//				printf("NMEA Parser ProcessNMEABuffer Failed and returned error: %d\n", nErr);
-//
-//				break;//return -1;
-//			}
-//			//			parser.readBuffer(inputdata, lengthRead);
-////			for (int i = 0; i < lengthRead; i++) {
-////				parser.readByte(inputdata[i]);
-////			}
-//		}
-//
-//		usleep(50000);
-
-//		Panda::CanFrame garbage;
-//		char testData[] = "\x7a\x1d\x10\xfe\xcc\x03\xe1\xde";
-//		garbage.messageID = 384;
-//		garbage.bus = 1;
-//		garbage.dataLength = 8;
-//		for (int i = 0; i < garbage.dataLength; i++) {
-//			garbage.data[i] = testData[i];
-//		}
-		//pandaHandler.getCan().sendMessage(garbage);
-		pandaHandler.getUsb().requestCanData();
-		usleep(500000);
-		
-		//std::cerr << "."; //heartbeat
+		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
+			std::cerr << ".";
+			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+		}
+		usleep(10000);
 	}
 	//pandaHandler.stop();
 	pandaHandler.stop();

@@ -478,6 +478,15 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 }
 
 void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
+	if (resetUniqueData) {
+		resetUniqueData = false;
+		canFrameStats.resetUniqueCount();
+	}
+
+	if (highlight >= 0) {
+		canFrameStats.highlightUniqueCount(highlight);
+		highlight = -1;
+	}
 
 	int menuX = 0;
 	int menuY = 0;
@@ -487,12 +496,10 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 
 	printCentered(menuY+10, menuX, menuWidth, "\'g\' to toggle GPS/CAN");
 
-	printCentered(menuY+3, menuX, menuWidth, "Sort by pressing key:");
-	printCentered(menuY+4, menuX, menuWidth, "  \'m\' : MessageID ");
-	printCentered(menuY+5, menuX, menuWidth, "  \'c\' : Count     ");
-	printCentered(menuY+6, menuX, menuWidth, "  \'r\' : Rate      ");
-	printCentered(menuY+7, menuX, menuWidth, "  \'m\' : UniqueData");
-	printCentered(menuY+8, menuX, menuWidth, "Or use arrow keys   ");
+	printCentered(menuY+4, menuX, menuWidth, "Sort by pressing key:");
+	printCentered(menuY+5, menuX, menuWidth, "\'m\',\'c\',\'r\',\'u\'");
+	printCentered(menuY+6, menuX, menuWidth, "Or use arrow keys    ");
+	printCentered(menuY+8, menuX, menuWidth, "'-' Resets unique data");
 
 
 
@@ -584,7 +591,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 	int row = titleRow+1;
 	if (reverseSortEnable) {
 		attron(A_STANDOUT);
-		mvaddch(titleRow, reverseColumn, ACS_DARROW);
+		mvaddch(titleRow, reverseColumn, ACS_UARROW);
 		attroff(A_STANDOUT);
 
 		std::vector<IdInfo*>::reverse_iterator it;
@@ -605,7 +612,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 		}
 	} else {
 		attron(A_STANDOUT);
-		mvaddch(titleRow, reverseColumn, ACS_UARROW);
+		mvaddch(titleRow, reverseColumn, ACS_DARROW);
 		attroff(A_STANDOUT);
 		std::vector<IdInfo*>::iterator it;
 		std::vector<IdInfo*>::iterator end;
@@ -614,12 +621,19 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 		for ( ; it != end; it++) {
 			//unsigned int messageId = it->;
 			IdInfo* idStats = *it;
+			if (idStats->highlight) {
+				attron(A_STANDOUT);
+			}
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+
+			if (idStats->highlight) {
+				attroff(A_STANDOUT);
+			}
 
 			row++;
 		}
@@ -692,6 +706,24 @@ char CursesHandler::getUserInput( )
 				reverseSortEnable = !reverseSortEnable;
 			}
 			canSortMode = SORT_UNIQUE_DATA_COUNT;
+			break;
+
+		case '-':
+		case '_':
+			resetUniqueData = true;
+			break;
+
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			highlight = result - '0';
 			break;
 
 		default:
