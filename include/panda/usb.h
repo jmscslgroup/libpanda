@@ -32,6 +32,10 @@
 
 #include "mogi/thread.h"
 
+#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 2
+#define BYTES_PER_CAN_PACKET (16)
+#define BYTES_PER_UART_TRANSFER (64)
+
 namespace Panda {
 	class Usb;
 
@@ -131,8 +135,8 @@ namespace Panda {
 		//struct libusb_transfer *outgoingTransfer;
 //		struct libusb_transfer *uartTransfer;
 
-		unsigned char bufferSynchronousCan[16*16];	// I think Rahul wanted this at 16, which seems a bit small...
-		unsigned char bufferSynchronousUart[64];
+		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
+		unsigned char bufferSynchronousUart[BYTES_PER_UART_TRANSFER];
 		unsigned int bufferLengthSynchronousUart;
 
 		//void asyncControlTransferUart();

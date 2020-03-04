@@ -54,6 +54,8 @@ target_link_libraries(strym    ${LIBUSB_1_LIBRARIES}
                                pandac )
 
 
+
+
 # Test executables:
 add_executable(listdevs      example/listdevs.c)
 add_executable(panda         example/pandaMain.cpp)
@@ -87,7 +89,9 @@ target_link_libraries(simplecan    ${LIBS}
 if(${CURSES_FOUND})
      add_executable(pandaCurses  example/pandaCurses.cpp
                                  example/cursesHandler.cpp
-                                 example/cursesHandler.h )
+                                 example/cursesHandler.h
+                                 example/canFrameStats.cpp
+                                 example/canFrameStats.h )
 
      target_link_libraries(pandaCurses  ${LIBS}
                                         pandac

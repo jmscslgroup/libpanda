@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	mUsb.addObserver(&mCan);
 
 	if (argc == 2) {
-		std::cout << "Setting modeo to MODE_SYNCHRONOUS" << std::endl;
+		std::cout << "Setting mode to MODE_SYNCHRONOUS" << std::endl;
 		mUsb.setOperatingMode(Panda::MODE_SYNCHRONOUS);
 	}
 

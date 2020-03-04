@@ -30,6 +30,7 @@
 #include <termios.h>
 
 #include "panda.h"
+#include "canFrameStats.h"
 
 class CursesHandler {
 private:
@@ -43,13 +44,33 @@ private:
 
 	void cleanupConsole();
 
+	typedef enum {
+		CAN,
+		GPS
+	} DisplayMode;
+
+	typedef enum _CanSortMode {
+		SORT_ID = 0,
+		SORT_ID_COUNT = 1,
+		SORT_ID_RATE = 2,
+		SORT_UNIQUE_DATA_COUNT = 3,
+		SORT_COUNT = 4
+	} CanSortMode;
+
+	DisplayMode displayMode;
+	CanSortMode canSortMode;
+	volatile bool reverseSortEnable;
+
 public:
 	// Singleton:
 	static CursesHandler* getInstance();
 
 	static void destroy();
 
-	void updateScreen( Panda::Handler& handler );
+	void updateScreen( Panda::Handler& handler, CanFrameStats& canFrameStats );
+
+	void drawGps( Panda::Handler& handler );
+	void drawCan( CanFrameStats& canFrameStats );
 
 	char getUserInput();
 

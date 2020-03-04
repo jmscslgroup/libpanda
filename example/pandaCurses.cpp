@@ -32,6 +32,7 @@
 
 #include <getopt.h>
 
+#include "canFrameStats.h"
 #include "cursesHandler.h"
 #include "panda.h"
 
@@ -62,7 +63,8 @@ private:
  */
 void printUsage(const char* binary) {
 	std::cout << "Usage: " << binary << " -[v] [-u <usbmode>] [-g <gpsfile>]" << std::endl;
-	std::cout << "   -v            : Verbose mode" << std::endl;
+	//std::cout << "   -v            : Verbose mode" << std::endl;
+	std::cout << "   -f            : Fake CAN data for debugging" << std::endl;
 	std::cout << "   -u <usbmode>  : USB operating mode:" << std::endl;
 	std::cout << "                     a: Asynchronous" << std::endl;
 	std::cout << "                     s: Synchronous" << std::endl;
@@ -72,9 +74,11 @@ void printUsage(const char* binary) {
 
 int verboseFlag = false;
 
+
 static struct option long_options[] =
 {
 	{"verbose", no_argument, &verboseFlag, 0},
+	{"fakedata", no_argument, NULL, 0},
 	{"usbmode", required_argument, NULL, 'u'},
 	{"gpsfile", required_argument, NULL, 'g'},
 	{NULL, 0, NULL, 0}
@@ -94,11 +98,12 @@ void killPanda(int killSignal) {
  */
 int main(int argc, char **argv) {
 	// Argument parsing
+	bool fakeData = false;
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
 	const char* gpsFilename = NULL;
 	int ch;
 	// loop over all of the options
-	while ((ch = getopt_long(argc, argv, "u:g:", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:f", long_options, NULL)) != -1)
 	{
 		// check to see if a single character or long option came through
 		switch (ch)
@@ -111,6 +116,9 @@ int main(int argc, char **argv) {
 				break;
 			case 'g':
 				gpsFilename = optarg;
+				break;
+			case 'f':
+				fakeData = true;
 				break;
 			default:
 				printUsage(argv[0]);
@@ -126,11 +134,15 @@ int main(int argc, char **argv) {
 	std::cout << "Starting " << argv[0] << std::endl;
 
 	SimpleEverythingObserver myObserver;
+	CanFrameStats mCanFrameStats;
+	mCanFrameStats.start();
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
 	pandaHandler.addCanObserver(myObserver);
 	pandaHandler.addGpsObserver(myObserver);
+
+	pandaHandler.addCanObserver(mCanFrameStats);
 
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	if (gpsFilename != NULL) {
@@ -139,18 +151,57 @@ int main(int argc, char **argv) {
 
 	pandaHandler.initialize();
 
-	
+	// faking can data for debugging, if enabled
+	Panda::CanFrame newFrame;
+	int i = 0, j = 0, k = 0, l = 0;
+	if (fakeData) {
+		newFrame.messageID = 384; // fake data stagnant
+		newFrame.data[0] = 1;
+		mCanFrameStats.newDataNotification(&newFrame);
+	}
+
 	// Main UI loop
 	CursesHandler* mCursesHandler = CursesHandler::getInstance();
 	mCursesHandler->setupTerminal();
-	mCursesHandler->updateScreen(pandaHandler); // Draw initial screen
+	mCursesHandler->updateScreen(pandaHandler,mCanFrameStats); // Draw initial screen
 	while (keepRunning == true) {
 		// Update whenever there is new data.
 		if (myObserver.checkNewData()) {
-			mCursesHandler->updateScreen(pandaHandler);
+			mCursesHandler->updateScreen(pandaHandler,mCanFrameStats);
 		}
 
-		usleep(1000000.0/30.0); // run at ~30Hz
+		if(fakeData) {
+		newFrame.messageID = 1100;		// fakes stats fast 10Hz
+		newFrame.data[0] = 1;
+		mCanFrameStats.newDataNotification(&newFrame);
+
+		if (k++ >= 2) {
+			newFrame.messageID = 1050;	// fake stats slow 5Hz
+			newFrame.data[0] = i++;
+			newFrame.dataLength = 8;
+			mCanFrameStats.newDataNotification(&newFrame);
+			//mCanFrameStats.newDataNotification(&newFrame);
+			k = 1;
+		}
+
+		if (j++ >= 4) {
+			newFrame.messageID = 1025;	// fake stats slow 2.5Hz
+			newFrame.data[0] = i++*16;
+			mCanFrameStats.newDataNotification(&newFrame);
+			//mCanFrameStats.newDataNotification(&newFrame);
+			j = 1;
+		}
+
+		if (l++ >= 10) {
+			newFrame.messageID = 1010;	// fake stats slow 1Hz
+			newFrame.data[0] = i++;
+			mCanFrameStats.newDataNotification(&newFrame);
+			//mCanFrameStats.newDataNotification(&newFrame);
+			l = 1;
+		}
+		}
+
+		usleep(1000000.0/10.0); // run at max ~10Hz
 
 		if(mCursesHandler->getUserInput() == 0x1B) {	// Look for ESC button
 			keepRunning = false;

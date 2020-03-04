@@ -68,6 +68,11 @@ int main(int argc, char **argv) {
 
 	mGps.addObserver(&mSimpleGpsObserver);
 
+	if (argc == 2) {
+		std::cout << "Setting mode to MODE_SYNCHRONOUS" << std::endl;
+		mUsb.setOperatingMode(Panda::MODE_SYNCHRONOUS);
+	}
+
 	std::cout << "Saving NMEA to nmea.txt" << std::endl;
 	mGps.saveToFile("nmea.txt");
 

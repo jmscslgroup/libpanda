@@ -38,16 +38,16 @@ namespace Panda {
 	typedef struct _CanFrame {
 		/*! \brief CAN message ID
 		 */
-		unsigned int messageID;
+		unsigned int messageID = 0;
 		/*! \brief Length of the data, should not exceed CAN_MAX_LENGTH (8)
 		 */
-		unsigned char dataLength;
+		unsigned char dataLength = 0;
 		/*! \brief CAN message bus time
 		 */
-		unsigned int busTime;
+		unsigned int busTime = 0;
 		/*! \brief CAN message bus ID
 		 */
-		unsigned char bus;
+		unsigned char bus = 0;
 		/*! \brief The data for the CAN message
 		 */
 		unsigned char data[CAN_MAX_LENGTH];

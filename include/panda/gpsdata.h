@@ -38,16 +38,16 @@ namespace Panda {
 	typedef struct _GpsPosition {
 		/*! \brief Latitude from GGA or RMC NMEA strings.
 		 */
-		double latitude;
+		double latitude = 0;
 		/*! \brief Longitude from GGA or RMC NMEA strings.
 		 */
-		double longitude;
+		double longitude = 0;
 		/*! \brief Altitude from GGA NMEA strings.
 		 */
-		double altitude;
+		double altitude = 0;
 		/*! \brief Geoidal Seperation from GGA or RMC NMEA strings.
 		 */
-		double geoidalSeparation;
+		double geoidalSeparation = 0;
 	} GpsPosition;
 
 	/*!
@@ -59,13 +59,13 @@ namespace Panda {
 	typedef struct _GpsMotion {
 		/*! \brief Speed in Knots.
 		 */
-		double speed;
+		double speed = 0;
 		/*! \brief Vertical speed calculated from NMEAParser, not from an NMEA string.
 		 */
-		double verticalSpeed;
+		double verticalSpeed = 0;
 		/*! \brief Direction of travel.
 		 */
-		double course;
+		double course = 0;
 	} GpsMotion;
 
 	/*!
@@ -75,16 +75,16 @@ namespace Panda {
 	typedef struct _GpsQuality {
 		/*! \brief Quality indicator from GGA string
 		 */
-		int indicator;
+		int indicator = 0;
 		/*! \brief Position Dilution of Precision (3D)
 		 */
-		double PDOP;
+		double PDOP = 0;
 		/*! \brief Horizontal Dilution of Precision
 		 */
-		double HDOP;
+		double HDOP = 0;
 		/*! \brief Vertical Dilution of Precision
 		 */
-		double VDOP;
+		double VDOP = 0;
 	} GpsQuality;
 
 	/*!
@@ -94,19 +94,19 @@ namespace Panda {
 	typedef struct _GpsSatellite {
 		/*! \brief Satellits are not always visible
 		 */
-		bool visible;
+		bool visible = 0;
 		/*! \brief Azimuth of the satellite relative to current position
 		 */
-		double azimuth;
+		double azimuth = 0;
 		/*! \brief Elevation of the satellite relative to current position
 		 */
-		double elevation;
+		double elevation = 0;
 		/*! \brief Signal-to-noise ratio in C/NO of the satellite
 		 */
-		int SNR;
+		int SNR = 0;
 		/*! \brief Satellite identifier, or PRN
 		 */
-		int ID;
+		int ID = 0;
 	} GpsSatellite;
 
 	/*!
@@ -120,19 +120,19 @@ namespace Panda {
 		//bool datavalid;
 		/*! \brief Differential ID from GGA strings
 		 */
-		int diffId;	// Not in NMEA?
+		int diffId = 0;
 		/*! \brief Differential Age from GGA strings
 		 */
-		double diffAge;	// Not in NMEA?
+		double diffAge = 0;
 		/*! \brief Fix type mode, either 'M' for Manual or 'A'(?) for Auto from GSA string
 		 */
-		char automode;
+		char automode = 0;
 		/*! \brief Fix type from GSA string: 1 for no fix, 2 for 2D fix, 3 for 3D fix
 		 */
-		int fixType;
+		int fixType = 0;
 		/*! \brief Not a part NMEA strings, from NMEAParser.
 		 */
-		int GGAcount;	// Not in NMEA
+		int GGAcount = 0;	// Not in NMEA
 	} GpsInfo;
 
 
@@ -147,7 +147,7 @@ namespace Panda {
 		struct tm time;
 		/*! \brief GPSData.time cannot account for sub-second precision, this stores the milliseconds from an RMC string
 		 */
-		int timeMilliseconds;
+		int timeMilliseconds = 0;
 		/*! \brief The current position information of the GPS fix
 		 */
 		GpsPosition pose;
@@ -159,13 +159,13 @@ namespace Panda {
 		GpsQuality quality;
 		/*! \brief The magnetic variation, if supported.  Unsure if this is porivded by the Ublox M8
 		 */
-		double magneticVariation;
+		double magneticVariation = 0;
 		/*! \brief Total satellites in use
 		 */
-		int satelitesInUse;
+		int satelitesInUse = 0;
 		/*! \brief Total satellites in view
 		 */
-		int satelitesInView;
+		int satelitesInView = 0;
 		/*! \brief A mapping of satellite PRN(int) to satellite information(GpsSatellite)
 		 */
 		std::map<int,GpsSatellite> satellites;
@@ -175,6 +175,15 @@ namespace Panda {
 		/*! \brief Total number of parsed NMEA strings
 		 */
 		int successfulParseCount = 0;
+
+		_GpsData() {
+			time.tm_min = 0;
+			time.tm_sec = 0;
+			time.tm_mon = 0;
+			time.tm_year = 0;
+			time.tm_hour = 0;
+			time.tm_mday = 0;
+		}
 	} GpsData;
 
 }
