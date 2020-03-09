@@ -31,6 +31,7 @@
 
 #include "panda.h"
 #include "canFrameStats.h"
+#include "usbStats.h"
 
 class CursesHandler {
 private:
@@ -63,7 +64,11 @@ private:
 
 	bool resetUniqueData;
 
-	int highlight = -1;
+	char highlightField[10];
+	int highlightCurrentIndex = 0;
+	bool highlightEnter = false;
+	bool highlightCurrent = false;
+	//int highlight = -1;
 
 public:
 	// Singleton:
@@ -71,10 +76,10 @@ public:
 
 	static void destroy();
 
-	void updateScreen( Panda::Handler& handler, CanFrameStats& canFrameStats );
+	void updateScreen( Panda::Handler& handler, CanFrameStats& canFrameStats, UsbStats& usbStats );
 
 	void drawGps( Panda::Handler& handler );
-	void drawCan( CanFrameStats& canFrameStats );
+	void drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats );
 
 	char getUserInput();
 

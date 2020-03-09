@@ -53,11 +53,11 @@ void Gps::setUsb( Panda::Usb* usbHandler ) {
 }
 
 void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
+	currentlyReceiving = bufferLength > 0;
+
 	resume();	// will request more data
 
-//	if (bufferLength == 0) {
-//		return;
-//	}
+
 
 	CNMEAParserData::ERROR_E nErr;
 	if ((nErr = this->ProcessNMEABuffer((char*)buffer, bufferLength)) != CNMEAParserData::ERROR_OK) {
@@ -80,12 +80,14 @@ void Gps::doAction() {
 		return;
 	}
 
+	if (!currentlyReceiving) {
+		usleep(10000);	// thread does not need to be particularly fast
+	}
+
 	// Tell this thread to pause, wait for request to complete
 	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
 
 	usbHandler->requestUartData();
-
-	usleep(1000);	// thread does not need to be particularly fast
 }
 
 bool Gps::isReady() {

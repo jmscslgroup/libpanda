@@ -1,0 +1,12 @@
+[Unit]
+Description=Handles raspberry pi wlan0 and eth0 in a crazy way
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/crazywifi
+
+
+[Install]
+WantedBy=multi-user.target
+Alias=crazywifi.service

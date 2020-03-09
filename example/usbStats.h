@@ -23,39 +23,34 @@
 
  */
 
-#ifndef PANDA_CAN_DATA_H
-#define PANDA_CAN_DATA_H
+#ifndef __PANDA_USBSTATS_H
+#define __PANDA_USBSTATS_H
 
-#define CAN_DATA_MAX_LENGTH (8)
+#include "panda.h"
+#include "mogi/thread.h"
 
-namespace Panda {
 
-	/*!
-	 \struct CanFrame
-	 \brief A CAN bus packet data.
-	 */
-	
-	typedef struct _CanFrame {
-		/*! \brief CAN message ID
-		 */
-		unsigned int messageID = 0;
-		/*! \brief Length of the data, should not exceed CAN_MAX_LENGTH (8)
-		 */
-		unsigned char dataLength = 0;
-		/*! \brief CAN message bus time
-		 */
-		unsigned int busTime = 0;
-		/*! \brief CAN message bus ID
-		 */
-		unsigned char bus = 0;
-		/*! \brief The data for the CAN message
-		 */
-		unsigned char data[CAN_DATA_MAX_LENGTH];
-		/*! \brief The system time upon rec
-		 */
-		struct timeval sysTime;
-	} CanFrame;
+class UsbStats : public Panda::UsbListener, public Mogi::Thread {
+public:
+	UsbStats();
+	~UsbStats();
 
-}
+	float getUartSuccess();
+	float getCanSuccess();
 
+private:
+
+	bool successulReceivesUart[1000];
+	bool successulReceivesCan[1000];
+	int runningIndexUart = 0;
+	int runningIndexCan = 0;
+
+	// overloads from Panda::UsbListener
+	void notificationUartRead(char* buffer, size_t bufferLength);
+	void notificationCanRead(char* buffer, size_t bufferLength);
+
+	// overload from Mogi::Thread
+	void doAction();
+
+};
 #endif

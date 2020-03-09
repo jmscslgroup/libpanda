@@ -28,7 +28,6 @@
 
 #include <map>
 #include <vector>
-#include <pthread.h>
 #include <list>
 
 #include "panda.h"
@@ -70,6 +69,9 @@ public:
 
 	void resetUniqueCount();
 	void highlightUniqueCount(int countToHighlight);
+	void highlightMessageId(int idToHighlight);
+	void highlightCount(int countToHighlight);
+	void highlightRate(int rateToHighlight);
 
 	void newDataNotification(Panda::CanFrame* canFrame);
 

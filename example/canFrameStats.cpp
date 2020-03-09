@@ -84,6 +84,35 @@ void CanFrameStats::resetUniqueCount() {
 		it->second.data.clear();
 	}
 }
+
+void CanFrameStats::highlightMessageId(int idToHighlight) {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		if (it->second.ID == idToHighlight) {
+			it->second.highlight = true;
+		} else {
+			it->second.highlight = false;
+		}
+	}
+}
+void CanFrameStats::highlightCount(int countToHighlight) {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		if (it->second.count == countToHighlight) {
+			it->second.highlight = true;
+		} else {
+			it->second.highlight = false;
+		}
+	}
+}
+void CanFrameStats::highlightRate(int rateToHighlight) {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		if ((it->second.currentRate >= rateToHighlight-1) &&
+			(it->second.currentRate <= rateToHighlight+1) ) {
+			it->second.highlight = true;
+		} else {
+			it->second.highlight = false;
+		}
+	}
+}
 void CanFrameStats::highlightUniqueCount(int countToHighlight) {
 	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
 		if (it->second.data.size() == countToHighlight) {
@@ -128,14 +157,14 @@ void CanFrameStats::doAction() {
 				IdInfo* idInfo = &it->second;
 				if (idInfo->priorTime != 0) {
 					// simple alpha-LPF-filtered rate, using harmonic mean method
-					idInfo->currentRate = 1.0/(( 1.0/idInfo->currentRate ) * 0.90 + 0.10 * (currentTime - idInfo->priorTime) );
+					idInfo->currentRate = 1.0/(( 1.0/idInfo->currentRate ) * 0.95 + 0.05 * (currentTime - idInfo->priorTime) );
 				}
 			}
 			rateRefreshSecondTracker = sysTime.tv_sec;
 		} else {
 			if (messageStats->priorTime != 0) {
 				// simple alpha-LPF-filtered rate, using harmonic mean method
-				messageStats->currentRate = 1.0/(( 1.0/messageStats->currentRate ) * 0.90 + 0.10 * (currentTime - messageStats->priorTime) );
+				messageStats->currentRate = 1.0/(( 1.0/messageStats->currentRate ) * 0.95 + 0.05 * (currentTime - messageStats->priorTime) );
 			}
 		}
 		messageStats->priorTime = currentTime;

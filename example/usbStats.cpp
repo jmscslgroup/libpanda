@@ -23,39 +23,42 @@
 
  */
 
-#ifndef PANDA_CAN_DATA_H
-#define PANDA_CAN_DATA_H
+#include "usbStats.h"
 
-#define CAN_DATA_MAX_LENGTH (8)
+#include <unistd.h>
 
-namespace Panda {
-
-	/*!
-	 \struct CanFrame
-	 \brief A CAN bus packet data.
-	 */
-	
-	typedef struct _CanFrame {
-		/*! \brief CAN message ID
-		 */
-		unsigned int messageID = 0;
-		/*! \brief Length of the data, should not exceed CAN_MAX_LENGTH (8)
-		 */
-		unsigned char dataLength = 0;
-		/*! \brief CAN message bus time
-		 */
-		unsigned int busTime = 0;
-		/*! \brief CAN message bus ID
-		 */
-		unsigned char bus = 0;
-		/*! \brief The data for the CAN message
-		 */
-		unsigned char data[CAN_DATA_MAX_LENGTH];
-		/*! \brief The system time upon rec
-		 */
-		struct timeval sysTime;
-	} CanFrame;
-
+UsbStats::UsbStats() {
+}
+UsbStats::~UsbStats() {
 }
 
-#endif
+float UsbStats::getUartSuccess() {
+	int total = (runningIndexUart < 1000 ? runningIndexUart : 1000);
+	int numberOfSuccess = 0;
+	for (int i = 0; i < total; i++) {
+		numberOfSuccess += (int)successulReceivesUart[i];
+	}
+	return 100.0*(float)numberOfSuccess/(float)total;
+}
+float UsbStats::getCanSuccess() {
+	int total = (runningIndexCan < 1000 ? runningIndexCan : 1000);
+	int numberOfSuccess = 0;
+	for (int i = 0; i < total; i++) {
+		numberOfSuccess += (int)successulReceivesCan[i];
+	}
+	return 100.0*(float)numberOfSuccess/(float)total;
+}
+
+void UsbStats::notificationUartRead(char* buffer, size_t bufferLength) {
+	successulReceivesUart[runningIndexUart++ % 1000] = bufferLength > 0;
+}
+
+void UsbStats::notificationCanRead(char* buffer, size_t bufferLength) {
+	successulReceivesCan[runningIndexCan++ % 1000] = bufferLength > 0;
+}
+
+void UsbStats::doAction() {
+	pause();
+	usleep(1000);
+}
+

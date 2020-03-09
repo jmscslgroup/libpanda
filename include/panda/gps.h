@@ -118,6 +118,8 @@ namespace Panda {
 	private:
 		GpsData state;
 
+		bool currentlyReceiving = false;
+
 		std::ofstream nmeaDump;
 
 		std::vector<GpsListener*> listeners;

@@ -32,6 +32,7 @@
 
 #include <getopt.h>
 
+#include "usbStats.h"
 #include "canFrameStats.h"
 #include "cursesHandler.h"
 #include "panda.h"
@@ -141,6 +142,7 @@ int main(int argc, char **argv) {
 
 	SimpleEverythingObserver myObserver;
 	CanFrameStats mCanFrameStats;
+	UsbStats mUsbStats;
 	mCanFrameStats.start();
 
 	// Initialize Usb, this requires a conencted Panda
@@ -149,6 +151,7 @@ int main(int argc, char **argv) {
 	pandaHandler.addGpsObserver(myObserver);
 
 	pandaHandler.addCanObserver(mCanFrameStats);
+	pandaHandler.getUsb().addObserver(&mUsbStats);
 
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	if (gpsFilename != NULL) {
@@ -172,11 +175,11 @@ int main(int argc, char **argv) {
 	// Main UI loop
 	CursesHandler* mCursesHandler = CursesHandler::getInstance();
 	mCursesHandler->setupTerminal();
-	mCursesHandler->updateScreen(pandaHandler,mCanFrameStats); // Draw initial screen
+	mCursesHandler->updateScreen(pandaHandler,mCanFrameStats, mUsbStats); // Draw initial screen
 	while (keepRunning == true) {
 		// Update whenever there is new data.
 		if (myObserver.checkNewData()) {
-			mCursesHandler->updateScreen(pandaHandler,mCanFrameStats);
+			mCursesHandler->updateScreen(pandaHandler, mCanFrameStats, mUsbStats);
 		}
 
 		if(fakeData) {

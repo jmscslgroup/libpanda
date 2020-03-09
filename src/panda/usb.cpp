@@ -28,8 +28,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#define TIMEOUT (0)
-
 using namespace Panda;
 
 Usb::Usb(UsbMode mode)
@@ -494,8 +492,6 @@ void Usb::transferCallbackReadUart(struct libusb_transfer *transfer) {
  Observer Notifications
  */
 void Usb::processNewCanRead(char* buffer, size_t length) {
-	bytesReceivedCan += length;
-	//std::cout << "Read CAN data! Bytes:" << length << std::endl;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationCanRead(buffer, length);
@@ -503,8 +499,6 @@ void Usb::processNewCanRead(char* buffer, size_t length) {
 }
 
 void Usb::processNewCanSend(size_t length) {
-	bytesSentCan += length;
-	//std::cout << "Sent CAN Data! Bytes:" << length << std::endl;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationCanWrite();
@@ -512,7 +506,6 @@ void Usb::processNewCanSend(size_t length) {
 }
 
 void Usb::processNewUartRead(char* buffer, size_t length) {
-	bytesReceivedUart += length;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationUartRead(buffer, length);
@@ -520,7 +513,6 @@ void Usb::processNewUartRead(char* buffer, size_t length) {
 }
 
 void Usb::processNewUartSend(size_t length) {
-	bytesSentUart += length;
 	for (std::vector<UsbListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 		UsbListener* listener = *it;
 		listener->notificationUartWrite();
@@ -579,7 +571,11 @@ void Usb::doAction() {
 //	while (!completed) {
 //		status = libusb_handle_events_completed(NULL, &completed);
 //	}
-	status = libusb_handle_events(NULL);
+//	status = libusb_handle_events(NULL);
+	struct timeval timeout;
+	timeout.tv_usec = 1000;
+	timeout.tv_sec = 0;
+	status = libusb_handle_events_timeout(NULL, &timeout);	// A timeout of 0 noticeably drives up CPU usage (from 90%->130%)
 
 	if (status != LIBUSB_SUCCESS) {
 		std::cerr << "ERROR: libusb_handle_events() != LIBUSB_SUCCESS, exiting" << std::endl;
@@ -775,11 +771,6 @@ void Usb::uartWrite(const char* buffer, int length) {
 	}
 }
 
-void Usb::uartPurge() {
-//	comma.ai code calls this "clearing the ring buffer."  It could do more than just clear this UART's ring buffer.
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
-}
-
 
 void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index) {
 	int status = libusb_control_transfer(handler, requestType, request, value, index, NULL, 0, TIMEOUT);
@@ -795,6 +786,19 @@ void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned
 		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_tranfer error" << std::endl;
 		printError(status);
 	}
+}
+
+void Usb::uartPurge() {
+	//	comma.ai code calls this "clearing the ring buffer."  It could do more than just clear this UART's ring buffer.
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
+}
+
+void Usb::canPurge() {
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_RX, 0);
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_1, 0);
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_2, 0);
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_3, 0);
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TXGMLAN, 0);
 }
 
 void Usb::setUartBaud(int uart, int baud) {

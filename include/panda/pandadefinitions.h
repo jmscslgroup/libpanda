@@ -26,12 +26,18 @@
 #ifndef PANDA_DEFINITIONS_H
 #define PANDA_DEFINITIONS_H
 
-#define UART_DEVICE_GPS (1)
+#define CAN_DEVICE_RX (0xFFFF)	// for clearing CAN ring buffer
+#define CAN_DEVICE_TX_1 (0x0000)	// for clearing CAN ring buffer
+#define CAN_DEVICE_TX_2 (0x0001)	// for clearing CAN ring buffer
+#define CAN_DEVICE_TX_3 (0x0002)	// for clearing CAN ring buffer
+#define CAN_DEVICE_TXGMLAN (0x0003)	// for clearing CAN ring buffer
+#define UART_DEVICE_GPS (1)	// there are other UARTS, unsure if used
+
 #define UART_BUFFER_READ_LENGTH (64)
 #define UART_BUFFER_WRITE_LENGTH (0x20)
+
 #define INIT_GPS_BAUD  9600
 #define	GPS_BAUD  460800
-
 
 // These are from the Panda python init:
 // Request Types:
@@ -52,10 +58,10 @@
 // Endpoints:
 // The difference between out and in is determined by LIBUSB_ENDPOINT_DIR_MASK (0x80)
 // The address is determined by LIBUSB_ENDPOINT_ADDRESS_MASK (0x0F)
-#define ENDPOINT_CAN_OUT  0x03	// = LIBUSB_ENDPOINT_OUT | 0x03
-#define ENDPOINT_CAN_IN   0x81	// = LIBUSB_ENDPOINT_IN | 0x01
-#define ENDPOINT_UART_OUT 0x02	// = LIBUSB_ENDPOINT_OUT | 0x02
-#define ENDPOINT_UART_IN  0x86	// NOT DONE IN PANDA: uhhh maybe this value? only for isoc. no luck yet
+#define ENDPOINT_CAN_OUT  0x03	// = LIBUSB_ENDPOINT_OUT | 0x03 - Panda firmware: USBx_OUTEP(3)
+#define ENDPOINT_CAN_IN   0x81	// = LIBUSB_ENDPOINT_IN | 0x01 - Panda firmware: USBx_INEP(1)
+#define ENDPOINT_UART_OUT 0x02	// = LIBUSB_ENDPOINT_OUT | 0x02 - Panda firmware: USBx_OUTEP(2)
+#define ENDPOINT_UART_IN  // doesn't exist in Panda firmware as far as I can tell
 
 
 #define REQUEST_RTC              0xa0 // Reading panda's built-in RTC

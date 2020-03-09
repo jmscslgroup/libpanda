@@ -1,0 +1,12 @@
+[Unit]
+Description=Handles recording of CAN/GPS data form Panda
+After=pandasettime.service
+Wants=pandasettime.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/sbin/pandarecord
+
+
+[Install]
+WantedBy=multi-user.target

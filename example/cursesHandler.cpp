@@ -71,6 +71,9 @@ CursesHandler::CursesHandler()
 	displayMode = GPS;
 	canSortMode = SORT_ID;
 	reverseSortEnable = false;
+	for (int i = 0; i < sizeof(highlightField); i++) {
+		highlightField[i] = 0;
+	}
 }
 
 CursesHandler* CursesHandler::getInstance() {
@@ -204,7 +207,7 @@ void printCentered(int y, int x, int width, const char* str) {
 	mvprintw(y, x + (float)width/2.0 - (float)strlen(str)/2.0 + 1.0, str);
 }
 
-void CursesHandler::updateScreen( Panda::Handler& handler, CanFrameStats& canFrameStats )
+void CursesHandler::updateScreen( Panda::Handler& handler, CanFrameStats& canFrameStats, UsbStats& usbStats )
 {
 
 
@@ -232,7 +235,7 @@ void CursesHandler::updateScreen( Panda::Handler& handler, CanFrameStats& canFra
 
 
 		case CAN:
-			drawCan(canFrameStats);
+			drawCan(canFrameStats, usbStats);
 			break;
 	}
 
@@ -477,21 +480,47 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	}
 }
 
-void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
+void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) {
 	if (resetUniqueData) {
 		resetUniqueData = false;
 		canFrameStats.resetUniqueCount();
 	}
 
-	if (highlight >= 0) {
-		canFrameStats.highlightUniqueCount(highlight);
-		highlight = -1;
+//	if (highlight >= 0) {
+//		canFrameStats.highlightUniqueCount(highlight);
+//		highlight = -1;
+//	}
+	if (highlightEnter == true) {
+		highlightEnter = false;
+		int valueToHighlight = 0;
+		int powOf10 = 1;
+		for (int i = highlightCurrentIndex-1; i >= 0; i--) {
+			valueToHighlight += powOf10 * (int)(highlightField[i] - '0');
+			powOf10 *= 10;
+		}
+		switch (canSortMode) {
+			case SORT_ID:
+				canFrameStats.highlightMessageId(valueToHighlight);
+				break;
+			case SORT_ID_COUNT:
+				canFrameStats.highlightCount(valueToHighlight);
+				break;
+			case SORT_ID_RATE:
+				canFrameStats.highlightRate(valueToHighlight);
+				break;
+			case SORT_UNIQUE_DATA_COUNT:
+				canFrameStats.highlightUniqueCount(valueToHighlight);
+				break;
+			default:
+				break;
+		}
+		highlightCurrent = true;
 	}
 
 	int menuX = 0;
 	int menuY = 0;
 	int menuWidth = 23;
-	//int menuHeight = 12;
+	int menuHeight = 12;
 	//miniWindow(menuY, menuY+menuHeight, menuX, menuX+menuWidth);	// Panda menu
 
 	printCentered(menuY+10, menuX, menuWidth, "\'g\' to toggle GPS/CAN");
@@ -508,12 +537,36 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 	int canWidth = 41;
 	int canHeight = 40;
 
+	int uiX = menuX;
+	int uiY = menuY + menuHeight;
+	int uiWidth = menuWidth;
+	int uiHeight = 10;
+
+	int fieldY = uiY+3;
+	int fieldX = uiX+6;
+	miniWindow(uiY, uiY+uiHeight, uiX, uiX+uiWidth);
+	printCentered(uiY+2, uiX, uiWidth, "Highlight Value:");
+	if (highlightCurrent) {
+		attron(A_STANDOUT);
+	}
+	mvaddch(fieldY, fieldX-1, '|');
+	mvaddch(fieldY, fieldX+sizeof(highlightField), '|');
+	mvprintw(fieldY, fieldX, highlightField);
+	if (highlightCurrent) {
+		attroff(A_STANDOUT);
+	}
+
+//	printCentered(uiY+2, uiX, uiWidth, "Highlight Field:");
 
 
 	attron(A_BOLD);
 	//	printCentered(menuY+1, menuX, menuWidth, "Panda Menu");
 	printCentered(canY+1,canX, canWidth, "CAN top");
 	attroff(A_BOLD);
+
+	mvprintw(canY+2,canX+2, "Empty Uart recvs:%0.1f  Empty Can recvs:%0.1f", 100.0-usbStats.getUartSuccess(), 100.0-usbStats.getCanSuccess());
+
+
 
 	const char msgId[] = "MessageID:";
 	int msgIdCol = canX + 2;
@@ -601,12 +654,19 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 		for ( ; it != end; it++) {
 			//unsigned int messageId = it->;
 			IdInfo* idStats = *it;
+			if (idStats->highlight) {
+				attron(A_STANDOUT);
+			}
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+
+			if (idStats->highlight) {
+				attroff(A_STANDOUT);
+			}
 
 			row++;
 		}
@@ -643,6 +703,8 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats ) {
 	miniWindow(canY, canY+canHeight, canX, uniCntCol + uniCntLength + 2);
 
 
+	move(fieldY, fieldX+highlightCurrentIndex);
+
 }
 
 char CursesHandler::getUserInput( )
@@ -653,8 +715,10 @@ char CursesHandler::getUserInput( )
 		case 'G':
 			if (displayMode == CAN) {
 				displayMode = GPS;
+				curs_set(0);	// no cursor
 			} else {
 				displayMode = CAN;
+				curs_set(1);	// yes cursor
 			}
 			break;
 
@@ -663,11 +727,13 @@ char CursesHandler::getUserInput( )
 			if (canSortMode != SORT_ID) {
 				canSortMode = (CanSortMode) (canSortMode-1);
 			}
+			highlightCurrent = false;
 			break;
 		case KEY_RIGHT:
 			if (canSortMode != SORT_COUNT-1) {
 				canSortMode = (CanSortMode) (canSortMode+1);
 			}
+			highlightCurrent = false;
 			break;
 
 		case KEY_UP:
@@ -723,7 +789,27 @@ char CursesHandler::getUserInput( )
 		case '7':
 		case '8':
 		case '9':
-			highlight = result - '0';
+//			highlight = result - '0';
+				if (highlightCurrentIndex < sizeof(highlightField)-1) {
+					highlightField[highlightCurrentIndex++] = result;
+				}
+				highlightCurrent = false;
+			break;
+
+		case KEY_BACKSPACE:
+			highlightCurrentIndex--;
+			if (highlightCurrentIndex <= 0) {
+				highlightCurrentIndex = 0;
+			}
+			highlightField[highlightCurrentIndex] = '\0';
+			highlightCurrent = false;
+			break;
+
+		case KEY_ENTER:
+		case '\r':
+		case '\n':
+			highlightEnter = true;
+			highlightCurrent = true;
 			break;
 
 		default:

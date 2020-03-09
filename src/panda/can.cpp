@@ -49,7 +49,10 @@ Can::~Can() {
 
 void Can::initialize() {
 	std::cout << "Initializing CAN" <<std::endl;
-	// false promises
+
+	std::cout << " - Purging ring buffers" << std::endl;
+	usbHandler->canPurge();
+	
 	std::cout << " - CAN Done." << std::endl;
 }
 
@@ -127,6 +130,11 @@ void Can::doAction() {
 		return;
 	}
 
+	if (!currentlyReceiving) {
+		usleep(500);
+	}
+
+
 	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
 
 	//if (!currentlyRequesting) {
@@ -134,10 +142,10 @@ void Can::doAction() {
 	usbHandler->requestCanData(); // only request data when we have nothing to process
 	//}
 	
-	if (canFrames.size() == 0) {
-		usleep(100);	// some breathing room maybe?
-		return;
-	}
+//	if (canFrames.size() == 0) {
+//		usleep(1000);	// some breathing room maybe?
+//		return;
+//	}
 
 	while (canFrames.size() > 0) {
 
@@ -218,8 +226,9 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 }
 
 void Can::notificationCanRead(char* buffer, size_t bufferLength) {
-//	currentlyRequesting = false;
+	currentlyReceiving = bufferLength > 0;
 	resume();	// Invoke another CAN request
+	
 	struct timeval sysTime;
 	gettimeofday(&sysTime, NULL);
 

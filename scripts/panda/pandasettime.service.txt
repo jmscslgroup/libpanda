@@ -1,0 +1,12 @@
+[Unit]
+Description=Sets the system the based on GPS
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pandaSetSystemTime
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=multi-user.target

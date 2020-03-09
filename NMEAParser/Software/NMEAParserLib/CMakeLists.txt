@@ -27,7 +27,7 @@ execute_process(COMMAND git describe --abbrev=4 HEAD
 #
 # Add executable name and project files
 #
-add_library(NMEAParserLib
+add_library(NMEAParserLib SHARED
 	DoxygenMainPage.md
     NMEAParserPacket.cpp
     NMEAParserPacket.h
@@ -47,6 +47,28 @@ add_library(NMEAParserLib
 	NMEASentenceZDA.cpp	# added by Bunting
 	NMEASentenceZDA.h	# added by Bunting
 )
+
+add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for install
+	DoxygenMainPage.md
+    NMEAParserPacket.cpp
+    NMEAParserPacket.h
+    NMEAParser.cpp
+    NMEAParser.h
+    NMEAParserData.h
+	NMEASentenceBase.cpp
+	NMEASentenceBase.h
+	NMEASentenceGGA.cpp
+	NMEASentenceGGA.h
+	NMEASentenceGSV.cpp
+	NMEASentenceGSV.h
+	NMEASentenceGSA.cpp
+	NMEASentenceGSA.h
+	NMEASentenceRMC.cpp
+	NMEASentenceRMC.h
+	NMEASentenceZDA.cpp	# added by Bunting
+	NMEASentenceZDA.h	# added by Bunting
+)
+new_install( NMEAParserLib ) # the as weell by bunting
 
 #
 # Add additional libraries

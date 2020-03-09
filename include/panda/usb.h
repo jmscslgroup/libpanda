@@ -32,7 +32,8 @@
 
 #include "mogi/thread.h"
 
-#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 2
+#define TIMEOUT (0)	// For libusb, in ms
+#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
 #define BYTES_PER_CAN_PACKET (16)
 #define BYTES_PER_UART_TRANSFER (64)
 
@@ -91,6 +92,7 @@ namespace Panda {
 		void uartWrite(const char* buffer, int length);
 //		int uartRead(unsigned char* buffer);
 		void uartPurge();
+		void canPurge();
 		void setUartBaud(int uart, int baud);
 		void setUartParity(int uart, int parity);
 
@@ -108,10 +110,6 @@ namespace Panda {
 		void setOperatingMode(UsbMode mode);
 		const char* getModeAsString() const;
 		std::string getUsbSerialNumber() { return serialNumber; };
-		int getBytesReceivedCan() { return bytesReceivedCan; };
-		int getBytesSentCan() { return bytesSentCan; };
-		int getBytesReceivedUary() { return bytesReceivedUart; };
-		int getBytesSentUArt() { return bytesSentUart; };
 
 		// Begin the USB data transfering, for reading:
 		void startRecording();
@@ -123,10 +121,6 @@ namespace Panda {
 		std::vector<UsbListener*> listeners;
 		char serialNumber[200];	// Stores the Panda's usb serial number
 		char pandaSerial[16];  // Panda's serial number
-		int bytesReceivedCan = 0;
-		int bytesReceivedUart = 0;
-		int bytesSentCan = 0;
-		int bytesSentUart = 0;
 
 		// libusb variables:
 		//struct libusb_device *device;
