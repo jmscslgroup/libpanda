@@ -67,13 +67,14 @@ private:
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] [-u usbmode] [-g gpsfile] [-c csvfile] [-r canfile]" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
 	std::cout << "   -v          : Verbose mode" << std::endl;
 	std::cout << "   -u usbmode  : USB operating mode:" << std::endl;
 	std::cout << "                   a: Asynchronous" << std::endl;
 	std::cout << "                   s: Synchronous" << std::endl;
 	std::cout << "                   i: Isochronous (not supported)" << std::endl;
-	std::cout << "   -g gpsfile  : Filename to output GPS NMEA strings" << std::endl;
+	std::cout << "   -g gpsfile  : Filename to output GPS data in CSV format" << std::endl;
+	std::cout << "   -n nmeafile : Filename to output GPS NMEA strings" << std::endl;
 	std::cout << "   -c csvfile  : Filename to output CSV format CAN data" << std::endl;
 	std::cout << "   -r canfile  : Filename to save raw messages from Panda CAN reads" << std::endl;
 }
@@ -85,6 +86,7 @@ static struct option long_options[] =
 	{"verbose",    no_argument, &verboseFlag, 0},
 	{"usbmode",    required_argument, NULL, 'u'},
 	{"gpsfile",    required_argument, NULL, 'g'},
+	{"gpscsvfile",    required_argument, NULL, 'n'},
 	{"cancsvfile", required_argument, NULL, 'c'},
 	{"canrawfile", required_argument, NULL, 'r'},
 	{NULL, 0, NULL, 0}
@@ -95,10 +97,11 @@ int main(int argc, char **argv) {
 	// Argument parsing
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
 	const char*    gpsFilename = NULL;
+	const char*   nmeaFilename = NULL;
 	const char* canCsvFilename = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:g:c:r:", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -109,6 +112,7 @@ int main(int argc, char **argv) {
 					case 'i': usbMode =  Panda::MODE_ISOCHRONOUS; break; };
 				break;
 			case 'g':    gpsFilename = optarg; break;
+			case 'n':   nmeaFilename = optarg; break;
 			case 'c': canCsvFilename = optarg; break;
 			case 'r': canRawFilename = optarg; break;
 			default:
@@ -133,7 +137,10 @@ int main(int argc, char **argv) {
 	pandaHandler.addGpsObserver(myGpsObserver);
 
 	if (gpsFilename != NULL) {
-		pandaHandler.getGps().saveToFile(gpsFilename);
+		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+	}
+	if (nmeaFilename != NULL) {
+		pandaHandler.getGps().saveToFile(nmeaFilename);
 	}
 	if (canCsvFilename != NULL) {
 		pandaHandler.getCan().saveToCsvFile(canCsvFilename);

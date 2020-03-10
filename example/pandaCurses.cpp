@@ -70,7 +70,7 @@ void printUsage(const char* binary) {
 	std::cout << "                     a: Asynchronous" << std::endl;
 	std::cout << "                     s: Synchronous" << std::endl;
 	std::cout << "                     i: Isochronous" << std::endl;
-	std::cout << "   -g <gpsfile>  : Filename to output GPS NMEA strings" << std::endl;
+	std::cout << "   -g <gpsfile>  : Filename to output GPS CSV file" << std::endl;
 	std::cout << "   -c <csvfile>  : Filename to output CAN in CSV" << std::endl;
 }
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
 	bool fakeData = false;
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
 	const char* gpsFilename = NULL;
-	const char* csvFilename = NULL;
+	const char* canFilename = NULL;
 	int ch;
 	// loop over all of the options
 	while ((ch = getopt_long(argc, argv, "u:g:c:f", long_options, NULL)) != -1)
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 				gpsFilename = optarg;
 				break;
 			case 'c':
-				csvFilename = optarg;
+				canFilename = optarg;
 				break;
 			case 'f':
 				fakeData = true;
@@ -155,10 +155,10 @@ int main(int argc, char **argv) {
 
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	if (gpsFilename != NULL) {
-		pandaHandler.getGps().saveToFile(gpsFilename);
+		pandaHandler.getGps().saveToCsvFile(gpsFilename);
 	}
-	if (csvFilename != NULL) {
-		pandaHandler.getCan().saveToCsvFile(csvFilename);
+	if (canFilename != NULL) {
+		pandaHandler.getCan().saveToCsvFile(canFilename);
 	}
 
 	pandaHandler.initialize();

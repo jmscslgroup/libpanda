@@ -76,6 +76,9 @@ int main(int argc, char **argv) {
 	std::cout << "Saving NMEA to nmea.txt" << std::endl;
 	mGps.saveToFile("nmea.txt");
 
+	std::cout << "Saving GPS data to gps.csv" << std::endl;
+	mGps.saveToCsvFile("gps.csv");
+
 	// Initialization:
 	mUsb.initialize();
 	mGps.initialize();

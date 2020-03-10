@@ -90,6 +90,12 @@ namespace Panda {
 		 */
 		void saveToFile(const char* filename);
 
+		/*! \brief Saves parsed GPS data to a file in CSV format.
+		 This is done after parsing raw NMEA strings.
+		 \param filename The filename and path for data to be saved.
+		 */
+		void saveToCsvFile(const char* filename);
+
 		/*! \brief Sets the USB handler for GPS UART communication
 		 \param usbHandler The Panda USB handler.
 		 */
@@ -122,6 +128,8 @@ namespace Panda {
 
 		std::ofstream nmeaDump;
 		FILE* csvDump;
+
+		void writeCsvToFile(GpsData& state);
 
 		std::vector<GpsListener*> listeners;
 		Usb* usbHandler = NULL;

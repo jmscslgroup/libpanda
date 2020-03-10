@@ -33,14 +33,43 @@
 
 using namespace Panda;
 
-Gps::Gps() {
+Gps::Gps()
+:csvDump(NULL) {
 }
 
 Gps::~Gps() {
 	stop();
 	WaitForInternalThreadToExit();
+	if (csvDump != NULL) {
+		fclose(csvDump);
+	}
 	if (nmeaDump.is_open()) {
 		nmeaDump.close();
+	}
+}
+
+void Gps::saveToCsvFile(const char* filename) {
+	csvDump = fopen(filename, "w");
+	fprintf(csvDump, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP\n");
+
+}
+void Gps::writeCsvToFile(GpsData& state) {
+	if (csvDump) {
+		time_t gpsTime_t = mktime(&state.time);
+//		struct timeval gpsTime;
+//		gpsTime.tv_sec = gpsTime_t;
+//		gpsTime.tv_usec = (state.timeMilliseconds)*1000;
+
+		fprintf(csvDump, "%d.%06d,%c,%0.7f,%0.7f,%0.1f,%0.2f,%0.2f,%0.2f\r\n",
+				(unsigned int)gpsTime_t,
+				(state.timeMilliseconds)*1000,
+				state.info.status,
+				state.pose.longitude,
+				state.pose.latitude,
+				state.pose.altitude,
+				state.quality.HDOP,
+				state.quality.PDOP,
+				state.quality.VDOP);
 	}
 }
 
@@ -246,6 +275,10 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 			state.magneticVariation = rmcData.m_dMagneticVariation;
 
 			newData = true;	// We get time with precision, pose, and speed.  Definitely notification worthy
+
+
+			// Save to CSV file
+			writeCsvToFile(state);
 		}
 	} else if (strcmp(pCmd, "GNZDA") == 0) {
 		CNMEAParserData::ZDA_DATA_T zdaData;
