@@ -1,31 +1,29 @@
 cmake_minimum_required(VERSION 3.1)
 
 function( new_install LIBNAME )
-
-# Install
-if(BUILD_SHARED_LIBS)
-	install( TARGETS ${LIBNAME}
-		LIBRARY DESTINATION lib #lib${LIB_SUFFIX}
-		COMPONENT sharedlibs
+	# Install
+	if(BUILD_SHARED_LIBS)
+		install( TARGETS ${LIBNAME}
+			LIBRARY DESTINATION lib #lib${LIB_SUFFIX}
+			COMPONENT sharedlibs
+			)
+	endif(BUILD_SHARED_LIBS)
+			
+	if(BUILD_STATIC_LIBS)
+		install( TARGETS ${LIBNAME}-static
+			ARCHIVE DESTINATION lib #lib${LIB_SUFFIX}
+			COMPONENT staticlibs
+			)
+	endif(BUILD_STATIC_LIBS)
+			
+	install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ #${c_headers}
+		DESTINATION include
+		COMPONENT headers
 		)
-endif(BUILD_SHARED_LIBS)
-		
-if(BUILD_STATIC_LIBS)
-	install( TARGETS ${LIBNAME}-static
-		ARCHIVE DESTINATION lib #lib${LIB_SUFFIX}
-		COMPONENT staticlibs
-		)
-endif(BUILD_STATIC_LIBS)
-		
-install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ #${c_headers}
-	DESTINATION include
-	COMPONENT headers
-	)
-
-message("-- Install Directory ${LIBNAME}: lib${LIB_SUFFIX}")
-message("-- Install Directory ${LIBNAME}-static: lib${LIB_SUFFIX}")
-message("-- Install Directory ${c_headers}: include/${LIB_SUFFIX}")
-
+	
+	message("-- Install Directory ${LIBNAME}: lib${LIB_SUFFIX}")
+	message("-- Install Directory ${LIBNAME}-static: lib${LIB_SUFFIX}")
+	message("-- Install Directory ${c_headers}: include/${LIB_SUFFIX}")
 endfunction()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -116,11 +114,6 @@ new_install( ${LIBNAME} )
 new_install( mogithread )
 
 # Test executables:
-add_executable(listdevs      example/listdevs.c)
-
-
-target_link_libraries(listdevs  ${LIBS})
-
 if(${CURSES_FOUND})
      add_executable(pandaCurses  example/pandaCurses.cpp
                                  example/cursesHandler.cpp

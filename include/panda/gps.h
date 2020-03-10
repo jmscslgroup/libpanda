@@ -121,6 +121,7 @@ namespace Panda {
 		bool currentlyReceiving = false;
 
 		std::ofstream nmeaDump;
+		FILE* csvDump;
 
 		std::vector<GpsListener*> listeners;
 		Usb* usbHandler = NULL;
