@@ -75,7 +75,11 @@ The OBD II port is intended for emmissions and mechanic diagnostics.  In order t
 <a name="hardware-rav4"></a>
 ### Installation in Toyota RAV4 2020
 
-Video
+\htmlonly
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/N2x18QqpV5s" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+\endhtmlonly
 
 <a name="hardware-pilot"></a>
 ### Installation in Honda Pilot 2017
@@ -271,7 +275,7 @@ $ sudo pandaSetSystemTime
 </center>
 \endhtmlonly
 
->Note: This video is showing an older method of invoking pandaSetSytemTime but provides the same output.
+> Note: This video is showing an older method of invoking pandaSetSytemTime but provides the same output.
 
 <a name="libpanda-pandaCurses"></a>
 ### pandaCurses
