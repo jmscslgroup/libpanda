@@ -1,5 +1,3 @@
-# This will run on Travis' 'new' container-based infrastructure
-language: ruby
 sudo: false 
 
 # Blacklist
