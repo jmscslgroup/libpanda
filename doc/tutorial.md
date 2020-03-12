@@ -32,11 +32,11 @@ Libpanda is a software library and set of utilities intended to interface with v
 
 [https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
 
-The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  Here is a video demonstrating our findings:
+The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  These tests were performed on a raspberry pi 4.  Here is a video demonstrating our findings:
 
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/GavbXC_aOCY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GavbXC_aOCY?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -82,7 +82,7 @@ ___
 ## Configuration
 The Panda serves as a bridge between the vehicle's CAN bus and USB.  The Panda uses a standard OBD II connector. The OBD port is a standardized connector guaranteed to be on any car newer than 1996 for emmissions pruproses.  This means that the Panda can connect to any car, however some caveats to this have been noted:
 
-* On a 2009 Ford Hybrid Escape,  CAN data can be read but the Panda causes an electrical issue resutling in disabling the dash, locks, and creature comforts.
+* On a 2009 Ford Hybrid Escape,  CAN data can be read but the Panda causes an electrical issue resulting in disabling the dash, locks, and creature comforts.
 * On a 2003 Jeep Grand Cherokee, the car runs normally but no CAN data can be read.  Also, the Panda USB interface connection fails on car starting.
 
 With this in mind, be cautious on the car that you wish to plug the Panda into, as the connector may be standardized but the pinout varies.  It is safest to only collect data on cars supported by comma.ai.
@@ -92,11 +92,11 @@ The OBD II port is intended for emmissions and mechanic diagnostics.  In order t
 ![Giraffe DIP switch configuration: ON:(1,3,4) OFF:(2)](/doc/images/dip.jpg "DIP Switches")
 
 <a name="hardware-rav4"></a>
-### Installation in Toyota RAV4 2020
+### Installation in Toyota RAV4 2019
 
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/N2x18QqpV5s" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/N2x18QqpV5s?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -112,6 +112,9 @@ ___
 
 <a name="software-OS"></a>
 ___
+
+![ ](/doc/images/ubuntu.jpg "Ubuntu")
+
 ## Ubuntu 18.04 LTS
 
 Currently Ubuntu 18.04 LTS is the only supported OS though it is very possible that libpanda will work just fine on other *nix based platforms.  To install Ubuntu 18.04 LTS on the raspberry pi 4, you will need a method to write to micro SD cards (see [Optional Hardware](#hardware-optional)).  Follow the tutorial on Ubuntu's website for downloding and flashing based on your own OS:
@@ -132,7 +135,7 @@ The default username can be changed, but is out of scope for this tutorial.
 3. On boot, enter the credentials
 4. Follow the instructions to enter a new password
 
-### Setup via Ethernet and SSH (Difficult but with minimal extra hardware
+### Setup via Ethernet and SSH (Difficult but with minimal extra hardware)
 
 1. Plug in an ethernet cable 
 2. Power the pi via the USB C connector
@@ -147,7 +150,7 @@ $ ssh ubuntu@<your pi's IP>
 Here is an example of logging into a pi after obtaining an IP address of 10.0.1.80:
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/w7WJoFv7HlY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/w7WJoFv7HlY?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -164,7 +167,7 @@ $ ping 8.8.8.8
 64 bytes from 8.8.8.8: icmp_seq=2 ttl=56 time=21.0 ms
 ~~~
 
-If successful, run the following to downlaod and install libpanda.  This will take a few minutes to complete:
+If successful, run the following to download and install libpanda.  This will take a few minutes to complete:
 ~~~
 $ git clone https://github.com/jmscslgroup/libpanda.git
 $ cd libpanda
@@ -173,7 +176,7 @@ $ sudo ./installpi4.sh
 
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/A3hyYB-Fy_U" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/A3hyYB-Fy_U?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -205,7 +208,7 @@ $ cd /var/panda/CyverseData/JmscslgroupData/PandaData
 
 ### Checking Status
 
-Systemd provides a set of utilities to work with services.  To check on the status of on of the above services:
+Systemd provides a set of utilities to work with services.  To check on the status of one of the above services:
 ~~~
 $ service pandasettime status
 $ service pandarecord status
@@ -213,9 +216,16 @@ $ service pandarecord status
 To exit the status check, press 'q'.
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/qbSig0QSgKk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/qbSig0QSgKk?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
+
+A similar command for checking status is journalctl.  This may be run as follows:
+~~~
+$ journalctl -f -u pandasettime
+~~~
+
+Press ctrl-c to exit journalctl.
 
 
 ### Fixing Errors
@@ -233,7 +243,7 @@ $ sudo service pandarecord restart
 This is an example of when the services show a fialed status, and how to reset them:
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mohtZnknESk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mohtZnknESk?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -277,7 +287,7 @@ $ sudo pandacord -h
 Here is a video showing a successful run of pandacord, however no CAN bus was physically conencted in this demonstration:
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DVjhZIUuJeI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/DVjhZIUuJeI?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -290,7 +300,7 @@ $ sudo pandaSetSystemTime
 ~~~
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/L0e9RAOfZ9U" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/L0e9RAOfZ9U?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -310,9 +320,11 @@ When run, pressing the 'g' key siwtches between view modes for GPS and CAN data.
 
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/qKrr3wVKoyA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/qKrr3wVKoyA?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
+
+> Note: In the above video example the argument "-f" was provided.  This fakes CAN data for testing purposes and should not be used.  This was used purely for demonstration.
 
 ##### pandaCurses GPS display
 ![pandaCurses GPS view](/doc/images/gpscurses.jpg "GPS View")
@@ -344,7 +356,7 @@ UniqueData is intended to be used for reverse-engineering of vehicle ocmponents.
 
 \htmlonly
 <center>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/kJtX92a0EbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kJtX92a0EbM?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
 
@@ -354,14 +366,23 @@ ___
 
 Data visualization is currently handled by [Strym](https://github.com/jmscslgroup/strym).
 
+A tutorial for Strym can be found [here](https://github.com/jmscslgroup/strym/blob/master/notebook/strymread_example.ipynb).
+
 
 
 <a name="repository"></a>
 ___
 # Data Repository
 
-Currently all data is intended to be uploaded to [CyVerse](https://cyverse.org).  In order to acess data we need to grant you access in an account-by-account basis.
+Currently all data is intended to be uploaded to [CyVerse](https://cyverse.org).  In order to acess data we need to grant you access in an account-by-account basis.  Please request access from someone at the JMS CSL Group.  Currently data is manually uploaded to CyVerse directly from the pi 4, but with manual commands at the end of each colleciton session.  Eventually we will provide methods to perform uploads automatically.  This is also why the power supply has yet to be determined for the pi 4, since power needs to remain after the car is shut off to give time for the pi to connect to wifi and transfer data.
 
-Once logged into CyVers, open the discovery environment.
+To access Cyverse data after you have created an account and have been granted access:
 
+1. Log into CyVerse, then open the discovery environment.
 ![CyVerse Discovery Environment](/doc/images/cyverse.jpg "Cyverse")
+2. Click on the "Data" square in the top left in the environment.
+3. Navigate to Shared With Me->rahulbhadani->Jmscslgroup->PandaData
+![Cyverse Discovery Environment data navigation](/doc/images/cyversedata.jpg "Discovery Environemnt Data")
+4. All data is timestamped in folders.  You can download data by clicking on the Download dorp down menu at the top.  Alternatively, the discovery environment lets you preview data once selected.
+
+> Note: Data between different days may show to have inconsistent formatting due to the development process of data collection.  Also, some data may be available along with a video of the collection session that may be used for data evaluation.
