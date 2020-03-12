@@ -4,6 +4,7 @@ Hardware tutorial                         {#mainpage}
 
 
 # Table of Contents
+* [About](#about)
 * [Hardware](#hardware)
 	* [List of Components](#hardware-list)
 		* [Required](#hardware-req)
@@ -22,6 +23,24 @@ Hardware tutorial                         {#mainpage}
 		* [pandaCurses](#libpanda-pandaCurses)
 * [Data Visualization](#visualization)
 * [Data Repository](#repository)
+
+
+<a name="about"></a>
+___
+# About
+Libpanda is a software library and set of utilities intended to interface with vehicles via comma.ai's Panda and optional Giraffe.  The source for the library is located here:
+
+[https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
+
+The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50%.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  Here is a video demonstrating our findings:
+
+\htmlonly
+<center>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GavbXC_aOCY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+\endhtmlonly
+
+> Note: After the video was recorded some small tuning resulted in CPU usage closer to 35% instead of 50%
 
 <a name="hardware"></a>
 ___

@@ -2,6 +2,9 @@
 
 A library that handles communication with a comma.ai Panda interface device.  Simple demos collect data from the panda (grey version) to the screen.
 
+A tutorial for hardware setup is located here:
+[https://jmscslgroup.github.io/libpanda/](https://jmscslgroup.github.io/libpanda/)
+
 ## Dependencies:
 1. Required - libusb-1.0-0-dev
 2. Optional - libcurses5-dev
