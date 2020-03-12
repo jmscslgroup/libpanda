@@ -32,7 +32,7 @@ Libpanda is a software library and set of utilities intended to interface with v
 
 [https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
 
-The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50%.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  Here is a video demonstrating our findings:
+The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  Here is a video demonstrating our findings:
 
 \htmlonly
 <center>
