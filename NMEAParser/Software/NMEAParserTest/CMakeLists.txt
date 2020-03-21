@@ -21,7 +21,7 @@ endif ()
 # Include directories
 #
 include_directories(
-    ../NMEAParserLib
+    ../NMEAParserLib/include
 )
 
 #

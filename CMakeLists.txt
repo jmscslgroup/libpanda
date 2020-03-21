@@ -8,19 +8,19 @@ function( new_install LIBNAME )
 			COMPONENT sharedlibs
 			)
 	endif(BUILD_SHARED_LIBS)
-			
+
 	if(BUILD_STATIC_LIBS)
 		install( TARGETS ${LIBNAME}-static
 			ARCHIVE DESTINATION lib #lib${LIB_SUFFIX}
 			COMPONENT staticlibs
 			)
 	endif(BUILD_STATIC_LIBS)
-			
+
 	install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ #${c_headers}
 		DESTINATION include
 		COMPONENT headers
 		)
-	
+
 	message("-- Install Directory ${LIBNAME}: lib${LIB_SUFFIX}")
 	message("-- Install Directory ${LIBNAME}-static: lib${LIB_SUFFIX}")
 	message("-- Install Directory ${c_headers}: include/${LIB_SUFFIX}")
@@ -77,7 +77,7 @@ find_package(Threads REQUIRED)
 find_package(Curses)
 
 include_directories( "include"
-                     "NMEAParser/Software/NMEAParserLib"
+                     "NMEAParser/Software/NMEAParserLib/include"
                      ${LIBUSB_1_INCLUDE_DIRS}
                      ${CMAKE_THREAD_LIBS_INIT} )
 
