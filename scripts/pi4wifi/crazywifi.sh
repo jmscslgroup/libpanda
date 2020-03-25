@@ -99,19 +99,16 @@ haveIpOnDevice ( )
 {
 	interface=$1
 	ips=($(ifconfig ${interface} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'))
-	echo "IP on" ${interface} ":" ${ips[@]}
+	echo ${interface} "IP:" ${ips[@]}
 	if [ ${#ips[@]} ]; then
-		echo " - I has ethernet IP"
 		return 1
-	else
-		echo " - I have no address"
 	fi
 	return 0
 }
 
 haveWifiConnection ()
 {
-	currentSsid=$(iwconfig 2>&1 | grep -v off/any | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*")
+	currentSsid=$(iwconfig 2>&1 | grep -v "off/any" | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*")
 #	echo "currentSsid=" $currentSsid
 	if [ -z "${currentSsid}" ]; then
 #		echo "No wifi connection"

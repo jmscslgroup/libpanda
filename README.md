@@ -8,7 +8,7 @@ A tutorial for hardware setup is located here:
 ## Dependencies:
 1. Required - libusb-1.0-0-dev
 2. Optional - libcurses5-dev
-3. Included - NMEAParser
+3. Included - NMEAParser from https://github.com/visualgps/NMEAParser/
 
 ### libusb-1.0-0-dev
 The core of this library is based on libusb, the default version installable through Ubuntu's apt-get.

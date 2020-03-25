@@ -30,44 +30,45 @@ execute_process(COMMAND git describe --abbrev=4 HEAD
 add_library(NMEAParserLib SHARED
 	DoxygenMainPage.md
     NMEAParserPacket.cpp
-    NMEAParserPacket.h
+    include/NMEAParserPacket.h
     NMEAParser.cpp
-    NMEAParser.h
-    NMEAParserData.h
+    include/NMEAParser.h
+    include/NMEAParserData.h
 	NMEASentenceBase.cpp
-	NMEASentenceBase.h
+	include/NMEASentenceBase.h
 	NMEASentenceGGA.cpp
-	NMEASentenceGGA.h
+	include/NMEASentenceGGA.h
 	NMEASentenceGSV.cpp
-	NMEASentenceGSV.h
+	include/NMEASentenceGSV.h
 	NMEASentenceGSA.cpp
-	NMEASentenceGSA.h
+	include/NMEASentenceGSA.h
 	NMEASentenceRMC.cpp
-	NMEASentenceRMC.h
+	include/NMEASentenceRMC.h
 	NMEASentenceZDA.cpp	# added by Bunting
-	NMEASentenceZDA.h	# added by Bunting
+	include/NMEASentenceZDA.h	# added by Bunting
 )
 
 add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for install
 	DoxygenMainPage.md
     NMEAParserPacket.cpp
-    NMEAParserPacket.h
+    include/NMEAParserPacket.h
     NMEAParser.cpp
-    NMEAParser.h
-    NMEAParserData.h
+    include/NMEAParser.h
+    include/NMEAParserData.h
 	NMEASentenceBase.cpp
-	NMEASentenceBase.h
+	include/NMEASentenceBase.h
 	NMEASentenceGGA.cpp
-	NMEASentenceGGA.h
+	include/NMEASentenceGGA.h
 	NMEASentenceGSV.cpp
-	NMEASentenceGSV.h
+	include/NMEASentenceGSV.h
 	NMEASentenceGSA.cpp
-	NMEASentenceGSA.h
+	include/NMEASentenceGSA.h
 	NMEASentenceRMC.cpp
-	NMEASentenceRMC.h
+	include/NMEASentenceRMC.h
 	NMEASentenceZDA.cpp	# added by Bunting
-	NMEASentenceZDA.h	# added by Bunting
+	include/NMEASentenceZDA.h	# added by Bunting
 )
+include_directories( "include" )
 new_install( NMEAParserLib ) # the as weell by bunting
 
 #
