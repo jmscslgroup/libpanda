@@ -6,7 +6,7 @@ echo "Installing crazywifi scripts"
 
 
 #build dependencies:
-declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown)
+declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown iptables)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -40,6 +40,7 @@ fi
 
 cp interfaces.* /etc/network/
 cp crazywifi.sh /usr/sbin/crazywifi
+touch /etc/wpa_supplicant/wpa_supplicant.conf
 
 if [ ! -f /etc/network/interfaces.bak ]; then
 	echo "Backing up /etc/network/interfaces to /etc/network/interfaces.bak"

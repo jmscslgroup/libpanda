@@ -62,7 +62,7 @@ void Can::saveToFile( const char* filename ) {
 
 void Can::saveToCsvFile(const char* filename) {
 	csvDump = fopen(filename, "w");
-	fprintf(csvDump, "Time,Buffer,Bus,MessageID,Message,MessageLength\n");
+	fprintf(csvDump, "Time,Bus,MessageID,Message,MessageLength\n");
 }
 
 void Can::setUsb( Panda::Usb* usbHandler ) {
@@ -104,11 +104,11 @@ void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 void Can::writeCsvToFile(CanFrame* frame, unsigned char* converted, int bufLength) {
 	if (csvDump != NULL) {
 		fprintf(csvDump, "%d.%06d,", (unsigned int)frame->sysTime.tv_sec, (int)frame->sysTime.tv_usec);
-		for (int i = 0; i < bufLength; i++) {
-			fprintf(csvDump, "%02x", converted[i]);
-		}
+//		for (int i = 0; i < bufLength; i++) {
+//			fprintf(csvDump, "%02x", converted[i]);
+//		}
 
-		fprintf(csvDump,",%d,%d,", (int)frame->bus, frame->messageID);
+		fprintf(csvDump,"%d,%d,", (int)frame->bus, frame->messageID);
 
 		for (int i =0; i < frame->dataLength; i++) {
 			fprintf(csvDump, "%02x", frame->data[i]);

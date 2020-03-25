@@ -9,48 +9,50 @@ setupDhcpServer ()
 {
 #	echo "Restarting dhcpcd"
 #	service dhcpcd restart
-	echo "Restarting isc-dhcp-server"
+	echo " - Restarting isc-dhcp-server"
 	service isc-dhcp-server restart
 }
 
-getKnownSsids ()
+echoGood ()
 {
-	echo "Getting list of prior configured SSIDs..."
-	ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
+	echo -e " - \e[1m\e[32m$1\e[0m"
 }
 
-getAvailableSsids ()
+echoBad ()
 {
-	echo "Scanning for available SSIDs..."
-	ssidsavailable=($(iwlist wlan0 scan | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*"))
+	echo -e " - \e[1m\e[31m$1\e[0m"
 }
 
 connectToKnownWifi ()
 {
+	echo " - Configuring interfaces"
 	cp /etc/network/interfaces.client /etc/network/interfaces
 #	service dhcpcd stop
+	echo " - Stopping DHCP server"
 	service isc-dhcp-server stop
-	#service networking stop
-	#service networking start
+
+	echo " - Stopping Hostapd"
+	service hostapd stop
+
+	echo " - Restarting wlan0"
 	ifdown wlan0
 	ifup wlan0
 
 	#ssids=$1
 
-	echo "Connecting to SSID: " $1
-	echo "Stopping Hostapd"
-	service hostapd stop
-	echo "Starting supplicant for WPA/WPA2"
+#	echo " - Connecting to SSID: " $1
+
+#	echo " - Starting supplicant for WPA/WPA2"
 	wpa_supplicant -B -i wlan0 -c /etc/wap_supplicant/wpa_supplicant.conf > /dev/null 2>&1
-	echo "Obtaining IP from DHCP"
-	if dhclient -1 wlan0
+	echo " - Releasing DHCP lease"
+	dhclient -r wlan0
+	echo " - Obtaining IP from DHCP"
+	if dhclient -1 wlan0;
 	then
-		echo "Connected to WiFi: " $1
-		wifiConnected=true
+		echoGood "- Connected to WiFi: $1"
 		return 1
 	else
-		echo "DHCP server did not respond with an IP lease"
-		wifiConnected=false
+		echoBad "- Unaible to get IP"
 		wpa_cli terminate
 	fi
 
@@ -59,18 +61,16 @@ connectToKnownWifi ()
 
 setupAp ()
 {
-	echo "Starting AccessPoint"
-	#cp /etc/network/interfaces.accesspoint /etc/network/interfaces
+	echo " - Configuring interfaces"
 	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
-#service networking stop
-#	service networking start
+
+	echo " - Restarting wlan0"
 	ifdown wlan0
 	ifup wlan0
-	#	echo "Restarting isc-dhcp-server"
-	#	service isc-dhcp-server restart
-	#	hostapd -dd /etc/hostapd/hostapd.conf
-	echo "Restarting hostapd"
+
+	echo " - Restarting hostapd"
 	service hostapd restart
+
 	setupDhcpServer
 }
 
@@ -82,21 +82,15 @@ enableDhcpServer ()
 haveInternet ()
 {
 	if ping -q -c 1 -W 1 8.8.8.8 > /dev/null; then
-		echo "I has internet"
 		return 1
-	else
-		echo "I is alone"
 	fi
 	return 0
 }
 
 haveEthernetPhysicalConnection ()
 {
-	if ethtool eth0 > /dev/null; then
-		echo "I has ethernet"
+	if ethtool eth0 | grep "Link detected: yes" > /dev/null; then
 		return 1
-	else
-		echo "I is physically disconnected"
 	fi
 	return 0
 }
@@ -107,25 +101,23 @@ haveIpOnDevice ( )
 	ips=($(ifconfig ${interface} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'))
 	echo "IP on" ${interface} ":" ${ips[@]}
 	if [ ${#ips[@]} ]; then
-		echo "I has ethernet IP"
+		echo " - I has ethernet IP"
 		return 1
 	else
-		echo "I have no address"
+		echo " - I have no address"
 	fi
 	return 0
 }
 
 haveWifiConnection ()
 {
-	currentSsid=$(iwconfig 2>&1 | grep -v off/any | grep ESSID)
-	echo "currentSsid=" $currentSsid
+	currentSsid=$(iwconfig 2>&1 | grep -v off/any | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*")
+#	echo "currentSsid=" $currentSsid
 	if [ -z "${currentSsid}" ]; then
-		wifiConnected=false
-		echo "No wifi connection"
+#		echo "No wifi connection"
 		return 0
 	fi
-	wifiConnected=true
-	echo "Yes wifi connection"
+#	echo "Yes wifi connection"
 	return 1
 }
 
@@ -139,67 +131,100 @@ cleanup ()
 
 doStuff ()
 {
-	if [ haveInternet ]; then
-		echo " - I gots the nets!  Nothing to do"
-#		return 1
+	echo "Beginning network status check."
+
+# If internet exists, things are probably in an acceptable state.
+	echo "Checking Internet status..."
+	haveInternet
+	if [ $? -eq 1 ]; then
+		echoGood "Connected"
+		return 1
+	else
+		echoBad "Disconnected"
 	fi
 
 	wifiConnected=false
 	ethernetConnected=false
-	if [ haveEthernetPhysicalConnection ]; then
-		echo " - I gots the ethernets!"
+
+# check for a physical connection on ethernet
+	echo "Checking for eth0 link status"
+	haveEthernetPhysicalConnection
+	if [ $? -eq 1 ]; then
+		echoGood "Connected"
 		ethernetConnected=true
-		haveIpOnDevice eth0
-		if [ $? ]; then
-			echo " - I has ethernet IP!"
-			haveIpOnDevice wlan0
-#			return 1
-		fi
+
+#		haveIpOnDevice eth0
+#		if [ $? -eq 1 ]; then
+#			echo " - I has ethernet IP!"
+#			haveIpOnDevice wlan0
+##			return 1
+#		fi
 	else
-		echo " - Ethernet not connected"
+		echoBad "Disconnected"
 #		setupDhcpServer
 	fi
 
+	if systemctl is-active --quiet hostapd; then
+# If any wifi clients exist, don't change anything to cause a disconnection
+		echo "Checking if wlan0 is busy with clients"
+		wificlients=$(iw dev wlan0 station dump)
+		if [ -z "$wificlients" ]; then
+			echoGood "Free"
+		else
+			echoBad "Busy"
+			return 1
+		fi
+	fi
+
+# Check if wifi is currently a client
+	echo "Checking if wifi is connected to AP"
 	haveWifiConnection
-	echo "Connected to wifi:" ${wifiConnected}
-	if ${wifiConnected}; then
-		echo "Already connected to an AP"
+	if [ $? -eq 1 ]; then
+		echoGood "Connected to ${currentSsid}"
+		wifiConnected=true
 	else
-		echo "Attempting to connect to wifi"
+		echoBad "Disconnected"
 
-		getKnownSsids
-		echo " - Known ESSIDs :" ${ssids[@]}
-
-		getAvailableSsids
+		echo "Searching for known APs"
+#		Get known SSIDs:
+		ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
+#		Scan for available SSIDs:
+		ssidsavailable=($(iwlist wlan0 scan | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*"))
 		echo " - Available ESSIDs :" ${ssidsavailable[@]}
 
 		for ssid in "${ssids[@]}"
 		do
 			if echo ${ssidsavailable[@]} | grep $ssid > /dev/null
 			then
-				echo " - First known available:" $ssid
+				echo "Connecting to $ssid"
 				connectToKnownWifi $ssid
-				break
+				if [ $? -eq 1 ]; then
+					wifiConnected=true	# Success!
+					break
+				fi
+				# If we are here, then try the next ssid
 			fi
 		done
 	fi
 
-	if $wifiConnected; then
+	if [ "$wifiConnected" = true ]; then
 		echo "No need to setup AP"
 	else
-		echo "Unable to connect to WiFi, setting up hostapd"
-		if systemctl is-active --quiet service; then
-			echo "AP already running"
+		echo "Unable to connect to WiFi, checking if AP is active"
+		if systemctl is-active --quiet hostapd; then
+			echoGood "AP is active"
 		else
-			echo "AP NOT running, starting..."
+			echoBad "AP inactive"
+			echo "Starting AP"
 			setupAp
 		fi
 	fi
 
-#connectToKnownWifi
-
 	echo "Done."
-	echo "--------------------------------"
+
+haveIpOnDevice wlan0
+haveIpOnDevice eth0
+
 	return 1
 }
 
@@ -207,8 +232,8 @@ trap cleanup SIGINT SIGTERM
 
 while [ 1 ]
 do
-	echo "Checking Status..."
+	echo "--------------------------------"
 	doStuff
-	sleep 60 &
+	sleep 10 &
 	wait $!
 done
