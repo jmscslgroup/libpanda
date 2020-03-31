@@ -1,3 +1,17 @@
+# Modifications by JMSCSLGroup
+### Author: Bunting
+This is a modified versionof NMEAParser, hence why it is is an addition to libpanda.  Libpanda requires this library for the parsing of NMEA strings and seemd like the quickest integration method for our purposes.  This needed to be modified for various reasons, and each modification has been commented with author tag "Bunting".
+
+This needed ot be modified for the following reasons:
+
+ - Implement an installation method via Cmake.  This involved moving headers into an "include" directory in NMEAParserLib
+ - Fix bugs regarding parsing of information critical to libpanda
+ - Added ZDA message parsing for development, though it turned out not to be used for our specific hardware but modifications have been left in since they seem to be functional
+
+The following instructions are not needed to install NMEAparser since libpanda's top-level "installpi4.sh" script installs this automatically.
+
+The rest of this README.md, unmodified:
+
 # NMEA Parser Class Library
 Monte Variakojis \@VisualGPS
 

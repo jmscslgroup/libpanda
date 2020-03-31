@@ -27,7 +27,7 @@ execute_process(COMMAND git describe --abbrev=4 HEAD
 #
 # Add executable name and project files
 #
-add_library(NMEAParserLib SHARED
+add_library(NMEAParserLib SHARED	# Bunting: all below headers have been moved to "include/"
 	DoxygenMainPage.md
     NMEAParserPacket.cpp
     include/NMEAParserPacket.h
@@ -68,8 +68,8 @@ add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for i
 	NMEASentenceZDA.cpp	# added by Bunting
 	include/NMEASentenceZDA.h	# added by Bunting
 )
-include_directories( "include" )
-new_install( NMEAParserLib ) # the as weell by bunting
+include_directories( "include" ) # Added by Bunting	
+new_install( NMEAParserLib ) # the as well by bunting
 
 #
 # Add additional libraries

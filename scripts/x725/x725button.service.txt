@@ -1,0 +1,11 @@
+[Unit]
+Description=Listens to the x725 button for safe-shutdowns
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/sbin/x725button
+
+
+[Install]
+WantedBy=multi-user.target

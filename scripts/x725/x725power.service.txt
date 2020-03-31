@@ -1,0 +1,13 @@
+[Unit]
+Description=Power management using x725
+After=x725button.service
+Wants=x725button.service
+
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/x725power
+
+
+[Install]
+WantedBy=multi-user.target
