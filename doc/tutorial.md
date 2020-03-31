@@ -68,14 +68,17 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 *  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
 * Power supply (TBD)
 
-	We have yet to determine the best method of providing power to the pi 4.  They consume quite a bit, you may need a 2.0A USB outlet to prevent brownout reboots.
+	
 
 <a name="hardware-opt"></a>
 #### Optional:<a name="hardware-optional"></a>
 * [SD Card reader for Ubuntu flashing](https://www.amazon.com/Vanja-Adapter-Portable-Memory-Reader/dp/B00W02VHM6/ref=sr_1_6?keywords=usb+sd+card&qid=1583949114&s=electronics&sr=1-6)
 * [Micro HDMI adapter for pi 4](https://www.amazon.com/GANA-Adapter-Female-Action-Supported/dp/B07K21HSQX/ref=sxin_2_ac_d_pm?ac_md=1-0-VW5kZXIgJDEw-ac_d_pm&cv_ct_cx=micro+hdmi&keywords=micro+hdmi&pd_rd_i=B07K21HSQX&pd_rd_r=b124f42c-a587-491e-9400-52aef81c3d88&pd_rd_w=mNPkI&pd_rd_wg=saxZx&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=J1YKVHPV73CBGDNP1MXZ&psc=1&qid=1583949163&s=electronics)
 * [Ethernet Cable](https://www.amazon.com/AmazonBasics-RJ45-Cat-6-Ethernet-Patch-Cable-10-Feet-3-Meters/dp/B00N2VIALK/ref=sr_1_3?keywords=ethernet&qid=1583954176&sr=8-3)
+* [x725 Raspebrry Pi UPS](https://www.amazon.com/Raspberry-Shutdown-Management-Expansion-Compatible/dp/B07Z3S42MK)
+* [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/liogea-LG3400G-3400mAh-Rechargeable-Batteries/dp/B07YBTQSQL/ref=sr_1_2?keywords=18650b&qid=1585673515&s=electronics&sr=1-2)
 
+The x725 and batteries are shown as optional since they are not reuqired to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
 
 <a name="hardware-config"></a>
 ___
