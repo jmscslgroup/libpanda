@@ -87,22 +87,29 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 The x725 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
 
 
-There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  For fastest charging at 3A, and for power debugging, the following list provides power information when in use.  This list requires a small amount of assembly.
+There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  
+
+##### Fast Charge w/Debuggin (most expensive)
+
+For fastest charging at 3A, and for power debugging, the following list provides power information when in use.  This list requires a small amount of assembly.
 
 * [DROK DC Buck Module with Display](https://www.amazon.com/gp/product/B07JZ2GQJF/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
 * [Cigarette Lighter Plug with Cable](https://www.amazon.com/gp/product/B01HGO2OIS/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
 * [2.5mm x 5.5mm Coaxial power plug](https://www.amazon.com/gp/product/B07VPHMLHC/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
 
-> Note: Thie 2.5mm x 5.5mm uses 22 AWG wire shich may be too small for 3A charging, yet to be evaluated.
+> Note: The 2.5mm x 5.5mm uses 22 AWG wire shich may be too small for 3A charging, yet to be evaluated.
 
+ ##### Fast Charge
+ 
+For full 3A charging using USB with minimal install, you can use a a USB to 5.5mmx2.5mm barrel jack cable with higher current cigarette lighter USB source
+* [USB to 5.5x2.5mm Adapter](https://www.amazon.com/TENINYU-Angled-Degree-5-5x2-5mm-Positive/dp/B07B11VK4S/ref=sr_1_2?keywords=usb+to+2.5mm+5.5+male&qid=1585767229&s=electronics&sr=1-2)
+* [Cigarette Ligheter to USB adapter, 4.8A](https://www.amazon.com/Charger-RAVPower-Adapter-iSmart-Compatible/dp/B071FHZRQN/ref=sr_1_2?keywords=cigarrete+usb&qid=1585767324&s=electronics&sr=1-2)
 
+##### Inexpensive (Slowest Charge)
 
 Alternatively, if your vehicle has USB ports that turn off when the car is shut off, then you may use a USB mini cable with a maximum supported charge current of 2A.
  * [USB mini cable (3-pack)](https://www.amazon.com/Premium-Super-Durable-Android-Smartphones-Tablets/dp/B076WXJPQ1/ref=sr_1_4?keywords=usb+micro&qid=1585767182&sr=8-4)
  
- For full 3A charging using USB with minimal install, you can use a a USB to 5.5mmx2.5mm barrel jack cable with higher current cigarette lighter USB source
- * [USB to 5.5x2.5mm Adapter](https://www.amazon.com/TENINYU-Angled-Degree-5-5x2-5mm-Positive/dp/B07B11VK4S/ref=sr_1_2?keywords=usb+to+2.5mm+5.5+male&qid=1585767229&s=electronics&sr=1-2)
- * [Cigarette Ligheter to USB adapter, 4.8A](https://www.amazon.com/Charger-RAVPower-Adapter-iSmart-Compatible/dp/B071FHZRQN/ref=sr_1_2?keywords=cigarrete+usb&qid=1585767324&s=electronics&sr=1-2)
 
 
 
