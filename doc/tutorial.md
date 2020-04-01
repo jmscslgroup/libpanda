@@ -89,9 +89,10 @@ The x725 and batteries are shown as optional since they are not required to reco
 
 There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  For fastest charging at 3A, and for power debugging, the following list provides power information when in use.  This list requires a small amount of assembly.
 
- * [DROK DC Buck Module with Display](https://www.amazon.com/gp/product/B07JZ2GQJF/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+* [DROK DC Buck Module with Display](https://www.amazon.com/gp/product/B07JZ2GQJF/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
 * [Cigarette Lighter Plug with Cable](https://www.amazon.com/gp/product/B01HGO2OIS/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
-* [2.5mm x 5.5mm Coaxial power plug] (https://www.amazon.com/gp/product/B07VPHMLHC/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+* [2.5mm x 5.5mm Coaxial power plug](https://www.amazon.com/gp/product/B07VPHMLHC/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+
 > Note: Thie 2.5mm x 5.5mm uses 22 AWG wire shich may be too small for 3A charging, yet to be evaluated.
 
 
