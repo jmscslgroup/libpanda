@@ -29,6 +29,9 @@
 
 #include "rpigpio.h"
 
+#define X725_BUTTON (4)
+#define X725_BOOT (17)
+
 int main(int argc, char **argv)
 {
 	fprintf(stderr,"Running %s\n", argv[0]);

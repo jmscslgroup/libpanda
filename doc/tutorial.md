@@ -9,6 +9,7 @@ Hardware tutorial                         {#mainpage}
 	* [List of Components](#hardware-list)
 		* [Required](#hardware-req)
 		* [Optional](#hardware-opt)
+		* [Optional Power](#hardware-opt)
 	* [Configuration](#hardware-config)
 		* [Toyota RAV4](#hardware-rav4)
 		* [Honda Pilot](#hardware-pilot)
@@ -21,6 +22,7 @@ Hardware tutorial                         {#mainpage}
 		* [pandacord](#libpanda-pandacord)
 		* [pandaSetSystemTime](#libpanda-pandaSetSystemTime)
 		* [pandaCurses](#libpanda-pandaCurses)
+* [Power Guide with x725](#power-guide)
 * [Data Visualization](#visualization)
 * [Data Repository](#repository)
 
@@ -66,19 +68,41 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
 *  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
-* Power supply (TBD)
 
-	
 
 <a name="hardware-opt"></a>
-#### Optional:<a name="hardware-optional"></a>
+#### Optional:
 * [SD Card reader for Ubuntu flashing](https://www.amazon.com/Vanja-Adapter-Portable-Memory-Reader/dp/B00W02VHM6/ref=sr_1_6?keywords=usb+sd+card&qid=1583949114&s=electronics&sr=1-6)
 * [Micro HDMI adapter for pi 4](https://www.amazon.com/GANA-Adapter-Female-Action-Supported/dp/B07K21HSQX/ref=sxin_2_ac_d_pm?ac_md=1-0-VW5kZXIgJDEw-ac_d_pm&cv_ct_cx=micro+hdmi&keywords=micro+hdmi&pd_rd_i=B07K21HSQX&pd_rd_r=b124f42c-a587-491e-9400-52aef81c3d88&pd_rd_w=mNPkI&pd_rd_wg=saxZx&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=J1YKVHPV73CBGDNP1MXZ&psc=1&qid=1583949163&s=electronics)
 * [Ethernet Cable](https://www.amazon.com/AmazonBasics-RJ45-Cat-6-Ethernet-Patch-Cable-10-Feet-3-Meters/dp/B00N2VIALK/ref=sr_1_3?keywords=ethernet&qid=1583954176&sr=8-3)
+
+<a name="hardware-opt-power"></a>
+#### Optional power for data collection
+
 * [x725 Raspebrry Pi UPS](https://www.amazon.com/Raspberry-Shutdown-Management-Expansion-Compatible/dp/B07Z3S42MK)
 * [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/liogea-LG3400G-3400mAh-Rechargeable-Batteries/dp/B07YBTQSQL/ref=sr_1_2?keywords=18650b&qid=1585673515&s=electronics&sr=1-2)
 
-The x725 and batteries are shown as optional since they are not reuqired to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
+
+The x725 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
+
+
+There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  For fastest charging at 3A, and for power debugging, the following list provides power information when in use.  This list requires a small amount of assembly.
+
+ * [DROK DC Buck Module with Display](https://www.amazon.com/gp/product/B07JZ2GQJF/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+* [Cigarette Lighter Plug with Cable](https://www.amazon.com/gp/product/B01HGO2OIS/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+* [2.5mm x 5.5mm Coaxial power plug] (https://www.amazon.com/gp/product/B07VPHMLHC/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1)
+> Note: Thie 2.5mm x 5.5mm uses 22 AWG wire shich may be too small for 3A charging, yet to be evaluated.
+
+
+
+Alternatively, if your vehicle has USB ports that turn off when the car is shut off, then you may use a USB mini cable with a maximum supported charge current of 2A.
+ * [USB mini cable (3-pack)](https://www.amazon.com/Premium-Super-Durable-Android-Smartphones-Tablets/dp/B076WXJPQ1/ref=sr_1_4?keywords=usb+micro&qid=1585767182&sr=8-4)
+ 
+ For full 3A charging using USB with minimal install, you can use a a USB to 5.5mmx2.5mm barrel jack cable with higher current cigarette lighter USB source
+ * [USB to 5.5x2.5mm Adapter](https://www.amazon.com/TENINYU-Angled-Degree-5-5x2-5mm-Positive/dp/B07B11VK4S/ref=sr_1_2?keywords=usb+to+2.5mm+5.5+male&qid=1585767229&s=electronics&sr=1-2)
+ * [Cigarette Ligheter to USB adapter, 4.8A](https://www.amazon.com/Charger-RAVPower-Adapter-iSmart-Compatible/dp/B071FHZRQN/ref=sr_1_2?keywords=cigarrete+usb&qid=1585767324&s=electronics&sr=1-2)
+
+
 
 <a name="hardware-config"></a>
 ___
@@ -362,6 +386,52 @@ UniqueData is intended to be used for reverse-engineering of vehicle ocmponents.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/kJtX92a0EbM?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
+
+
+<a name="power-guide"></a>
+___
+# Power Guide with x725
+
+> Note: Do not follow the installation instructions provided by the manufacturer.  We have provided an installation script that functions for our use case.
+
+![x725 installed on the raspberry pi](/doc/images/x725.jpg "x725")
+
+The x725 is a battery backup solution for the raspberry pi, using GPIO pins 4, 17, and 18 along with i2c.  The documentation of the particular hardware is a bit lacking, but the functionality is sufficient for data collection applications.  Some preliminary data was taken in regard to charge/discharge times under expected use:
+
+* With the Panda plugged in while the OS is idle, power can be supplied for ~4 hours
+* With the Panda plugged in actively recording data at ~30% CPU usage, charge time is ~2.5 hours
+
+For use with the CIRCLES project, the installation script in libpanda->scripts->x725 sets up the necessary start scripts to automatically shut down the pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x725 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
+
+
+![Statemachine of data recording, network connectivity, and data upload](/doc/images/statemachine.png "High-Level State Machine of libpanda, Wifi, and Power Management")
+
+To install the x725 software for the above state machine, navigate to the installation directory for the x725.  Then, invoke the installation script.
+
+~~~
+$ cd libpanda/scripts/x725
+$ sudo ./install.sh
+~~~
+
+This installation process involves the compilation of two C programs, installs a script to invoke a system shutdown, and installs two systemd services.
+
+* x725shutdown.sh is installed as /usr/local/sbin/x725shutdown.  When called, this operates the GPIO pins to invoke a shutdown.
+* x725button.service is a systemd script that invokes the C program, x725button.  This listens to the GPIO for an invoked shutdown command, then calls a "poweroff".
+*  x725power.service is a systemd script that invokes the C program, x725power.   This monitors the charging/discharging state. If power disconnect event occurs, user-defined script is invoked, followed by a call to "x725shutdown".
+
+
+To manually invoke a system shutdown:
+
+~~~
+$ sudo x725shutdown
+~~~
+
+To check on the systemd power or button status:
+~~~
+$ systemctl status x725button
+$ systemctl status x725power
+~~~
+
 
 <a name="visualization"></a>
 ___
