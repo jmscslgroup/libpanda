@@ -23,6 +23,7 @@ Hardware tutorial                         {#mainpage}
 		* [pandaSetSystemTime](#libpanda-pandaSetSystemTime)
 		* [pandaCurses](#libpanda-pandaCurses)
 * [Power Guide with x725](#power-guide)
+* [Network Guide](#network-guide)
 * [Data Visualization](#visualization)
 * [Data Repository](#repository)
 
@@ -431,6 +432,14 @@ To check on the systemd power or button status:
 $ systemctl status x725button
 $ systemctl status x725power
 ~~~
+
+
+<a name="network-guide"></a>
+___
+# Network Guide
+
+> Note: Development for this is incomplete, but in-progress
+
 
 
 <a name="visualization"></a>
