@@ -7,9 +7,13 @@ iface eth0 inet static
 	address 10.3.141.1
 	netmask 255.255.255.0
 
-allow-hotplug wlan0
-
-iface wlan0 inet manual
-wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
-
-iface default inet dhcp
+#allow-hotplug wlan0
+#
+#iface wlan0 inet manual
+#wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+#
+#iface default inet dhcp
+auto wlan0
+iface wlan0 inet dhcp
+#wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+        wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf

@@ -54,9 +54,8 @@ int i2c_write_byte( int i2cFile, unsigned char cmd, unsigned char value) {
 	buffer[1] = value;
 
 	int length = 2;
-	if( write(i2cFile, buffer, length) != length )
-	{
-		printf("Failed to write to the i2c\n");
+	if( write(i2cFile, buffer, length) != length ) {
+		fprintf(stderr, "Failed to write to the i2c\n");
 	}
 
 	return 0;
@@ -67,17 +66,15 @@ int i2c_read_word( int i2cFile, unsigned char cmd) {
 
 	// First we need to write a byte for the register to be read
 	buffer[0] = cmd;
-	int length = 1;			//<<< Number of bytes to write
-	if (write(i2cFile, buffer, length) != length)
-	{
-		printf("Failed to write to i2c\n");
+	int length = 1;
+	if (write(i2cFile, buffer, length) != length) {
+		fprintf(stderr, "Failed to write to i2c\n");
 	}
 
 	// Then we can begin reading from that register onward
 	length = 2;
-	if (read(i2cFile, buffer, length) != length)
-	{
-		printf("Failed to read from i2c\n");
+	if (read(i2cFile, buffer, length) != length) {
+		fprintf(stderr, "Failed to read from i2c\n");
 	}
 
 	int result = (((int)buffer[0])<<8) + (int)buffer[1];
@@ -88,7 +85,7 @@ int i2c_read_word( int i2cFile, unsigned char cmd) {
 
 
 int main(int argc, char **argv) {
-	printf("Running %s\n", argv[0]);
+	fprintf(stderr, "Running %s\n", argv[0]);
 
 	// if a single argument is passed, it will be the name of the script to be run prior to system shutdown.
 	char scriptToRunBeforeShutdown[] = "scriptToRunBeforeShutdown";
@@ -97,19 +94,17 @@ int main(int argc, char **argv) {
 		exitScript = argv[1];
 	}
 
-	printf("The command \'%s\' will be run on exit\n", exitScript);
+	fprintf(stderr, "The command \'%s\' will be run on exit\n", exitScript);
 
 	// This opens the raspberry pi device file:
 	char i2cFilename[] = "/dev/i2c-1";
 	int i2cFile;
-	if ((i2cFile = open(i2cFilename, O_RDWR)) < 0)
-	{
+	if( (i2cFile = open(i2cFilename, O_RDWR)) < 0) {
 		printf("Unable to open the i2c file");
 		return -1;
 	}
 
-	if (ioctl(i2cFile, I2C_SLAVE, x725_ADDRESS) < 0)
-	{
+	if( ioctl(i2cFile, I2C_SLAVE, x725_ADDRESS) < 0) {
 		printf("Unable ot talk to x725 i2c address\n");
 		return -1;
 	}
@@ -130,12 +125,12 @@ int main(int argc, char **argv) {
 		// Read voltage:
 		result = i2c_read_word(i2cFile, 2);
 		voltage = ((float)result) * 1.25 /1000/16;
-		printf("Voltage  = %7.5fV\n", voltage);
+//		printf("Voltage  = %7.5fV\n", voltage);
 
 		// Read capacity:
 		result = i2c_read_word(i2cFile, 4);
 		capacity = result / 256.0;
-		printf("Capacity = %5.2f%%\n", capacity);
+//		printf("Capacity = %5.2f%%\n", capacity);
 
 		// Read Current:
 		// I am unsure if this actually corresponds to current
@@ -145,12 +140,20 @@ int main(int argc, char **argv) {
 		} else {
 			current = 2.0/1000.0 * (float)(result & 0x7FFF);
 		}
-		printf("Batt Current = %0.3f\n", current);
+//		printf("Batt Current = %0.3f\n", current);
 
-		printf("Chargin state: %s\n",
+//		printf("Chargin state: %s\n",
+//			   current > CHARGED_THRESHOLD ? "Charging" :
+//			   current < -CHARGED_THRESHOLD ? "Discharging" :
+//			   "Charged" );
+
+		fprintf(stderr, "Status: %s %5.3fV %6.3fA %6.2f%%\n",
 			   current > CHARGED_THRESHOLD ? "Charging" :
 			   current < -CHARGED_THRESHOLD ? "Discharging" :
-			   "Charged" );
+			   "Charged",
+			   voltage,
+			   current,
+			   capacity);
 
 		if ((current < CHARGED_THRESHOLD ) && (current > -CHARGED_THRESHOLD )) {
 			batteryState = CHARGED;
@@ -171,17 +174,17 @@ int main(int argc, char **argv) {
 
 
 		if ( capacity <= 0 ) {
-			printf("Batteries are drained!  Shutting Down...\n");
+			fprintf(stderr, "Batteries are drained!  Shutting Down...\n");
 			keepRunning = false;
 		}
 
 		if ( voltage < 3.2 ) {
-			printf("Battery voltage is low!  Shutting Down...\n");
+			fprintf(stderr, "Battery voltage is low!  Shutting Down...\n");
 			keepRunning = false;
 		}
 
 		if ( batteryState == DISCHARGING ) {
-			printf("External Power loss!  Running upload script...\n");
+			fprintf(stderr, "External Power loss!  Running upload script...\n");
 
 
 //			exitScriptPid = fork();
@@ -194,7 +197,7 @@ int main(int argc, char **argv) {
 //			}
 			// This is blocking call until the exit script
 
-			printf("Shutting Down...\n");
+			fprintf(stderr, "Shutting Down...\n");
 
 		}
 	}

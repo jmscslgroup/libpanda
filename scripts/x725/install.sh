@@ -24,10 +24,19 @@ then
 	apt-get install -y ${toInstall[@]}
 fi
 
-g++ x725power.cpp -o x725power
-mv x725power /usr/local/bin/x725power
+#g++ x725power.cpp -o x725power
+#mv x725power /usr/local/bin/x725power
 
-cp x725button.sh /usr/local/sbin/x725button
+if [ ! -d "build" ]; then
+	mkdir build
+fi
+cd build
+cmake ..
+make install
+cd ..
+
+
+#cp x725button.sh /usr/local/sbin/x725button
 cp x725shutdown.sh /usr/local/sbin/x725shutdown
 cp scriptToRunBeforeShutdown.sh /usr/local/sbin/scriptToRunBeforeShutdown
 
@@ -40,6 +49,9 @@ systemctl daemon-reload
 
 systemctl enable x725power.service
 systemctl enable x725button.service
+
+systemctl restart x725button.service
+systemctl restart x725power.service
 
 echo "Done."
 echo "========================="
