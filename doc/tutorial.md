@@ -89,7 +89,7 @@ The x725 and batteries are shown as optional since they are not required to reco
 
 There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  
 
-##### Fast Charge w/Debuggin (most expensive)
+##### Fast Charge w/Debugging (most expensive)
 
 For fastest charging at 3A, and for power debugging, the following list provides power information when in use.  This list requires a small amount of assembly.
 
@@ -435,10 +435,34 @@ To manually invoke a system shutdown:
 $ sudo x725shutdown
 ~~~
 
-To check on the systemd power or button status:
+Invoking the shutdown works by signaling to the x725 that a shutdown is taking place, at which the x725 signals back to the pi via GPIO that a shutdown should take place.  The x725button service listens for this and invokes the shutdown automatically.  To check on the systemd button status:
+
 ~~~
 $ systemctl status x725button
+~~~
+
+The x725 script is automatically invoked based on the power conditions as measured by the x725power service.  These conditions include a power input interrupt, low battery voltage, or low battery capacity.  The overall flow of signals is therefore:
+
+x725power -> x725shutdown -> x725button
+
+Again, the status may be checked with systemctl:
+
+~~~
 $ systemctl status x725power
+~~~
+
+If you desire to not have the system automatically shutdown upon, such as for when you are debugging the car during starting and stopping the engine, then disable the x725power script:
+
+~~~
+$ sudo systemctl stop x725power
+$ sudo systemctl disable x725power
+~~~
+
+To return to normal operation:
+
+~~~
+$ sudo systemctl restart x725power
+$ sudo systemctl enable x725power
 ~~~
 
 

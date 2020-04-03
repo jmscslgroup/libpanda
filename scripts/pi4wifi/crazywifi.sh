@@ -52,7 +52,7 @@ connectToKnownWifi ()
 		echoGood "- Connected to WiFi: $1"
 		return 1
 	else
-		echoBad "- Unaible to get IP"
+		echoBad "- Unable to get IP"
 		wpa_cli terminate
 	fi
 
@@ -219,8 +219,8 @@ doStuff ()
 
 	echo "Done."
 
-haveIpOnDevice wlan0
-haveIpOnDevice eth0
+	haveIpOnDevice wlan0
+	haveIpOnDevice eth0
 
 	return 1
 }

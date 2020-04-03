@@ -36,9 +36,9 @@
 
 #define x725_ADDRESS (0x36)
 
-#define CMD_VOLTAGE
-#define CMD_CAPACITY
-#define CMD_CURRENT	// unsure if this is current, seems to roughly correspond
+#define CMD_VOLTAGE (2)
+#define CMD_CAPACITY (4)
+#define CMD_CURRENT	(20)// unsure if this is current, seems to roughly correspond
 
 typedef enum {
 	CHARGING,
@@ -122,19 +122,34 @@ int main(int argc, char **argv) {
 	while(keepRunning) {
 		sleep(5); // only operate once every 5 seconds
 
+
+		// The following two functions ensure that i2c is connected, otherwise continue and wait.
+		//  This assumes that 4 total byes are unchanging regardless of the x725 state.
+		//  It is unsure what these registers are for.  primitive tests were unable to write
+		//  new values for these registers, meaning that they may
+		result = i2c_read_word(i2cFile, 8);
+		if (result != 2) {
+			continue;
+		}
+		result = i2c_read_word(i2cFile, 12);
+		if (result != 38656) {
+			continue;
+		}
+
+
 		// Read voltage:
-		result = i2c_read_word(i2cFile, 2);
+		result = i2c_read_word(i2cFile, CMD_VOLTAGE);
 		voltage = ((float)result) * 1.25 /1000/16;
 //		printf("Voltage  = %7.5fV\n", voltage);
 
 		// Read capacity:
-		result = i2c_read_word(i2cFile, 4);
+		result = i2c_read_word(i2cFile, CMD_CAPACITY);
 		capacity = result / 256.0;
 //		printf("Capacity = %5.2f%%\n", capacity);
 
 		// Read Current:
 		// I am unsure if this actually corresponds to current
-		result = i2c_read_word(i2cFile, 20);
+		result = i2c_read_word(i2cFile, CMD_CURRENT);
 		if(result & 0x8000) {
 			current = 2.0/1000.0 * (float)((result & 0x7FFF) - 0x8000);
 		} else {

@@ -5,6 +5,7 @@ Wants=network.target
 
 [Service]
 Type=simple
+ExecStartPre=/usr/local/bin/x725available
 ExecStart=/usr/local/bin/x725button
 
 

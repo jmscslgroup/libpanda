@@ -1,7 +1,7 @@
 [Unit]
 Description=Power management using x725
 After=x725button.service
-Wants=x725button.service
+Required=x725button.service
 
 
 [Service]

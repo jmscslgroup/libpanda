@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.1)
 project(x725)
 
 
+add_executable( x725available src/x725available.cpp )
 
 add_executable( x725power src/x725power.cpp )
 
@@ -18,4 +19,7 @@ install( TARGETS x725power
 	         DESTINATION bin )
 set_target_properties( x725button PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 install( TARGETS x725button
+	         DESTINATION bin )
+set_target_properties( x725available PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+install( TARGETS x725available
 	         DESTINATION bin )
