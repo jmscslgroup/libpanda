@@ -26,7 +26,7 @@ echoBad ()
 connectToKnownWifi ()
 {
 	echo " - Configuring interfaces"
-	cp /etc/network/interfaces.client /etc/network/interfaces
+#	cp /etc/network/interfaces.client /etc/network/interfaces
 #	service dhcpcd stop
 	echo " - Stopping DHCP server"
 	service isc-dhcp-server stop
@@ -62,7 +62,7 @@ connectToKnownWifi ()
 setupAp ()
 {
 	echo " - Configuring interfaces"
-	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
+#	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
 
 	echo " - Restarting wlan0"
 	ifdown wlan0
@@ -219,10 +219,40 @@ doStuff ()
 
 	echo "Done."
 
-	haveIpOnDevice wlan0
-	haveIpOnDevice eth0
+
+
 
 	return 1
+}
+
+doEthernet ()
+{
+	# check for a physical connection on ethernet
+	echo "Checking for eth0 link status"
+	haveEthernetPhysicalConnection
+	if [ $? -eq 1 ]; then
+		echoGood "Connected"
+		ethernetConnected=true
+
+		dhclient eth0
+
+#		haveIpOnDevice eth0
+
+#		haveIpOnDevice eth0
+#		if [ $? -eq 1 ]; then
+#			echo " - I has ethernet IP!"
+#			haveIpOnDevice wlan0
+##			return 1
+#		fi
+	else
+		echoBad "Disconnected"
+#		setupDhcpServer
+	fi
+
+
+
+
+
 }
 
 trap cleanup SIGINT SIGTERM
@@ -231,6 +261,9 @@ while [ 1 ]
 do
 	echo "--------------------------------"
 	doStuff
+	haveIpOnDevice wlan0
+	doEthernet
+	haveIpOnDevice eth0
 	sleep 10 &
 	wait $!
 done

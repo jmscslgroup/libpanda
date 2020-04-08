@@ -2,11 +2,11 @@
 # Author: Matt Bunting
 
 echo "----------------------------"
-echo "Installing crazywifi scripts"
+echo "Installing crazypifi scripts"
 
 
 #build dependencies:
-declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown iptables)
+declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown iptables iw)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -38,21 +38,22 @@ fi
 #	apt-get install ifupdown
 #fi
 
-cp interfaces.* /etc/network/
-cp crazywifi.sh /usr/sbin/crazywifi
+cp crazypifi.sh /usr/local/sbin/crazypifi
 touch /etc/wpa_supplicant/wpa_supplicant.conf
 
 if [ ! -f /etc/network/interfaces.bak ]; then
 	echo "Backing up /etc/network/interfaces to /etc/network/interfaces.bak"
 	cp /etc/network/interfaces /etc/network/interfaces.bak
 fi
-# nothing to copy here
+cp interfaces.* /etc/network/
 
 if [ ! -f /etc/hostapd/hostapd.conf.bak ]; then
 	echo "Backing up /etc/hostapd/hostapd.conf to /etc/hostapd/hostapd.conf.bak"
 	mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
 fi
 cp hostapd.conf /etc/hostapd/hostapd.conf
+
+sed -i 's/#DAEMON_CONF=.*/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/' /etc/default/hostapd
 
 #if [ ! -f /etc/dhcpcd.conf.bak ]; then
 #	echo "Backing up /etc/dhcpcd.conf to /etc/dhcpcd.conf.bak"
@@ -66,6 +67,13 @@ if [ ! -f /etc/dhcp/dhcpd.conf.bak ]; then
 fi
 cp dhcpd.conf /etc/dhcp/dhcpd.conf
 
+
+cp crazypifi.service.txt  /etc/systemd/system/crazypifi.service
+chmod 655 /etc/systemd/system/crazypifi.service
+
+systemctl daemon-reload
+
+#systemctl enable crazypifi.service
 
 
 echo "Done."
