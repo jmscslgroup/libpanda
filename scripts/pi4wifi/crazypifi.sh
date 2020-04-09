@@ -26,7 +26,7 @@ echoBad ()
 connectToKnownWifi ()
 {
 	echo " - Configuring interfaces"
-#	cp /etc/network/interfaces.client /etc/network/interfaces
+	cp /etc/network/interfaces.client /etc/network/interfaces
 #	service dhcpcd stop
 	echo " - Stopping DHCP server"
 	service isc-dhcp-server stop
@@ -34,16 +34,26 @@ connectToKnownWifi ()
 	echo " - Stopping Hostapd"
 	service hostapd stop
 
+	echo " - Removing static IP"
+	ifconfig wlan0 0.0.0.0
+
+	echo " - Restarting wpa_supplicant"
+#	service wpa_supplicant restart
+
 	echo " - Restarting wlan0"
 	ifdown wlan0
 	ifup wlan0
 
 	#ssids=$1
 
-#	echo " - Connecting to SSID: " $1
 
-#	echo " - Starting supplicant for WPA/WPA2"
+
+	echo " - Starting wpa_supplicant for WPA/WPA2"
 	wpa_supplicant -B -i wlan0 -c /etc/wap_supplicant/wpa_supplicant.conf > /dev/null 2>&1
+
+	echo " - Selecting AP SSID: " $1
+	wpa_cli select_network $1
+
 	echo " - Releasing DHCP lease"
 	dhclient -r wlan0
 	echo " - Obtaining IP from DHCP"
@@ -53,7 +63,7 @@ connectToKnownWifi ()
 		return 1
 	else
 		echoBad "- Unable to get IP"
-		wpa_cli terminate
+#wpa_cli terminate
 	fi
 
 	return 0
@@ -61,12 +71,22 @@ connectToKnownWifi ()
 
 setupAp ()
 {
+	echo " - Releasing DHCP lease"
+	dhclient -r wlan0
+
+	echo " - Stopping wpa_supplicant"
+	wpa_cli terminate
+#	service wpa_supplicant stop
+
 	echo " - Configuring interfaces"
-#	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
+	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
 
 	echo " - Restarting wlan0"
 	ifdown wlan0
 	ifup wlan0
+
+	echo " - Setting static IP"
+	ifconfig wlan0 10.3.141.1/24
 
 	echo " - Restarting hostapd"
 	service hostapd restart

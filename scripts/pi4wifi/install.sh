@@ -67,6 +67,12 @@ if [ ! -f /etc/dhcp/dhcpd.conf.bak ]; then
 fi
 cp dhcpd.conf /etc/dhcp/dhcpd.conf
 
+if [ ! -f /etc/wpa_supplicant/wpa_supplicant.conf.bak ]; then
+	echo "Backing up /etc/wpa_supplicant/wpa_supplicant.conf to /etc/wpa_supplicant/wpa_supplicant.conf.bak"
+	cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
+fi
+cp wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+
 
 cp crazypifi.service.txt  /etc/systemd/system/crazypifi.service
 chmod 655 /etc/systemd/system/crazypifi.service
