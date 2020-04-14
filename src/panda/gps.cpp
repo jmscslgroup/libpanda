@@ -86,8 +86,6 @@ void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
 
 	resume();	// will request more data
 
-
-
 	CNMEAParserData::ERROR_E nErr;
 	if ((nErr = this->ProcessNMEABuffer((char*)buffer, bufferLength)) != CNMEAParserData::ERROR_OK) {
 		std::cerr << "NMEA Parser Gps::ProcessNMEABuffer Failed and returned error: " << nErr << std::endl;
@@ -129,7 +127,12 @@ void Gps::addObserver( GpsListener* listener ) {
 
 void Gps::startParsing() {
 	if(usbHandler == NULL) {
-		std::cerr << "ERROR: Gps::startParsing() No Usb Handler set for Panda::Gps!" << std::endl;
+		std::cerr << "ERROR: Gps::startParsing(): No Usb Handler set for Panda::Gps!" << std::endl;
+		return;
+	}
+
+	if ( !usbHandler->hasGpsSupport() ) {
+		std::cerr << "WARNING: Gps::startParsing(): Usb Device does not support GPS!" << std::endl;
 		return;
 	}
 
@@ -380,10 +383,17 @@ void setUbxChecksum(char* packet) {
 
 void Gps::initialize() {
 	std::cerr << "Initializing GPS" << std::endl;
+
 	if (usbHandler == NULL) {
 		std::cerr << "ERROR: Usb::initialize(): No Usb Handler set for Panda::Usb!" << std::endl;
 		return;
 	}
+
+	if ( !usbHandler->hasGpsSupport() ) {
+		std::cerr << "WARNING: Gps::initialize(): Usb Device does not support GPS!" << std::endl;
+		return;
+	}
+
 	std::cerr << " - Resetting" << std::endl;
 	usbHandler->setEspPower(0);
 	usleep(100000);

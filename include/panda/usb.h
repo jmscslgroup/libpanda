@@ -89,6 +89,7 @@ namespace Panda {
 		void requestUartData();
 
 		// uart write and read, for GPS
+		bool hasGpsSupport();
 		void uartWrite(const char* buffer, int length);
 //		int uartRead(unsigned char* buffer);
 		void uartPurge();
@@ -116,6 +117,7 @@ namespace Panda {
 		void stopRecording();
 
 	private:
+		bool hasGps;
 		UsbMode mode;
 
 		std::vector<UsbListener*> listeners;

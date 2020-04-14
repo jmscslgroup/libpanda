@@ -31,7 +31,7 @@
 using namespace Panda;
 
 Usb::Usb(UsbMode mode)
-:mode(mode), handler(NULL) {
+:hasGps(false), mode(mode), handler(NULL) {
 
 }
 
@@ -127,6 +127,37 @@ void Usb::initialize() {
 //	setCanLoopback(true);
 	std::cout << " - Disabling CAN Loopback:" << std::endl;
 	setCanLoopback(false);
+
+
+	std::cout << " - Reading USB hardware model:" << std::endl;
+	unsigned char hardwareType = getHardware();
+
+	printf("Got the following value in return: %d\n", (int)hardwareType);
+
+	switch (hardwareType) {
+		case HARDWARE_WHITE_PANDA:
+			std::cout << " |-- This is a WHITE PANDA, no GPS" << std::endl;
+			break;
+		case HARDWARE_GREY_PANDA:
+			hasGps = true;
+			std::cout << " |-- This is a GREY PANDA" << std::endl;
+			break;
+		case HARDWARE_BLACK_PANDA:
+			hasGps = true;
+			std::cout << " |-- This is a BLACK PANDA" << std::endl;
+			break;
+		case HARDWARE_UNO:
+			hasGps = true;
+			std::cout << " |-- This is an UNO" << std::endl;
+			break;
+		case HARDWARE_PEDAL:
+			std::cout << " |-- This is an PEDAL, no GPS" << std::endl;
+			break;
+
+		case HARDWARE_UNKNOWN:
+		default:
+			std::cout << " |-- This is UNKOWN HARDWARE" << std::endl;
+	}
 
 	std::cerr << " - USB Done." << std::endl;
 }
@@ -837,9 +868,13 @@ void Usb::getFirmware( unsigned char* firmware128 ) {
 }
 
 unsigned char Usb::getHardware() {
-	unsigned char hardware;
-	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_HARDWARE, &hardware, 1);
-	return hardware;
+	unsigned char hardware[1];
+	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_HARDWARE, hardware, 1);
+	return hardware[0];
+}
+
+bool Usb::hasGpsSupport() {
+	return hasGps;
 }
 
 struct tm Usb::getRtc() {

@@ -57,7 +57,7 @@ connectToKnownWifi ()
 	echo " - Releasing DHCP lease"
 	dhclient -r wlan0
 	echo " - Obtaining IP from DHCP"
-	if dhclient -1 wlan0;
+	if dhclient -10 wlan0;
 	then
 		echoGood "- Connected to WiFi: $1"
 		return 1

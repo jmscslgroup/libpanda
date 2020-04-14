@@ -69,7 +69,7 @@
 // The following definitions are interpreted from openpilot/panda/board/main.c:246 usb_cb_control_msg(
 // Requests involving REQUEST_TYPE_OUT:
 #define REQUEST_CAN_DEBUG        0xc0 // CAN debug information
-#define REQUEST_HARDWARE         0xc1 // determine Panda model (GPS)
+#define REQUEST_HARDWARE         0xc1 // determine Panda model (black/grey/white/uno)
 #define REQUEST_SERIAL           0xd0
 #define REQUEST_BOOTLOADER       0xd1 // For flashing
 #define REQUEST_CAN_HEALTH       0xd2 // Can get ignition info here
@@ -124,6 +124,15 @@
 #define SAFETY_ALLOUTPUT 17U
 #define SAFETY_GM_ASCM 18U
 
-
+// This order was copied from cereal based nt he boardd.cc code.  The order however seems wrong.
+// This is known to work, based on tests, for the white, grey and black pandas
+enum {
+	HARDWARE_UNKNOWN=2,	// I don't know what this is
+	HARDWARE_WHITE_PANDA=0, // based on experimentation
+	HARDWARE_GREY_PANDA=1, // based on experimentation
+	HARDWARE_BLACK_PANDA=3, // based on experimentation
+	HARDWARE_PEDAL=4,	// I don't know what this is
+	HARDWARE_UNO=5,	// I don't know what this is
+};
 
 #endif

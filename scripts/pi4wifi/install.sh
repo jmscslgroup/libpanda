@@ -79,7 +79,7 @@ chmod 655 /etc/systemd/system/crazypifi.service
 
 systemctl daemon-reload
 
-#systemctl enable crazypifi.service
+systemctl enable crazypifi.service
 
 
 echo "Done."
