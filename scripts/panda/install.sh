@@ -4,7 +4,7 @@
 echo "========================="
 echo "Installing panda services"
 
-if [ ! -d /etc/libpanda.d ]; 
+if [ ! -d /etc/libpanda.d ]; then
 	mkdir /etc/libpanda.d
 fi
 
