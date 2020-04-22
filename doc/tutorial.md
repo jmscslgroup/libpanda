@@ -530,7 +530,7 @@ ___
 
 The directory libpanda/scripts/pi4wifi provides a set of installation scripts for the automatic connection of WiFi for future automatic data uploading.  When a known wifi Access Point (AP) is not available, then the scripts with generate an AP for easy connection with a phone or laptop for Raspberry Pi debugging.  A very high level view of these scripts in the form of a state machine is as follows:
 
-![State machine of the wifi handler](/doc/images/wifistate.jpg "High-Level State Machine of crazypifi")
+![State machine of the wifi handler](/doc/images/wifistate.png "High-Level state machine of crazypifi")
 
 The pi4wifi directory has an installation script for easy setup.  Simply run this script for installation of dependencies, along with the removal of confliciting packages.  The main script is called "crazypifi.sh" and is dependent on hostapd, isc-dhcp-server, wpa_supplicant, iw, and ifupdown.  On Ubuntu 18.04, netplan is the default network interface manager but needs to be removed for the use of ifupdown.  Please make a note of this if you need netplan for other applications.  Again, running the install.sh script will handle all of installation needed.
 
