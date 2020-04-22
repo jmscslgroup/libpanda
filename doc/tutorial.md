@@ -35,7 +35,7 @@ Libpanda is a software library and set of utilities intended to interface with v
 
 [https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
 
-The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  These tests were performed on a raspberry pi 4.  Here is a video demonstrating our findings:
+The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  These tests were performed on a Raspberry Pi 4.  Here is a video demonstrating our findings:
 
 \htmlonly
 <center>
@@ -62,7 +62,8 @@ Both the Black and Grey Panda is supported by libpanda.  It is recommended to us
 
 #### Required for Black Panda:
 * [comma.ai Car Harness](https://comma.ai/shop/products/panda-obd-ii-dongle)
-	Be sure to select the "Black Panda" option when ordering the Car Harness
+
+Be sure to select the "Black Panda" option when ordering the Car Harness.  Also very importantly, read the [Hardware Configuration](#hardware-config) section to understand how **the Black Panda may brick your computer if not understood completely**.
 
 #### Required for Grey Panda:
 * [comma.ai Grey Panda](https://comma.ai/shop/products/panda-obd-ii-dongle)
@@ -76,15 +77,19 @@ Libpanda may be able to work on most linux machines, however the following hardw
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
 *  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
+* [Pimoroni Blinkt!](https://www.adafruit.com/product/3195)
+
+	This is a fun, inexpensive and compact set of addressable LEDs that will be supported for displaying the state of various scripting components such as WiFi connectivity, data upload, and power states, but is not required for any functionality.
+	
 
 
 <a name="hardware-opt"></a>
 #### Optional:
 
-These items are for convenience and will not change the function of the baove hardware, but may be needed if you are new to using a Raspberry pi.
+These items are for convenience and will not change the function of the baove hardware, but may be needed if you are new to using a Raspberry Pi.
 
 * [SD Card reader for Ubuntu flashing](https://www.amazon.com/Vanja-Adapter-Portable-Memory-Reader/dp/B00W02VHM6/ref=sr_1_6?keywords=usb+sd+card&qid=1583949114&s=electronics&sr=1-6)
-* [Micro HDMI adapter for pi 4](https://www.amazon.com/GANA-Adapter-Female-Action-Supported/dp/B07K21HSQX/ref=sxin_2_ac_d_pm?ac_md=1-0-VW5kZXIgJDEw-ac_d_pm&cv_ct_cx=micro+hdmi&keywords=micro+hdmi&pd_rd_i=B07K21HSQX&pd_rd_r=b124f42c-a587-491e-9400-52aef81c3d88&pd_rd_w=mNPkI&pd_rd_wg=saxZx&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=J1YKVHPV73CBGDNP1MXZ&psc=1&qid=1583949163&s=electronics)
+* [Micro HDMI adapter for Pi 4](https://www.amazon.com/GANA-Adapter-Female-Action-Supported/dp/B07K21HSQX/ref=sxin_2_ac_d_pm?ac_md=1-0-VW5kZXIgJDEw-ac_d_pm&cv_ct_cx=micro+hdmi&keywords=micro+hdmi&pd_rd_i=B07K21HSQX&pd_rd_r=b124f42c-a587-491e-9400-52aef81c3d88&pd_rd_w=mNPkI&pd_rd_wg=saxZx&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=J1YKVHPV73CBGDNP1MXZ&psc=1&qid=1583949163&s=electronics)
 * [Ethernet Cable](https://www.amazon.com/AmazonBasics-RJ45-Cat-6-Ethernet-Patch-Cable-10-Feet-3-Meters/dp/B00N2VIALK/ref=sr_1_3?keywords=ethernet&qid=1583954176&sr=8-3)
 
 <a name="hardware-opt-power"></a>
@@ -94,7 +99,7 @@ These items are for convenience and will not change the function of the baove ha
 * [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/liogea-LG3400G-3400mAh-Rechargeable-Batteries/dp/B07YBTQSQL/ref=sr_1_2?keywords=18650b&qid=1585673515&s=electronics&sr=1-2)
 
 
-The x725 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
+The x725 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the Pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
 
 
 There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  
@@ -126,17 +131,58 @@ Alternatively, if your vehicle has USB ports that turn off when the car is shut 
 <a name="hardware-config"></a>
 ___
 ## Configuration
-The Panda serves as a bridge between the vehicle's CAN bus and USB.  The Panda uses a standard OBD II connector. The OBD port is a standardized connector guaranteed to be on any car newer than 1996 for emmissions pruproses.  This means that the Panda can connect to any car, however some caveats to this have been noted:
+The Panda serves as a bridge between the vehicle's CAN bus and USB.  The Grey Panda uses a standard OBD II connector whereas the Black Panda interfaces using special connectors. The OBD port is a standardized connector guaranteed to be on any car newer than 1996 for emmissions pruproses.  This means that the Grey/White Panda can connect to any car, however some caveats to this have been noted:
 
 * On a 2009 Ford Hybrid Escape,  CAN data can be read but the Panda causes an electrical issue resulting in disabling the dash, locks, and creature comforts.
 * On a 2003 Jeep Grand Cherokee, the car runs normally but no CAN data can be read.  Also, the Panda USB interface connection fails on car starting.
 
 With this in mind, be cautious on the car that you wish to plug the Panda into, as the connector may be standardized but the pinout varies.  It is safest to only collect data on cars supported by comma.ai.
 
+#### Grey Panda with Giraffe
 The OBD II port is intended for emmissions and mechanic diagnostics.  In order to read lower-level data, the Giraffe exposes deeped CAN buses and adapts them to an OBD II port.  This enables reading of a vehicle's Radar data.  The Giraffe also feature DIP switches for setting different modes, including enabling writing to the CAN bus for vehicel control.  Currently we have the DIP switches are configures as follows:
 
 ![Giraffe DIP switch configuration: ON:(1,3,4) OFF:(2)](/doc/images/dip.jpg "DIP Switches")
 
+#### Black Panda with Car Harness
+
+The Black Panda does not feature any DIP switches, but the associated Car Harness, if matched to the vehicle, should be all that is needed.  There is a caveat to the installation of the black panda when not using comma.ai's EON.  First let's discuss the power methodology regarding the Black Panda/Car Harness/EON intended use case:
+
+* The EON is a rooted phone, featuring a single USB connector that is intended for normal charging.  This charging is usually power provided by the host computer to the client USB device.
+* The EON features USB OTG functionality, meaning that the phone can act a USB host.  The phone however still needs to charge.
+* The Black Panda is a USB client device, but has been engineered to provide back-power to the EON to power the host by getting power through the Car Harness.
+* This project, using libpanda, is intended to run on a Raspberry Pi which provides power to the client device.
+* Thus there is a conflict where both the Raspberry Pi (or other computer) is trying to drive the USB power pins along with the Black Panda.
+
+The above items were found out by assuming that the USB connectors followed standard protocols but this is **very importantly not the case**.  **Thus to make use of the Black Panda, modification or special parts must be ordered to not burn out any components**.
+
+Fortunately htere are a few workarounds that will let you safely make use of the Black Panda.  
+
+#### Purchasing an Adapter:
+The least invasive method is to purchase a cable that has only the data lines connected.  These are however difficult to comeby.  One example of a cable is [this power-switchable cable](https://www.amazon.com/dp/B07T9BRNHW/ref=sspa_dk_detail_5?psc=1&pd_rd_i=B07T9BRNHW&pd_rd_w=L4Rlk&pf_rd_p=48d372c1-f7e1-4b8b-9d02-4bd86f5158c5&pd_rd_wg=TWwR4&pf_rd_r=46V14Z53DTJWNP6WXF3Q&pd_rd_r=5f3b21c8-2c73-4df3-a883-129fbd9c115a&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExTlZMTDJIU1JXVVY4JmVuY3J5cHRlZElkPUEwMDAxMDA3MVQ2QlFZN0lORTVWOCZlbmNyeXB0ZWRBZElkPUEwMzY4MzU0MTBNRDJQQkpWRkdVTSZ3aWRnZXROYW1lPXNwX2RldGFpbCZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=), however please keep in mind that you must ensure that the switch is never accidentally flipped.  Also, this means that a person new tot he Black Panda may be unaware of the cables importance, bypass the cable, and cause hardware damage.
+
+#### Using Scotch Tape on the USB Cable:
+A simple solution without the purchase of a separate adapter that can be easily done at home is to tape-off the +5V line in the USB cable.  In the following image, you can see the placement of the tape within the cable.  This end may be plugged into either the Black Panda or the Raspberry Pi.  This method is non-invasive and easily reversible.  To read more about the pinouts with USB type A connectors, refer to [this website](https://www.electroschematics.com/usb-how-things-work/?utm_referrer=https%3A%2F%2Fwww.google.com).  This method also has the same issue as using the adapter method above regarding having knowledge about the cable, but even moreso since the cable change with tape is subtle.  A person could potentially swap out cables without realizing the tape is on the old cable, causing hardware damage.
+
+![Tape on the +5V pin on one end of a USB cable for the Black Panda](/doc/images/tapedUSB.png "USB taped off")
+
+#### Black Panda Modification:
+As with the scotch-tape method above, this method involves disconencting power but through a more invasive method.  Again, [this website](https://www.electroschematics.com/usb-how-things-work/?utm_referrer=https%3A%2F%2Fwww.google.com) should be read regarding pinouts to understand what this modification does.  This method involves the disassembly of the Black Panda to sever the +5V line directly on the USB connector.  Fortunately this can be done in a number of ways, using some snipping tool or a soldering iron, and disassembly is a breeze.  I personally prefer this method to the above two since this will ensure that the Black Panda will never be able to fry a computer.  Also depending on the method of modification, this may be reversible using a soldering iron.  The following image shows the steps to modify the Black Panda:
+
+![Black Panda Power Modification](/doc/images/modification.png "Black Panda Power Modification")
+
+1. Peel back the tape until the seam is exposed.
+2. Slide the two halves apart as shown.  Be careful of the GPS antenna cable.
+3. Use a USB cable or other blunt object to aid in sliding the PCB out of the casing.
+4. Remove the USB cable after the board slides a bit
+5. Slide the PCB out of the case
+6. Locate the USB A +5V power pin.  You may use a tool to sever the connection and bend the pins out of the way.  In the photo, a tool is used to pry the pin out of the USB housing.
+7. Furhter prying shown, witht he pin coming out of the connector.
+8. The solder joint may break, but the pin is fully removed and the Black Panda, with any cable, is now incapable of breaking a computer.
+
+Reassmbly may be done by following steps 1, 2, and 5 in reverse.
+
+
+#### Vehicle Specific Information
 <a name="hardware-rav4"></a>
 ### Installation in Toyota RAV4 2019
 
@@ -163,11 +209,11 @@ ___
 
 ## Ubuntu 18.04 LTS
 
-Currently Ubuntu 18.04 LTS is the only supported OS though it is very possible that libpanda will work just fine on other *nix based platforms.  To install Ubuntu 18.04 LTS on the raspberry pi 4, you will need a method to write to micro SD cards (see [Optional Hardware](#hardware-optional)).  Follow the tutorial on Ubuntu's website for downloding and flashing based on your own OS:
+Currently Ubuntu 18.04 LTS is the only supported OS though it is very possible that libpanda will work just fine on other *nix based platforms.  To install Ubuntu 18.04 LTS on the Raspberry Pi 4, you will need a method to write to micro SD cards (see [Optional Hardware](#hardware-optional)).  Follow the tutorial on Ubuntu's website for downloding and flashing based on your own OS:
 
 * [Ubuntu 18.04 LTS Raspberry Pi 4 Installation Guide](https://ubuntu.com/download/raspberry-pi)
 
-Once the OS is flashed, insert the SD card into the pi 4.  Etherrnet is by default enabled with a DHCP client.  There are two ways to configure the pi 4 from this point, either by plugging in a keyboard and monitor using the HDMI adapter from the [Optional Hardware](#hardware-optional), or through the preinstalled SSH server.  The default credentials for this image are:
+Once the OS is flashed, insert the SD card into the Pi 4.  Etherrnet is by default enabled with a DHCP client.  There are two ways to configure the Pi 4 from this point, either by plugging in a keyboard and monitor using the HDMI adapter from the [Optional Hardware](#hardware-optional), or through the preinstalled SSH server.  The default credentials for this image are:
 
 * Username: ubuntu
 * Password: ubuntu
@@ -177,23 +223,23 @@ The default username can be changed, but is out of scope for this tutorial.
 ### Setup via Monitor and Keyboard (Easy but clunky)
 
 1. Hook up monitor and keyboard
-2. Power the pi via the USB C connector
+2. Power the Pi via the USB C connector
 3. On boot, enter the credentials
 4. Follow the instructions to enter a new password
 
 ### Setup via Ethernet and SSH (Difficult but with minimal extra hardware)
 
 1. Plug in an ethernet cable 
-2. Power the pi via the USB C connector
-3. Wait a few minutes, then get the pi's IP from your router
+2. Power the Pi via the USB C connector
+3. Wait a few minutes, then get the Pi's IP from your router
 4. SSH into the pi.  You may use PuTTY on Windows, or on a *nix system (including macOS):
 ~~~
-$ ssh ubuntu@<your pi's IP>
+$ ssh ubuntu@<your Pi's IP>
 ~~~
 5. Follow instructions to change password
 6. SSH in again with new password
 
-Here is an example of logging into a pi after obtaining an IP address of 10.0.1.80:
+Here is an example of logging into a Pi after obtaining an IP address of 10.0.1.80:
 \htmlonly
 <center>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/w7WJoFv7HlY?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -206,7 +252,7 @@ ___
 
 Libpanda is a multithreaded C++ based library for custom Panda interface applications using the observer based software design pattern (i.e. callbacks).  Also featured in the software area set of premade data recording utilities, simple data visualizers, startup services, and network handling services.  The utilities save CSV formatted data that is supported by Rahul Bhadani's [Strym](https://github.com/jmscslgroup/strym).
 
-Installation requires an internet connection.  Ethernet is the easiest form to provide internet.  Once logged into your pi 4 (either SSH or keyboard/monitor), try pinging Google's DNS server to check for receivng bytes from 8.8.8.8:
+Installation requires an internet connection.  Ethernet is the easiest form to provide internet.  Once logged into your Pi 4 (either SSH or keyboard/monitor), try pinging Google's DNS server to check for receivng bytes from 8.8.8.8:
 ~~~
 $ ping 8.8.8.8
 64 bytes from 8.8.8.8: icmp_seq=1 ttl=56 time=25.6 ms
@@ -242,13 +288,13 @@ ___
 ### About
 
 The [libpanda setup process](libpanda-setup) installs a set of startup scripts using linux's systemd.  These scripts 
-* pandasettime - This opens the Panda, waits for a GPS fix, then sets the pi 4's system clock based on GPS time
+* pandasettime - This opens the Panda, waits for a GPS fix, then sets the Pi 4's system clock based on GPS time
 * pandarecord - This runs after pandasettime.  Once the system clock is set, pandarecord opens the panda for data recording.  This produces a set of CSV formatted files for both CAN and GPS data.  All data is currently recorded into timestamped files and folders, which may be viewable here:
 ~~~
 $ cd /var/panda/CyverseData/JmscslgroupData/PandaData
 ~~~
 
-> Note: We currently are aware of an issue where when the pi 4 is soft rebooted (i.e. sudo reboot), the Panda device fails to be recognized.  In the case of a hard boot (i.e. reconnecting pi 4 power), this problem does not occur.  In the following example, you can see how to check for Oanda USB connectivitiy by performing the command lsusb.  This is the result afeter a soft boot, then the Panda was reconnected, followed by andother lsusb to check for its presence.
+> Note: We currently are aware of an issue where when the Pi 4 is soft rebooted (i.e. sudo reboot), the Panda device fails to be recognized.  In the case of a hard boot (i.e. reconnecting Pi 4 power), this problem does not occur.  In the following example, you can see how to check for Oanda USB connectivitiy by performing the command lsusb.  This is the result afeter a soft boot, then the Panda was reconnected, followed by andother lsusb to check for its presence.
 
 ![Using lsusb to check for the Panda device, device ID bbaa:ddcc](/doc/images/lsusb.jpg "lsusb")
 
@@ -413,18 +459,18 @@ ___
 
 > Note: Do not follow the installation instructions provided by the manufacturer.  We have provided an installation script that functions for our use case.
 
-![x725 installed on the raspberry pi](/doc/images/x725.jpg "x725")
+![x725 installed on the Raspberry Pi](/doc/images/x725.jpg "x725")
 
-The x725 is a battery backup solution for the raspberry pi, using GPIO pins 4, 17, and 18 along with i2c.  The documentation of the particular hardware is a bit lacking, but the functionality is sufficient for data collection applications.  Some preliminary data was taken in regard to charge/discharge times under expected use:
+The x725 is a battery backup solution for the Raspberry Pi, using GPIO pins 4, 17, and 18 along with i2c.  The documentation of the particular hardware is a bit lacking, but the functionality is sufficient for data collection applications.  Some preliminary data was taken in regard to charge/discharge times under expected use:
 
 * With the Panda plugged in while the OS is idle, power can be supplied for ~4 hours
 * With the Panda plugged in actively recording data at ~30% CPU usage, charge time is ~2.5 hours
 
-For use with the CIRCLES project, the installation script in libpanda->scripts->x725 sets up the necessary start scripts to automatically shut down the pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x725 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
+For use with the CIRCLES project, the installation script in libpanda->scripts->x725 sets up the necessary start scripts to automatically shut down the Pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x725 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
 
 ![Statemachine of data recording, network connectivity, and data upload](/doc/images/statemachine.png "High-Level State Machine of libpanda, Wifi, and Power Management")
 
-The x725 may operate in certain modes based on the installation of certain jumpers per the x725's user manual.  The scripts provided by the libpanda project are based on the jumper settings in the following image.  This ensures that the x725 will apply power to the raspberry pi when power is re-established, e.g. when starting a car.  This jumper is labelled on the x725 PCB as "Auto SD".  The "Auto On" feature appears to leave the raspberry pi powered after a shutdown event, which is why a jumper should not be installed in this location.  The "Lan PWR" jumper allows for power to be applied to the ethernet port for WOL funcitonality which is not needed for this porject.  Also, the x725 ships with a small USB cable for a built-in USB-Ethernet adapter.  Again, since WOL is not needed for the CIRCLES project, this cable does not need ot be installed.
+The x725 may operate in certain modes based on the installation of certain jumpers per the x725's user manual.  The scripts provided by the libpanda project are based on the jumper settings in the following image.  This ensures that the x725 will apply power to the Raspberry Pi when power is re-established, e.g. when starting a car.  This jumper is labelled on the x725 PCB as "Auto SD".  The "Auto On" feature appears to leave the Raspberry Pi powered after a shutdown event, which is why a jumper should not be installed in this location.  The "Lan PWR" jumper allows for power to be applied to the ethernet port for WOL funcitonality which is not needed for this porject.  Also, the x725 ships with a small USB cable for a built-in USB-Ethernet adapter.  Again, since WOL is not needed for the CIRCLES project, this cable does not need ot be installed.
 
 ![x725 jumper settings](/doc/images/x725jumper.png "x725 Jumper Settings for the scripts in libpanda")
 
@@ -447,7 +493,7 @@ To manually invoke a system shutdown:
 $ sudo x725shutdown
 ~~~
 
-Invoking the shutdown works by signaling to the x725 that a shutdown is taking place, at which the x725 signals back to the pi via GPIO that a shutdown should take place.  The x725button service listens for this and invokes the shutdown automatically.  To check on the systemd button status:
+Invoking the shutdown works by signaling to the x725 that a shutdown is taking place, at which the x725 signals back to the Pi via GPIO that a shutdown should take place.  The x725button service listens for this and invokes the shutdown automatically.  To check on the systemd button status:
 
 ~~~
 $ systemctl status x725button
@@ -482,7 +528,7 @@ $ sudo systemctl enable x725power
 ___
 # Network Guide
 
-The directory libpanda/scripts/pi4wifi provides a set of installation scripts for the automatic connection of WiFi for future automatic data uploading.  When a known wifi Access Point (AP) is not available, then the scripts with generate an AP for easy connection with a phone or laptop for raspberry pi debugging.  A very high level view of these scripts in the form of a state machine is as follows:
+The directory libpanda/scripts/pi4wifi provides a set of installation scripts for the automatic connection of WiFi for future automatic data uploading.  When a known wifi Access Point (AP) is not available, then the scripts with generate an AP for easy connection with a phone or laptop for Raspberry Pi debugging.  A very high level view of these scripts in the form of a state machine is as follows:
 
 ![State machine of the wifi handler](/doc/images/wifistate.jpg "High-Level State Machine of crazypifi")
 
@@ -524,7 +570,7 @@ A tutorial for Strym can be found [here](https://github.com/jmscslgroup/strym/bl
 ___
 # Data Repository
 
-Currently all data is intended to be uploaded to [CyVerse](https://cyverse.org).  In order to acess data we need to grant you access in an account-by-account basis.  Please request access from someone at the JMS CSL Group.  Currently data is manually uploaded to CyVerse directly from the pi 4, but with manual commands at the end of each colleciton session.  Eventually we will provide methods to perform uploads automatically.  This is also why the power supply has yet to be determined for the pi 4, since power needs to remain after the car is shut off to give time for the pi to connect to wifi and transfer data.
+Currently all data is intended to be uploaded to [CyVerse](https://cyverse.org).  In order to acess data we need to grant you access in an account-by-account basis.  Please request access from someone at the JMS CSL Group.  Currently data is manually uploaded to CyVerse directly from the Pi 4, but with manual commands at the end of each colleciton session.  Eventually we will provide methods to perform uploads automatically.  This is also why the power supply has yet to be determined for the Pi 4, since power needs to remain after the car is shut off to give time for the Pi to connect to wifi and transfer data.
 
 To access Cyverse data after you have created an account and have been granted access:
 
