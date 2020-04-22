@@ -54,7 +54,7 @@ ___
 ## List of Components
 The hardware choice is based around running linux with comm.ai hardware, leveraging prior efforts in CAN bus access.  
 
-![Hardware Overview](/doc/images/overview.jpg "Overview")
+![Hardware Overview](/doc/images/overview.png "Overview")
 
 <a name="hardware-req"></a>
 
@@ -79,7 +79,7 @@ Libpanda may be able to work on most linux machines, however the following hardw
 *  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
 * [Pimoroni Blinkt!](https://www.adafruit.com/product/3195)
 
-	This is a fun, inexpensive and compact set of addressable LEDs that will be supported for displaying the state of various scripting components such as WiFi connectivity, data upload, and power states, but is not required for any functionality.
+	This is a nifty, inexpensive, and compact set of addressable LEDs that will be supported for displaying the state of various scripting components such as WiFi connectivity, data upload, and power states, but is not required for any functionality.
 	
 
 
