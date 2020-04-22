@@ -54,18 +54,25 @@ ___
 ## List of Components
 The hardware choice is based around running linux with comm.ai hardware, leveraging prior efforts in CAN bus access.  
 
-![Hardware Overview](/doc/images/overview.png "Overview")
+![Hardware Overview](/doc/images/overview.jpg "Overview")
 
 <a name="hardware-req"></a>
-#### Required:
-* [comma.ai Grey Panda](https://comma.ai/shop/products/panda-obd-ii-dongle)
 
-	Currently only the Grey Panda is supported in libpanda.
-	
+Both the Black and Grey Panda is supported by libpanda.  It is recommended to use the Black Panda since it can do everything the Grey Panda can do, but also can connect tothe Car's OBD II port.  This means that the Black Panda is capable of reading 3 total CAN busses for information, wherase the Grey Panda can only listen to 2 CAN busses.
+
+#### Required for Black Panda:
+* [comma.ai Car Harness](https://comma.ai/shop/products/panda-obd-ii-dongle)
+	Be sure to select the "Black Panda" option when ordering the Car Harness
+
+#### Required for Grey Panda:
+* [comma.ai Grey Panda](https://comma.ai/shop/products/panda-obd-ii-dongle)
 * [comma.ai Giraffe](https://comma.ai/shop/products/giraffe)
 
 	There are many flavors, be sure to select the Giraffe for your particular vehicle.
-	
+
+#### Recommended Computer Hardware:
+Libpanda may be able to work on most linux machines, however the following hardware list is what is used for development and hould eliminate concerns of portability.
+
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
 *  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
@@ -73,6 +80,9 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 
 <a name="hardware-opt"></a>
 #### Optional:
+
+These items are for convenience and will not change the function of the baove hardware, but may be needed if you are new to using a Raspberry pi.
+
 * [SD Card reader for Ubuntu flashing](https://www.amazon.com/Vanja-Adapter-Portable-Memory-Reader/dp/B00W02VHM6/ref=sr_1_6?keywords=usb+sd+card&qid=1583949114&s=electronics&sr=1-6)
 * [Micro HDMI adapter for pi 4](https://www.amazon.com/GANA-Adapter-Female-Action-Supported/dp/B07K21HSQX/ref=sxin_2_ac_d_pm?ac_md=1-0-VW5kZXIgJDEw-ac_d_pm&cv_ct_cx=micro+hdmi&keywords=micro+hdmi&pd_rd_i=B07K21HSQX&pd_rd_r=b124f42c-a587-491e-9400-52aef81c3d88&pd_rd_w=mNPkI&pd_rd_wg=saxZx&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=J1YKVHPV73CBGDNP1MXZ&psc=1&qid=1583949163&s=electronics)
 * [Ethernet Cable](https://www.amazon.com/AmazonBasics-RJ45-Cat-6-Ethernet-Patch-Cable-10-Feet-3-Meters/dp/B00N2VIALK/ref=sr_1_3?keywords=ethernet&qid=1583954176&sr=8-3)
@@ -470,8 +480,28 @@ $ sudo systemctl enable x725power
 ___
 # Network Guide
 
-> Note: Development for this is incomplete, but in-progress
+The directory libpanda/scripts/pi4wifi provides a set of installation scripts for the automatic connection of WiFi for future automatic data uploading.  When a known wifi Access Point (AP) is not available, then the scripts with generate an AP for easy connection with a phone or laptop for raspberry pi debugging.  A very high level view of these scripts in the form of a state machine is as follows:
 
+![State machine of the wifi handler](/doc/images/wifistate.jpg "High-Level State Machine of crazypifi")
+
+The pi4wifi directory has an installation script for easy setup.  Simply run this script for installation of dependencies, along with the removal of confliciting packages.  The main script is called "crazypifi.sh" and is dependent on hostapd, isc-dhcp-server, wpa_supplicant, iw, and ifupdown.  On Ubuntu 18.04, netplan is the default network interface manager but needs to be removed for the use of ifupdown.  Please make a note of this if you need netplan for other applications.  Again, running the install.sh script will handle all of installation needed.
+
+During installation you will be asked to enter a WiFi SSID and passphrase.  It is not checked upon entering, so if you have connection issues you may need to correct your passphrase later.  The passphrase and SSID are stored in a wpa_supplicant configuration file, specifically you may edit known wifi SSIDs and passphrases using nano as follows:
+
+~~~
+$ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+~~~
+
+The installation script also installs crazypifi.sh as a service, called crazypifi.  As with the prior service scripts covered above, you may use systemctl to check the status, stop/start/restart the service, or enable/disable on boot:
+
+~~~
+$ systemctl status crazypifi
+$ sudo systemctl stop crazypifi
+$ sudo systemctl start crazypifi
+$ sudo systemctl restart crazypifi
+$ sudo systemctl disable crazypifi
+$ sudo systemctl enable crazypifi
+~~~
 
 
 <a name="visualization"></a>
