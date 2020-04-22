@@ -58,7 +58,7 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 
 <a name="hardware-req"></a>
 
-Both the Black and Grey Panda is supported by libpanda.  It is recommended to use the Black Panda since it can do everything the Grey Panda can do, but also can connect tothe Car's OBD II port.  This means that the Black Panda is capable of reading 3 total CAN busses for information, wherase the Grey Panda can only listen to 2 CAN busses.
+Both the Black and Grey Panda is supported by libpanda.  It is recommended to use the Black Panda since it can do everything the Grey Panda can do, but also can connect tothe Car's OBD II port.  This means that the Black Panda is capable of reading 3 total CAN busses for information, wherase the Grey Panda can only listen to 2 CAN busses.  Comma.ai also sells a White Panda which features no GPS but WiFi instead. Libpanda will be ale to work with the White Panda over USB and will diasble GPS methods, however it is not listed as a supported device due to libpanda's lack of WiFi connection support.
 
 #### Required for Black Panda:
 * [comma.ai Car Harness](https://comma.ai/shop/products/panda-obd-ii-dongle)
@@ -422,8 +422,11 @@ The x725 is a battery backup solution for the raspberry pi, using GPIO pins 4, 1
 
 For use with the CIRCLES project, the installation script in libpanda->scripts->x725 sets up the necessary start scripts to automatically shut down the pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x725 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
 
-
 ![Statemachine of data recording, network connectivity, and data upload](/doc/images/statemachine.png "High-Level State Machine of libpanda, Wifi, and Power Management")
+
+The x725 may operate in certain modes based on the installation of certain jumpers per the x725's user manual.  The scripts provided by the libpanda project are based on the jumper settings in the following image.  This ensures that the x725 will apply power to the raspberry pi when power is re-established, e.g. when starting a car.  This jumper is labelled on the x725 PCB as "Auto SD".  The "Auto On" feature appears to leave the raspberry pi powered after a shutdown event, which is why a jumper should not be installed in this location.  The "Lan PWR" jumper allows for power to be applied to the ethernet port for WOL funcitonality which is not needed for this porject.  Also, the x725 ships with a small USB cable for a built-in USB-Ethernet adapter.  Again, since WOL is not needed for the CIRCLES project, this cable does not need ot be installed.
+
+![x725 jumper settings](/doc/images/x725jumper.png "x725 Jumper Settings for the scripts in libpanda")
 
 To install the x725 software for the above state machine, navigate to the installation directory for the x725.  Then, invoke the installation script.
 
@@ -437,7 +440,6 @@ This installation process involves the compilation of two C programs, installs a
 * x725shutdown.sh is installed as /usr/local/sbin/x725shutdown.  When called, this operates the GPIO pins to invoke a shutdown.
 * x725button.service is a systemd script that invokes the C program, x725button.  This listens to the GPIO for an invoked shutdown command, then calls a "poweroff".
 *  x725power.service is a systemd script that invokes the C program, x725power.   This monitors the charging/discharging state. If power disconnect event occurs, user-defined script is invoked, followed by a call to "x725shutdown".
-
 
 To manually invoke a system shutdown:
 
