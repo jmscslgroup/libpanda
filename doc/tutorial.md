@@ -153,7 +153,7 @@ The Black Panda does not feature any DIP switches, but the associated Car Harnes
 * This project, using libpanda, is intended to run on a Raspberry Pi which provides power to the client device.
 * Thus there is a conflict where both the Raspberry Pi (or other computer) is trying to drive the USB power pins along with the Black Panda.
 
-The above items were found out by assuming that the USB connectors followed standard protocols but this is **very importantly not the case**.  **Thus to make use of the Black Panda, modification or special parts must be ordered to not burn out any components**.
+>Note: The above items were found out by assuming that the USB connectors followed standard protocols but this is **very importantly not the case**.  **Thus to make use of the Black Panda, modification or special parts must be ordered to not cause any hardware failure**.
 
 Fortunately htere are a few workarounds that will let you safely make use of the Black Panda.  
 

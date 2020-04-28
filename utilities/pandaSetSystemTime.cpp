@@ -50,9 +50,8 @@ std::string timevalToPrettyString(struct timeval& time) {
 
 class SetSystemTimeObserver : public Panda::GpsListener {
 public:
-	SetSystemTimeObserver(double gmtOffsetInHours, double minimumAcceptableOffsetInSeconds) {
+	SetSystemTimeObserver(double minimumAcceptableOffsetInSeconds) {
 		timeHasBeenSet = false;
-		gmtInSeconds = gmtOffsetInHours*60*60;
 		epsilon = minimumAcceptableOffsetInSeconds;
 	}
 	// Check this before using system time
@@ -61,7 +60,6 @@ public:
 	}
 private:
 	bool timeHasBeenSet;
-	int gmtInSeconds;
 	double epsilon;
 
 	void newDataNotification( Panda::GpsData* gpsData ) {
@@ -71,12 +69,13 @@ private:
 
 		// Current system time
 		struct timeval sysTime;
-		gettimeofday(&sysTime, NULL);
+		struct timezone sysZone;
+		gettimeofday(&sysTime, &sysZone);
 
 		// Current GPS local time based on GMT offset
 		time_t gpsTime_t = mktime(&gpsData->time);
 		struct timeval gpsTime;
-		gpsTime.tv_sec = gpsTime_t + gmtInSeconds;
+		gpsTime.tv_sec = gpsTime_t - sysZone.tz_minuteswest*60;
 		gpsTime.tv_usec = (gpsData->timeMilliseconds)*1000;
 
 		// This seems convoluted, but I think it will avoid floating point error math
@@ -111,9 +110,8 @@ int main(int argc, char **argv) {
 	//Set up graceful exit
 	signal(SIGINT, killPanda);
 
-	int MSToffset = -7; 	// -7 hours.  DST not supported
 	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
-	SetSystemTimeObserver mSetSystemTimeObserver(MSToffset, epsilon);
+	SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
