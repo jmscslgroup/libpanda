@@ -40,6 +40,12 @@ cd scripts/panda
 ./install.sh
 cd ../..
 
+# Install configuration files and welcome msg
+cd scripts/
+cp irsyncCyverse.sh ~/irsyncCyverse.sh
+cp setVin.sh ~/setVin.sh
+cp 99-libpanda.sh /etc/profile.d/99-libpanda.sh
+cd ..
 
 echo "Done."
 echo "--------------------------------------------------------"
