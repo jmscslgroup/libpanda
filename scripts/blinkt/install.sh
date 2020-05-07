@@ -2,9 +2,9 @@
 # Author: Matt Bunting
 
 echo "========================="
-echo "Installing x725monitor   "
+echo "Installing blinkt!       "
 
-declare -a depencencies=(python-smbus)
+declare -a depencencies=(python3-pip)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -24,33 +24,20 @@ then
 	apt-get install -y ${toInstall[@]}
 fi
 
-#g++ x725power.cpp -o x725power
-#mv x725power /usr/local/bin/x725power
-
-if [ ! -d "build" ]; then
-	mkdir build
-fi
-cd build
-cmake ..
-make install
-cd ..
+pip3 install blinkt
 
 
-cp x725shutdown.sh /usr/local/sbin/x725shutdown
-cp scriptToRunBeforeShutdown.sh /usr/local/sbin/scriptToRunBeforeShutdown
+cp blinktStatus.py /usr/local/sbin/blinktStatus.py
 
-cp x725power.service.txt  /etc/systemd/system/x725power.service
-cp x725button.service.txt  /etc/systemd/system/x725button.service
-chmod 655 /etc/systemd/system/x725power.service
-chmod 655 /etc/systemd/system/x725button.service
+cp blinkt.service.txt  /etc/systemd/system/blinkt.service
+chmod 655 /etc/systemd/system/blinkt.service
 
 systemctl daemon-reload
 
-systemctl enable x725power.service
-systemctl enable x725button.service
+systemctl enable blinkt.service
 
-systemctl restart x725button.service
-systemctl restart x725power.service
+systemctl restart blinkt.service
+
 
 # Setup status files:
 if [ ! -d /etc/libpanda.d ]; then

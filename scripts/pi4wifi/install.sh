@@ -79,6 +79,7 @@ chmod 655 /etc/systemd/system/crazypifi.service
 
 systemctl daemon-reload
 
+systemctl unmask hostapd
 systemctl enable crazypifi.service
 
 
@@ -107,6 +108,26 @@ fi
 
 unset passphrase
 
+# Setup status files:
+if [ ! -d /etc/libpanda.d ]; then
+	mkdir /etc/libpanda.d
+fi
+
+if [ ! -f /etc/libpanda.d/isaphost ]; then
+	touch /etc/libpanda.d/isaphost
+fi
+
+if [ ! -f /etc/libpanda.d/isapclient ]; then
+	touch /etc/libpanda.d/isapclient
+fi
+
+if [ ! -f /etc/libpanda.d/hasinternet ]; then
+	touch /etc/libpanda.d/hasinternet
+fi
+
+if [ ! -f /etc/libpanda.d/hasapclients ]; then
+	touch /etc/libpanda.d/hasapclients
+fi
 
 echo "Done."
 echo "----------------------------"

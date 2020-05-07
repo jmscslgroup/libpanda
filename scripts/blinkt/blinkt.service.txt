@@ -1,0 +1,11 @@
+[Unit]
+Description=Displays libpanda status on Pimoroni Blinkt
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/sbin/blinktStatus.py
+
+
+[Install]
+WantedBy=multi-user.target

@@ -85,11 +85,11 @@ int i2c_read_word( int i2cFile, unsigned char cmd) {
 
 void writeToFileThenClose( const char* filename, const char* line) {
 	FILE *file;
-	if( (file = fopen(filename, "w")) == NULL) {
+	if( (file = fopen(filename, "w") == NULL) {
 		printf("Unable to open the file: %s", filename);
 		return;
 	}
-	fprintf(file, "%s\r\n", line);
+	fprintf(file, line);
 	fclose(file);
 }
 

@@ -57,7 +57,7 @@ connectToKnownWifi ()
 	echo " - Releasing DHCP lease"
 	dhclient -r wlan0
 	echo " - Obtaining IP from DHCP"
-	if dhclient -10 wlan0;
+	if dhclient -1 wlan0;
 	then
 		echoGood "- Connected to WiFi: $1"
 		return 1
@@ -155,9 +155,13 @@ doStuff ()
 	haveInternet
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
+		echo "1" > /etc/libpanda.d/hasinternet
+		echo "0" > /etc/libpanda.d/isaphost
+		echo "1" > /etc/libpanda.d/isapclient
 		return 1
 	else
 		echoBad "Disconnected"
+		echo "0" > /etc/libpanda.d/hasinternet
 	fi
 
 	wifiConnected=false
@@ -186,9 +190,11 @@ doStuff ()
 		echo "Checking if wlan0 is busy with clients"
 		wificlients=$(iw dev wlan0 station dump)
 		if [ -z "$wificlients" ]; then
+			echo "0" > /etc/libpanda.d/hasapclients
 			echoGood "Free"
 		else
 			echoBad "Busy"
+			echo "1" > /etc/libpanda.d/hasapclients
 			return 1
 		fi
 	fi
@@ -198,9 +204,11 @@ doStuff ()
 	haveWifiConnection
 	if [ $? -eq 1 ]; then
 		echoGood "Connected to ${currentSsid}"
+		echo "1" > /etc/libpanda.d/isapclient
 		wifiConnected=true
 	else
 		echoBad "Disconnected"
+		echo "0" > /etc/libpanda.d/isapclient
 
 		echo "Searching for known APs"
 #		Get known SSIDs:
@@ -217,6 +225,7 @@ doStuff ()
 				connectToKnownWifi $ssid
 				if [ $? -eq 1 ]; then
 					wifiConnected=true	# Success!
+					echo "1" > /etc/libpanda.d/isapclient
 					break
 				fi
 				# If we are here, then try the next ssid
@@ -229,11 +238,13 @@ doStuff ()
 	else
 		echo "Unable to connect to WiFi, checking if AP is active"
 		if systemctl is-active --quiet hostapd; then
+			echo "1" > /etc/libpanda.d/isaphost
 			echoGood "AP is active"
 		else
 			echoBad "AP inactive"
 			echo "Starting AP"
 			setupAp
+			echo "1" > /etc/libpanda.d/isaphost
 		fi
 	fi
 
