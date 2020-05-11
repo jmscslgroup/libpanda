@@ -1,5 +1,5 @@
 #/bin/bash
-LOCAL=/var/panda/JmscslgroupData/PandaData
+LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData
 REMOTE=/iplant/home/rahulbhadani/JmscslgroupData/PandaData
 
 read -r -p "Would you like to push data to $REMOTE? [y/N] " response
