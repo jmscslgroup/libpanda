@@ -5,7 +5,7 @@ echo $(cd /home/eternity/libpanda && git show | head | grep Date: && cd )
 echo ""
 
 if [ -s /etc/libpanda.d/vin ]; then
-	echo "The VIN entry in /etc/libpanda/vin is " $(cat /etc/libpanda/vin)
+	echo "The VIN entry in /etc/libpanda.d/vin is " $(cat /etc/libpanda.d/vin)
 else
 	echo "WARNING:"
 	echo "The VIN file is empty, run 'sudo ./setVin.sh' to set your VIN"
