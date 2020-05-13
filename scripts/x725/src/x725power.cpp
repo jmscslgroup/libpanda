@@ -131,7 +131,8 @@ int main(int argc, char **argv) {
 	float voltage, capacity, current;
 	int result;
 
-	BatteryState batteryState;
+	BatteryState batteryState, priorBatterState;
+
 
 	// For forking into an exit script that can be killed
 	pid_t  exitScriptPid = -1;
@@ -216,16 +217,18 @@ int main(int argc, char **argv) {
 
 		if ( capacity <= 0 ) {
 			fprintf(stderr, "Batteries are drained!  Shutting Down...\n");
-			keepRunning = false;
+			//keepRunning = false;
+			system("x725shutdown");
 		}
 
 		if ( voltage < 3.2 ) {
 			fprintf(stderr, "Battery voltage is low!  Shutting Down...\n");
-			keepRunning = false;
+			//keepRunning = false;
+			system("x725shutdown");
 		}
 
 		if ( batteryState == DISCHARGING ) {
-			fprintf(stderr, "External Power loss!  Running upload script...\n");
+			//fprintf(stderr, "External Power loss!  Running upload script...\n");
 
 
 //			exitScriptPid = fork();
@@ -234,18 +237,35 @@ int main(int argc, char **argv) {
 //			} else {
 				// parent process
 				system(exitScript);
-				keepRunning = false;
+				//keepRunning = false;
 //			}
 			// This is blocking call until the exit script
 
-			fprintf(stderr, "Shutting Down...\n");
+			//fprintf(stderr, "Shutting Down...\n");
 
+		}
+		if ( priorBatterState != batteryState ) {
+			priorBatterState = batteryState;
+			switch (batteryState) {
+				case CHARGED:
+					fprintf(stderr, "Battery state changed to: CHARGED\n");
+					break;
+
+				case DISCHARGING:
+					fprintf(stderr, "Battery state changed to: DISCHARGING\n");
+					break;
+
+				case CHARGING:
+					fprintf(stderr, "Battery state changed to: CHARGING\n");
+					break;
+
+			}
 		}
 	}
 
 //	kill(exitScriptPid, SIGKILL);
 
-	system("x725shutdown");
+	//system("x725shutdown");
 
 	return 0;
 }

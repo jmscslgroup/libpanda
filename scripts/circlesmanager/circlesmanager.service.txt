@@ -1,0 +1,11 @@
+[Unit]
+Description=Circles software component manager
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/sbin/circlesmanager.py
+
+
+[Install]
+WantedBy=multi-user.target
