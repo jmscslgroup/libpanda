@@ -28,6 +28,8 @@
 #include <unistd.h>	// usleep()
 #include <cmath>	// fabs()
 #include <time.h>
+#include <iomanip>
+#include <ctime>
 
 #include "panda.h"
 
@@ -70,12 +72,32 @@ private:
 		// Current system time
 		struct timeval sysTime;
 		struct timezone sysZone;
-		gettimeofday(&sysTime, &sysZone);
+		//gettimeofday(&sysTime, &sysZone);
+		// per web, need NULL or behavior undefined for tz
+		gettimeofday(&sysTime, NULL);
+
+		// testing different time method
+		std::time_t t = std::time(nullptr);
+		std::cout << "UTC:   " << std::put_time(std::gmtime(&t), "%c %Z") << '\n';
+		std::cout << "local: " << std::put_time(std::localtime(&t), "%c %Z") << '\n';
+		std::time_t gmt = mktime(std::gmtime(&t));
+		std::time_t localt = mktime(std::localtime(&t));
+		// offset in seconds: will use this rather than taking the 
+		// tz value from gettimeofday which may not be consistent or supported
+		// across different distros or with different packages installed
+		time_t offset = gmt-localt;
 
 		// Current GPS local time based on GMT offset
 		time_t gpsTime_t = mktime(&gpsData->time);
 		struct timeval gpsTime;
-		gpsTime.tv_sec = gpsTime_t - sysZone.tz_minuteswest*60;
+		
+		std::cout << " sysTime=" << sysTime.tv_sec << std::endl;
+		std::cout << " sysZone=" << sysZone.tz_minuteswest << std::endl;
+
+		// fixing CH-61 by removing undefined behavior of tz (timezone)
+		// the offset value is calculated by the minute subtraction from gmt
+		gpsTime.tv_sec = gpsTime_t - offset;
+		//gpsTime.tv_sec = gpsTime_t - sysZone.tz_minuteswest*60;
 		gpsTime.tv_usec = (gpsData->timeMilliseconds)*1000;
 
 		// This seems convoluted, but I think it will avoid floating point error math
