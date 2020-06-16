@@ -265,7 +265,7 @@ doEthernet ()
 		echoGood "Connected"
 		ethernetConnected=true
 
-		dhclient eth0
+		dhclient -1 eth0
 
 #		haveIpOnDevice eth0
 
