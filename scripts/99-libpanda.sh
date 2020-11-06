@@ -1,7 +1,7 @@
 #/bin/bash
 echo ""
 echo "This machine is running a version of libpanda last pulled on" 
-echo $(cd /home/eternity/libpanda && git show | head | grep Date: && cd )
+echo $(cd /home/${USER}/libpanda && git show | head | grep Date: && cd )
 echo ""
 
 if [ -s /etc/libpanda.d/vin ]; then
@@ -11,7 +11,7 @@ else
 	echo "The VIN file is empty, run 'sudo ./setVin.sh' to set your VIN"
 fi
 echo ""
-if [ ! -s /home/eternity/.irods/irods_environment.json ]; then
+if [ ! -s /home/${USER}/.irods/irods_environment.json ]; then
 	echo "WARNING:"
 	echo "Your irods is not set up, run 'iinit' and enter your credentials, along with "
 	echo "  hostname: data.cyverse.org"
