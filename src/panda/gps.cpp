@@ -50,7 +50,7 @@ Gps::~Gps() {
 
 void Gps::saveToCsvFile(const char* filename) {
 	csvDump = fopen(filename, "w");
-	fprintf(csvDump, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP\n");
+	fprintf(csvDump, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP,Systime\n");
 
 }
 void Gps::writeCsvToFile(GpsData& state) {
