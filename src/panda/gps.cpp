@@ -59,8 +59,12 @@ void Gps::writeCsvToFile(GpsData& state) {
 //		struct timeval gpsTime;
 //		gpsTime.tv_sec = gpsTime_t;
 //		gpsTime.tv_usec = (state.timeMilliseconds)*1000;
+		
+		// Get system time to check against GPS time skew
+		struct timeval sysTime;
+		gettimeofday(&sysTime, NULL);
 
-		fprintf(csvDump, "%d.%06d,%c,%0.7f,%0.7f,%0.1f,%0.2f,%0.2f,%0.2f\r\n",
+		fprintf(csvDump, "%d.%06d,%c,%0.7f,%0.7f,%0.1f,%0.2f,%0.2f,%0.2f,%d.%06d\r\n",
 				(unsigned int)gpsTime_t,
 				(state.timeMilliseconds)*1000,
 				state.info.status,
@@ -69,7 +73,9 @@ void Gps::writeCsvToFile(GpsData& state) {
 				state.pose.altitude,
 				state.quality.HDOP,
 				state.quality.PDOP,
-				state.quality.VDOP);
+				state.quality.VDOP,
+				(unsigned int)sysTime.tv_sec,
+				(int)sysTime.tv_usec);
 	}
 }
 
