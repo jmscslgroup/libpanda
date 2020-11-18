@@ -58,18 +58,23 @@ The hardware choice is based around running linux with comm.ai hardware, leverag
 
 <a name="hardware-req"></a>
 
-Both the Black and Grey Panda is supported by libpanda.  It is recommended to use the Black Panda since it can do everything the Grey Panda can do, but also can connect tothe Car's OBD II port.  This means that the Black Panda is capable of reading 3 total CAN busses for information, wherase the Grey Panda can only listen to 2 CAN busses.  Comma.ai also sells a White Panda which features no GPS but WiFi instead. Libpanda will be ale to work with the White Panda over USB and will diasble GPS methods, however it is not listed as a supported device due to libpanda's lack of WiFi connection support.
+Both the Black Panda and Grey Panda(discontinued) is supported by libpanda.  It is recommended to use the Black Panda since it can do everything the Grey Panda can do, but also can connect to the Car's OBD II port.  This means that the Black Panda is capable of reading 3 total CAN busses for information, whereas the Grey Panda can only listen to 2 CAN busses.  Comma.ai also sells a White Panda which features no GPS but WiFi instead. Libpanda will be able to work with the White Panda over USB and will diasble GPS methods, however it is not listed as a supported device due to libpanda's lack of WiFi connection support.
 
 #### Required for Black Panda:
 * [comma.ai Car Harness](https://comma.ai/shop/products/panda-obd-ii-dongle)
 
 Be sure to select the "Black Panda" option when ordering the Car Harness.  Also very importantly, read the [Hardware Configuration](#hardware-config) section to understand how **the Black Panda may brick your computer if not understood completely**.
 
-#### Required for Grey Panda:
+#### Required for Grey Panda (discontinued):
+
+If you have the Grey Panda/Giraffe it is still supported by libpanda, however it has been discontinued and is no longer available for purchase.
+
+<!--
 * [comma.ai Grey Panda](https://comma.ai/shop/products/panda-obd-ii-dongle)
 * [comma.ai Giraffe](https://comma.ai/shop/products/giraffe)
 
 	There are many flavors, be sure to select the Giraffe for your particular vehicle.
+-->
 
 #### Recommended Computer Hardware:
 Libpanda may be able to work on most linux machines, however the following hardware list is what is used for development and hould eliminate concerns of portability.
@@ -138,7 +143,10 @@ The Panda serves as a bridge between the vehicle's CAN bus and USB.  The Grey Pa
 
 With this in mind, be cautious on the car that you wish to plug the Panda into, as the connector may be standardized but the pinout varies.  It is safest to only collect data on cars supported by comma.ai.
 
+
 #### Grey Panda with Giraffe
+>Note: The Grey Panda has been discontinued but this information will remain for those that still have the Grey/Giraffe setup.
+
 The OBD II port is intended for emmissions and mechanic diagnostics.  In order to read lower-level data, the Giraffe exposes deeped CAN buses and adapts them to an OBD II port.  This enables reading of a vehicle's Radar data.  The Giraffe also feature DIP switches for setting different modes, including enabling writing to the CAN bus for vehicel control.  Currently we have the DIP switches are configures as follows:
 
 ![Giraffe DIP switch configuration: ON:(1,3,4) OFF:(2)](/doc/images/dip.jpg "DIP Switches")
