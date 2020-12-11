@@ -27,6 +27,7 @@
 #include "panda/pandadefinitions.h"
 #include <cstring>
 #include <unistd.h>
+#include <sstream>
 
 using namespace Panda;
 
@@ -107,21 +108,23 @@ void Usb::initialize() {
 	}
 
 //	libusb_control_transfer(handler, 0xc0, 0xe5, 1, 0, NULL, 0, 0);
-//	unsigned char firmware[128];
-//	getFirmware(firmware);
-//	std::cout << " - Firmware:";
-//	for (int i = 0; i < 128; i++) {
-//		printf("%02X", firmware[i]);
-//	}
-//	std::cout << std::endl;
+	unsigned char firmware[128];
+	getFirmware(firmware);
+	std::cout << " - Firmware:";
+	for (int i = 0; i < 128; i++) {
+		printf("%02X", firmware[i]);
+	}
+	std::cout << std::endl;
 
 	// Void function:
 	libusb_free_device_list(devices, 1);
 
-//	std::cout << " - Setting Safety:" << std::endl;
-//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
-	std::cout << " - Setting Safety elm327:" << std::endl;
-	setSafetyMode(SAFETY_ELM327);	// OBD II port
+	std::cout << " - Setting Safety:" << std::endl;
+	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+//	std::cout << " - Setting Safety elm327:" << std::endl;
+//	setSafetyMode(SAFETY_ELM327);	// OBD II port
+//		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
+// 	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
 //	std::cout << " - Enabling CAN Loopback:" << std::endl;
 //	setCanLoopback(true);
@@ -824,6 +827,16 @@ void Usb::uartPurge() {
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
 }
 
+void Usb::sendHeartBeat() {
+	//	the panda has a heartbeat counter, calling this should reset it
+	// The panda has a timer running at 8Hz.  A loop counter decimates this to 1Hz.
+	// In the 1 Hz loop, the heartbeat counter will increment.
+	// If the hearbeat is graetr than: (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)
+	// or: (check_started() ? 5U : 2U)
+	// then the panda will enter a SAFETY_SILENT mode
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_HEARTBEAT, 0, 0);	// TODO test this
+}
+
 void Usb::canPurge() {
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_RX, 0);
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_1, 0);
@@ -863,8 +876,12 @@ void Usb::setCanLoopback( int enable ) {
 }
 
 void Usb::getFirmware( unsigned char* firmware128 ) {
-	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_FIRMWARE_LOW, firmware128, 64);
-	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_FIRMWARE_HIGH, &firmware128[64], 64);
+	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_FIRMWARE_LOW, firmware128, 64);
+	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_FIRMWARE_HIGH, &firmware128[64], 64);
+}
+
+void Usb::getHealth( PandaHealth* health ) {
+	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_CAN_HEALTH, (unsigned char*)health, sizeof(*health));
 }
 
 unsigned char Usb::getHardware() {
@@ -887,4 +904,120 @@ void Usb::setSafetyMode(uint16_t mode) {
 	// comma.ai code has a discrepency in the two following calls:
 //	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 0);	// python Panda class has this
+}
+
+
+const char* Panda::safetyModelToString( int safetyModel ) {
+	switch (safetyModel) {
+		case SAFETY_NOOUTPUT: return "NOOUTPUT";
+		case SAFETY_HONDA: return "HONDA";
+		case SAFETY_TOYOTA: return "TOYOTA";
+		case SAFETY_ELM327: return "ELM327";
+		case SAFETY_GM: return "GM";
+		case SAFETY_HONDA_BOSCH: return "HONDA_BOSCH";
+		case SAFETY_FORD: return "FORD";
+		case SAFETY_CADILLAC: return "CADILLAC";
+		case SAFETY_HYUNDAI: return "HYUNDAI";
+		case SAFETY_CHRYSLER: return "CHRYSLER";
+		case SAFETY_TESLA: return "TESLA";
+		case SAFETY_SUBARU: return "SUBARU";
+		case SAFETY_GM_PASSIVE: return "GM_PASSIVE";
+		case SAFETY_MAZDA: return "MAZDA";
+		case SAFETY_TOYOTA_IPAS: return "TOYOTA_IPAS";
+		case SAFETY_ALLOUTPUT: return "ALLOUTPUT";
+		case SAFETY_GM_ASCM: return "GM_ASCM";
+		default:
+			break;
+	}
+	return "Unrecognized :(";
+}
+
+const char* Panda::carHarnessStatusToString( int car_harness_status) {
+	switch (car_harness_status) {
+		case HARNESS_STATUS_NC: return "HARNESS_STATUS_NC";
+		case HARNESS_STATUS_NORMAL: return "HARNESS_STATUS_NORMAL";
+		case HARNESS_STATUS_FLIPPED: return "HARNESS_STATUS_FLIPPED";
+			
+		default:
+			break;
+	}
+	return "Unrecognized :(";
+
+}
+
+const char* Panda::faultStatusToString( int fault_status ) {
+	switch (fault_status) {
+		case FAULT_STATUS_NONE: return "FAULT_STATUS_NONE";
+		case FAULT_STATUS_TEMPORARY: return "FAULT_STATUS_TEMPORARY";
+		case FAULT_STATUS_PERMANENT: return "FAULT_STATUS_PERMANENT";
+			
+		default:
+			break;
+	}
+	return "Unrecognized :(";
+	
+}
+
+std::string Panda::faultsToString( int faults ) {
+	std::stringstream result;
+	if ( faults & FAULT_RELAY_MALFUNCTION) result << "FAULT_RELAY_MALFUNCTION, ";
+	if ( faults & FAULT_UNUSED_INTERRUPT_HANDLED) result << "FAULT_UNUSED_INTERRUPT_HANDLED, ";
+	if ( faults & FAULT_INTERRUPT_RATE_CAN_1) result << "FAULT_INTERRUPT_RATE_CAN_1, ";
+	if ( faults & FAULT_INTERRUPT_RATE_CAN_2) result << "FAULT_INTERRUPT_RATE_CAN_2, ";
+	if ( faults & FAULT_INTERRUPT_RATE_CAN_3) result << "FAULT_INTERRUPT_RATE_CAN_3, ";
+	if ( faults & FAULT_INTERRUPT_RATE_TACH) result << "FAULT_INTERRUPT_RATE_TACH, ";
+	if ( faults & FAULT_INTERRUPT_RATE_GMLAN) result << "FAULT_INTERRUPT_RATE_GMLAN, ";
+	if ( faults & FAULT_INTERRUPT_RATE_INTERRUPTS) result << "FAULT_INTERRUPT_RATE_INTERRUPTS, ";
+	if ( faults & FAULT_INTERRUPT_RATE_SPI_DMA) result << "FAULT_INTERRUPT_RATE_SPI_DMA, ";
+	if ( faults & FAULT_INTERRUPT_RATE_SPI_CS) result << "FAULT_INTERRUPT_RATE_SPI_CS, ";
+	if ( faults & FAULT_INTERRUPT_RATE_UART_1) result << "FAULT_INTERRUPT_RATE_UART_1, ";
+	if ( faults & FAULT_INTERRUPT_RATE_UART_2) result << "FAULT_INTERRUPT_RATE_UART_2, ";
+	if ( faults & FAULT_INTERRUPT_RATE_UART_3) result << "FAULT_INTERRUPT_RATE_UART_3, ";
+	if ( faults & FAULT_INTERRUPT_RATE_UART_5) result << "FAULT_INTERRUPT_RATE_UART_5, ";
+	if ( faults & FAULT_INTERRUPT_RATE_UART_DMA) result << "FAULT_INTERRUPT_RATE_UART_DMA, ";
+	if ( faults & FAULT_INTERRUPT_RATE_USB) result << "FAULT_INTERRUPT_RATE_USB, ";
+	if ( faults & FAULT_INTERRUPT_RATE_TIM1) result << "FAULT_INTERRUPT_RATE_TIM1, ";
+	if ( faults & FAULT_INTERRUPT_RATE_TIM3) result << "FAULT_INTERRUPT_RATE_TIM3, ";
+	if ( faults & FAULT_REGISTER_DIVERGENT) result << "FAULT_REGISTER_DIVERGENT, ";
+	if ( faults & FAULT_INTERRUPT_RATE_KLINE_INIT) result << "FAULT_INTERRUPT_RATE_KLINE_INIT, ";
+	if ( faults & FAULT_INTERRUPT_RATE_CLOCK_SOURCE) result << "FAULT_INTERRUPT_RATE_CLOCK_SOURCE, ";
+	if ( faults & FAULT_INTERRUPT_RATE_TIM9) result << "FAULT_INTERRUPT_RATE_TIM9";
+
+	return result.str();
+}
+
+const char* Panda::usbPowerModeToString( int mode ) {
+	switch (mode) {
+		case USB_POWER_NONE: return "USB_POWER_NONE";
+		case USB_POWER_CLIENT: return "USB_POWER_CLIENT";
+		case USB_POWER_CDP: return "USB_POWER_CDP";
+		case USB_POWER_DCP: return "USB_POWER_DDP";
+			
+		default:
+			break;
+	}
+	return "Unrecognized :(";
+	
+}
+
+void Panda::printPandaHealth( const PandaHealth& health ) {
+	std::cout << "------Health------" << std::endl;
+	std::cout << "uptime            :" << health.uptime << std::endl;
+	std::cout << "voltage           :" << (double)health.voltage/1000.0 << std::endl;
+	std::cout << "current           :" << health.current << std::endl;
+	std::cout << "can_rx_errors     :" << health.can_rx_errs << std::endl;
+	std::cout << "can_send_errors   :" << health.can_send_errs << std::endl;
+	std::cout << "can_fwd_errors    :" << health.can_fwd_errs << std::endl;
+	std::cout << "gmlan_send_errs   :" << health.gmlan_send_errs << std::endl;
+	std::cout << "faults            :" << Panda::faultsToString(health.faults) << std::endl;
+	std::cout << "ignition_line     :" << (int)health.ignition_line << std::endl;
+	std::cout << "ignition_can      :" << (int)health.ignition_can << std::endl;
+	std::cout << "controls_allowed  :" << (int)health.controls_allowed << std::endl;
+	std::cout << "gas_int_detected  :" << (int)health.gas_interceptor_detected << std::endl;
+	std::cout << "car_harness_status:" << Panda::carHarnessStatusToString(health.car_harness_status) << std::endl;
+	std::cout << "usb_power_mode    :" << Panda::usbPowerModeToString(health.usb_power_mode) << std::endl;
+	std::cout << "Safety Model      :" << Panda::safetyModelToString(health.safety_model) << std::endl;
+	std::cout << "fault_status      :" << Panda::faultStatusToString(health.fault_status) << std::endl;
+	std::cout << "power_save_enabled:" << (int)health.power_save_enabled << std::endl;
+	std::cout << "-------------------" << std::endl;
 }

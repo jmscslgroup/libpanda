@@ -22,7 +22,7 @@ Hardware tutorial                         {#mainpage}
 		* [pandacord](#libpanda-pandacord)
 		* [pandaSetSystemTime](#libpanda-pandaSetSystemTime)
 		* [pandaCurses](#libpanda-pandaCurses)
-* [Power Guide with x725](#power-guide)
+* [Power Guide with x728](#power-guide)
 * [Network Guide](#network-guide)
 * [Data Visualization](#visualization)
 * [Data Repository](#repository)
@@ -100,14 +100,14 @@ These items are for convenience and will not change the function of the baove ha
 <a name="hardware-opt-power"></a>
 #### Optional power for data collection
 
-* [x725 Raspebrry Pi UPS](https://www.amazon.com/Raspberry-Shutdown-Management-Expansion-Compatible/dp/B07Z3S42MK)
+* [x728 Raspebrry Pi UPS](https://www.amazon.com/Geekworm-Raspberry-Management-Detection-Shutdown/dp/B087FXLZZH)
 * [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/liogea-LG3400G-3400mAh-Rechargeable-Batteries/dp/B07YBTQSQL/ref=sr_1_2?keywords=18650b&qid=1585673515&s=electronics&sr=1-2)
 
 
-The x725 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the Pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
+The x728 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the Pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
 
 
-There are multiple ways to power the x725 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  
+There are multiple ways to power the x728 board in a car that can make use of automatic data upload scripts.  The most important part for functionality as intended is that the power source turns off when the car is turned off.  
 
 ##### Fast Charge w/Debugging (most expensive)
 
@@ -463,26 +463,26 @@ UniqueData is intended to be used for reverse-engineering of vehicle ocmponents.
 
 <a name="power-guide"></a>
 ___
-# Power Guide with x725
+# Power Guide with x728
 
 > Note: Do not follow the installation instructions provided by the manufacturer.  We have provided an installation script that functions for our use case.
 
-![x725 installed on the Raspberry Pi](/doc/images/x725.jpg "x725")
+![x728 installed on the Raspberry Pi](/doc/images/x725.jpg "x725")
 
-The x725 is a battery backup solution for the Raspberry Pi, using GPIO pins 4, 17, and 18 along with i2c.  The documentation of the particular hardware is a bit lacking, but the functionality is sufficient for data collection applications.  Some preliminary data was taken in regard to charge/discharge times under expected use:
+The x728 is a battery backup solution for the Raspberry Pi, using GPIO pins 4, 17, and 18 along with i2c.  The documentation of the particular hardware is a bit lacking, but the functionality is sufficient for data collection applications.  Some preliminary data was taken in regard to charge/discharge times under expected use:
 
 * With the Panda plugged in while the OS is idle, power can be supplied for ~4 hours
 * With the Panda plugged in actively recording data at ~30% CPU usage, charge time is ~2.5 hours
 
-For use with the CIRCLES project, the installation script in libpanda->scripts->x725 sets up the necessary start scripts to automatically shut down the Pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x725 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
+For use with the CIRCLES project, the installation script in libpanda->scripts->x728 sets up the necessary start scripts to automatically shut down the Pi in a safe manner.  The statemachine for the boot process is shown in the following state diagram. The x728 allows the state machine to detect a power outage, then invoke the necessary scripts for wifi connectivity and cyverse data uploading, then finally invoke a safe shutdown when all data has been uploaded.
 
 ![Statemachine of data recording, network connectivity, and data upload](/doc/images/statemachine.png "High-Level State Machine of libpanda, Wifi, and Power Management")
 
-The x725 may operate in certain modes based on the installation of certain jumpers per the x725's user manual.  The scripts provided by the libpanda project are based on the jumper settings in the following image.  This ensures that the x725 will apply power to the Raspberry Pi when power is re-established, e.g. when starting a car.  This jumper is labelled on the x725 PCB as "Auto SD".  The "Auto On" feature appears to leave the Raspberry Pi powered after a shutdown event, which is why a jumper should not be installed in this location.  The "Lan PWR" jumper allows for power to be applied to the ethernet port for WOL funcitonality which is not needed for this porject.  Also, the x725 ships with a small USB cable for a built-in USB-Ethernet adapter.  Again, since WOL is not needed for the CIRCLES project, this cable does not need ot be installed.
+The x728 may operate in certain modes based on the installation of certain jumpers per the x728's user manual.  The scripts provided by the libpanda project are based on the jumper settings in the following image.  This ensures that the x728 will apply power to the Raspberry Pi when power is re-established, e.g. when starting a car.  This jumper is labelled on the x728 PCB as "Auto SD".  The "Auto On" feature appears to leave the Raspberry Pi powered after a shutdown event, which is why a jumper should not be installed in this location.  The "Lan PWR" jumper allows for power to be applied to the ethernet port for WOL funcitonality which is not needed for this porject.  Also, the x728 ships with a small USB cable for a built-in USB-Ethernet adapter.  Again, since WOL is not needed for the CIRCLES project, this cable does not need ot be installed.
 
 ![x725 jumper settings](/doc/images/x725jumper.png "x725 Jumper Settings for the scripts in libpanda")
 
-To install the x725 software for the above state machine, navigate to the installation directory for the x725.  Then, invoke the installation script.
+To install the x728 software for the above state machine, navigate to the installation directory for the x728.  Then, invoke the installation script.
 
 ~~~
 $ cd libpanda/scripts/x725
@@ -501,13 +501,13 @@ To manually invoke a system shutdown:
 $ sudo x725shutdown
 ~~~
 
-Invoking the shutdown works by signaling to the x725 that a shutdown is taking place, at which the x725 signals back to the Pi via GPIO that a shutdown should take place.  The x725button service listens for this and invokes the shutdown automatically.  To check on the systemd button status:
+Invoking the shutdown works by signaling to the x728 that a shutdown is taking place, at which the x728 signals back to the Pi via GPIO that a shutdown should take place.  The x725button service listens for this and invokes the shutdown automatically.  To check on the systemd button status:
 
 ~~~
 $ systemctl status x725button
 ~~~
 
-The x725 script is automatically invoked based on the power conditions as measured by the x725power service.  These conditions include a power input interrupt, low battery voltage, or low battery capacity.  The overall flow of signals is therefore:
+The x728 script is automatically invoked based on the power conditions as measured by the x725power service.  These conditions include a power input interrupt, low battery voltage, or low battery capacity.  The overall flow of signals is therefore:
 
 x725power -> x725shutdown -> x725button
 

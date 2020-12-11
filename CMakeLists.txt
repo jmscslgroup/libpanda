@@ -131,6 +131,18 @@ if(${CURSES_FOUND})
                                         ncurses )
 endif()
 
+add_executable(simpleSend	example/simpleSend.cpp
+				example/device.h
+				example/deviceTypes.h
+				example/joystick.cpp
+				example/device.cpp
+				example/mouse.cpp )
+target_link_libraries(simpleSend	${LIBS}
+									${LIBNAME}
+									mogithread
+									strym
+									NMEAParserLib )
+
 add_subdirectory(utilities)
 
 

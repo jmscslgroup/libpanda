@@ -124,6 +124,47 @@
 #define SAFETY_ALLOUTPUT 17U
 #define SAFETY_GM_ASCM 18U
 
+
+// copied from harness.h from comma.ai panda firmware
+#define HARNESS_STATUS_NC 0U
+#define HARNESS_STATUS_NORMAL 1U
+#define HARNESS_STATUS_FLIPPED 2U
+
+// copied from faults.h from comma.ai panda firmware
+#define FAULT_STATUS_NONE 0U
+#define FAULT_STATUS_TEMPORARY 1U
+#define FAULT_STATUS_PERMANENT 2U
+
+#define FAULT_RELAY_MALFUNCTION             (1U << 0)
+#define FAULT_UNUSED_INTERRUPT_HANDLED      (1U << 1)
+#define FAULT_INTERRUPT_RATE_CAN_1          (1U << 2)
+#define FAULT_INTERRUPT_RATE_CAN_2          (1U << 3)
+#define FAULT_INTERRUPT_RATE_CAN_3          (1U << 4)
+#define FAULT_INTERRUPT_RATE_TACH           (1U << 5)
+#define FAULT_INTERRUPT_RATE_GMLAN          (1U << 6)
+#define FAULT_INTERRUPT_RATE_INTERRUPTS     (1U << 7)
+#define FAULT_INTERRUPT_RATE_SPI_DMA        (1U << 8)
+#define FAULT_INTERRUPT_RATE_SPI_CS         (1U << 9)
+#define FAULT_INTERRUPT_RATE_UART_1         (1U << 10)
+#define FAULT_INTERRUPT_RATE_UART_2         (1U << 11)
+#define FAULT_INTERRUPT_RATE_UART_3         (1U << 12)
+#define FAULT_INTERRUPT_RATE_UART_5         (1U << 13)
+#define FAULT_INTERRUPT_RATE_UART_DMA       (1U << 14)
+#define FAULT_INTERRUPT_RATE_USB            (1U << 15)
+#define FAULT_INTERRUPT_RATE_TIM1           (1U << 16)
+#define FAULT_INTERRUPT_RATE_TIM3           (1U << 17)
+#define FAULT_REGISTER_DIVERGENT            (1U << 18)
+#define FAULT_INTERRUPT_RATE_KLINE_INIT     (1U << 19)
+#define FAULT_INTERRUPT_RATE_CLOCK_SOURCE   (1U << 20)
+#define FAULT_INTERRUPT_RATE_TIM9           (1U << 21)
+
+// copied from board_declarations.h from comma.ai panda firmware
+// USB power modes (from cereal.log.health)
+#define USB_POWER_NONE 0U
+#define USB_POWER_CLIENT 1U
+#define USB_POWER_CDP 2U
+#define USB_POWER_DCP 3U
+
 // This order was copied from cereal based nt he boardd.cc code.  The order however seems wrong.
 // This is known to work, based on tests, for the white, grey and black pandas
 enum {
@@ -134,5 +175,28 @@ enum {
 	HARDWARE_PEDAL=4,	// I don't know what this is
 	HARDWARE_UNO=5,	// I don't know what this is
 };
+
+// copied from panda/board/main.c
+//typedef struct __attribute__((packed)) _PandaHealth {
+typedef struct __attribute__((packed)) _PandaHealth {
+  uint32_t uptime;
+  uint32_t voltage;
+  uint32_t current;
+  uint32_t can_rx_errs;
+  uint32_t can_send_errs;
+  uint32_t can_fwd_errs;
+  uint32_t gmlan_send_errs;
+  uint32_t faults;
+  uint8_t ignition_line;
+  uint8_t ignition_can;
+  uint8_t controls_allowed;
+  uint8_t gas_interceptor_detected;
+  uint8_t car_harness_status;
+  uint8_t usb_power_mode;
+  uint8_t safety_model;
+  uint8_t fault_status;
+  uint8_t power_save_enabled;
+} PandaHealth;
+
 
 #endif

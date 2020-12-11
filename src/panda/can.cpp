@@ -98,6 +98,9 @@ void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 	unsigned char message[16];
 	canFrameToBuffer(frame, message);
 
+	// In comma.ai code they bulk send multiple messages with the following:
+	// usb_bulk_write(3, (unsigned char*)send, msg_count*0x10, 5);
+	// Panda::usb_bulk_write(unsigned char endpoint, unsigned char* data, int length, unsigned int timeout
 	usbHandler->sendCanData(message, 16);
 }
 

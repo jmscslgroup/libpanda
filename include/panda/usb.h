@@ -31,7 +31,10 @@
 #include <libusb-1.0/libusb.h>
 #include <vector>
 
+#include <string>
+
 #include "mogi/thread.h"
+#include "pandadefinitions.h"
 
 #define TIMEOUT (0)	// For libusb, in ms
 #define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
@@ -46,6 +49,13 @@ namespace Panda {
 		MODE_ASYNCHRONOUS,
 		MODE_ISOCHRONOUS
 	} UsbMode;
+
+	const char* safetyModelToString( int safetyModel );
+	const char* carHarnessStatusToString( int car_harness_status);
+	const char* faultStatusToString( int fault_status);
+	std::string faultsToString( int faults );
+	const char* usbPowerModeToString( int usb_power_mode );
+	void printPandaHealth( const PandaHealth& health );
 
 	class UsbListener {
 	private:
@@ -107,11 +117,13 @@ namespace Panda {
 		unsigned char getHardware();
 		struct tm getRtc();
 		void setSafetyMode(uint16_t mode);
+		void sendHeartBeat();  // Call more that 0.5 Hz to geet talking to panda
 
 		// The standard getters/setters:
 		void setOperatingMode(UsbMode mode);
 		const char* getModeAsString() const;
 		std::string getUsbSerialNumber() { return serialNumber; };
+		void getHealth( PandaHealth* health );
 
 		// Begin the USB data transfering, for reading:
 		void startRecording();
