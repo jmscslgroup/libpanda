@@ -75,6 +75,12 @@ private:
 				default: break;
 			}
 			//std::cout << "Event id:" << (int)event->id << "\tvalue:" << event->value << std::endl;
+		} else if (event->type == TYPE_BUTTON) {
+			switch (event->id) {
+				case BUTTON_TRIANGLE: buttonTriangle = event->value; break;
+				case BUTTON_SQUARE: buttonSquare = event->value; break;
+				default: break;
+			}
 		}
 	}
 	
@@ -82,14 +88,18 @@ private:
 	double axisRY;
 	double axisLX;
 	double axisLY;
+	bool buttonTriangle;
+	bool buttonSquare;
 public:
 	JoystickListener()
-	:axisRX(0), axisRY(0), axisLX(0), axisLY(0) {
+	:axisRX(0), axisRY(0), axisLX(0), axisLY(0), buttonTriangle(false), buttonSquare(false) {
 	}
 	double getRX() { return axisRX; }
 	double getRY() { return axisRY; }
 	double getLX() { return axisLX; }
 	double getLY() { return axisLY; }
+	bool getTriangle() { return buttonTriangle; }
+	bool getSquare() { return buttonSquare; }
 };
 
 Panda::CanFrame buildLkasHud() {
@@ -176,10 +186,17 @@ SG_ SET_ME_X02 : 63|8@0+ (1,0) [0|1] "" XXX
 	return frame;
 }
 
-Panda::CanFrame buildLdaAlert(bool LDA_ALERT) {
+Panda::CanFrame buildLdaAlert(bool LDA_ALERT, unsigned char leftLane, unsigned char rightLane, bool barrier) {
 	Panda::CanFrame frame = buildLkasHud();
 	
 	*((uint64_t*)frame.data) |= ((uint64_t)LDA_ALERT << (9+1-2));
+	
+	bool BARRIERS = barrier;
+	*((uint64_t*)frame.data) |= ((uint64_t)BARRIERS << (1+1-2));
+	char RIGHT_LANE = rightLane;
+	*((uint64_t*)frame.data) |= ((uint64_t)(RIGHT_LANE & 0x03) << (3+1-2));
+	char LEFT_LANE = leftLane;
+	*((uint64_t*)frame.data) |= ((uint64_t)(LEFT_LANE & 0x03) << (5+1-2));
 	
 	return frame;
 }
@@ -208,7 +225,7 @@ uint8_t checksum(Panda::CanFrame& frame)
 	return sum;
 }
 
-Panda::CanFrame buildSteeringLKA( unsigned char count, int16_t steer_torque, bool steerRequest ) {
+Panda::CanFrame buildSteeringLKA( unsigned char count, int16_t steer_torque, bool steerRequest, unsigned char lkaState ) {
 	
 	// max steer_torque: const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 	Panda::CanFrame frame;
@@ -234,11 +251,11 @@ Panda::CanFrame buildSteeringLKA( unsigned char count, int16_t steer_torque, boo
 	// set_me_1
 	*((uint64_t*)frame.data) |= ((uint64_t)0x01 << (7+1-1));
 	// Steer_torque
-	*((uint64_t*)frame.data) |= ((uint64_t)(0x00FF & steer_torque)  << (23+(16/2)+1-16));
 	*((uint64_t*)frame.data) |= ((uint64_t)((0xFF00 & steer_torque) >> 8) << (15+(16/2)+1-16));
+	*((uint64_t*)frame.data) |= ((uint64_t)(0x00FF & steer_torque)  << (23+(16/2)+1-16));
 	
 	//*((uint64_t*)frame.data) |= ((0xFFFF & (uint64_t)steer_torque) << (15+(16/2)+1-16));
-	unsigned char LKA_STATE = 0;
+	unsigned char LKA_STATE = lkaState;//0;
 	*((uint64_t*)frame.data) |= ((uint64_t)LKA_STATE << (31+1-8));
 	
 	
@@ -249,7 +266,7 @@ Panda::CanFrame buildSteeringLKA( unsigned char count, int16_t steer_torque, boo
 	return frame;
 }
 
-Panda::CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar) {
+Panda::CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar, bool cancelRequest) {
 	Panda::CanFrame frame;
 	/*
 	 BO_ 835 ACC_CONTROL: 8 DSU
@@ -284,7 +301,7 @@ Panda::CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseSta
 	*((uint64_t*)frame.data) |= ((uint64_t)MINI_CAR << (21+1-1));
 	// set_me_x01 ACCTYPE
 	*((uint64_t*)frame.data) |= ((uint64_t)0x01 << (23+1-2));
-	bool CANCEL_REQ = 0;
+	bool CANCEL_REQ = cancelRequest;
 	*((uint64_t*)frame.data) |= ((uint64_t)CANCEL_REQ << (24+1-1));
 	bool LCCWOK = 0;
 	*((uint64_t*)frame.data) |= ((uint64_t)LCCWOK << (25+1-1));
@@ -453,12 +470,17 @@ int main(int argc, char **argv) {
 	// Let's roll
 	pandaHandler.initialize();
 	
+	pandaHandler.getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+	
 	struct timeval sysTime;
 	gettimeofday(&sysTime, NULL);
 	
 	double startTime = (double)sysTime.tv_sec + ((double)sysTime.tv_usec)*0.000001;
 	
 	bool LDA_ALERT = 0;
+	bool barrier = 0;
+	unsigned char leftLane = 0;
+	unsigned char rightLane = 2;
 	int steer_decimator = 0;
 	char	steer_counter = 1;
 	int acc_decimator = 0;
@@ -469,7 +491,7 @@ int main(int argc, char **argv) {
 	Panda::CanFrame frame;
 	PandaHealth health;
 	while(1) {
-		usleep(1000000.0/1000.0);	// run at 100 Hz
+		usleep(1000000.0/1000.0);	// run at 1000 Hz
 		gettimeofday(&sysTime, NULL);
 		double time = (double)sysTime.tv_sec + ((double)sysTime.tv_usec)*0.000001 - startTime;
 
@@ -480,7 +502,9 @@ int main(int argc, char **argv) {
 			std::cout << "Joystick RX:" << mJoystickState.getRX() <<
 						" RY:" << mJoystickState.getRY() <<
 						" LX:" << mJoystickState.getLX() <<
-						" LY:" << mJoystickState.getLY() << std::endl;
+						" LY:" << mJoystickState.getLY() <<
+						" btnTri: " << mJoystickState.getTriangle() <<
+						" btnSqu: " << mJoystickState.getSquare() << std::endl;
 			
 			pandaHandler.getUsb().sendHeartBeat();
 			
@@ -489,8 +513,11 @@ int main(int argc, char **argv) {
 			Panda::printPandaHealth(health);
 			
 			
-			LDA_ALERT = false;//!LDA_ALERT;
-			frame = buildLdaAlert(LDA_ALERT);
+			LDA_ALERT = mJoystickState.getTriangle();// false;//!LDA_ALERT;
+			barrier = false;//!barrier;
+			leftLane = 2;
+			rightLane = 2;
+			frame = buildLdaAlert(LDA_ALERT, leftLane, rightLane, barrier);
 			//printf("LDA_ALERT: "); printFrame(frame);
 			pandaHandler.getCan().sendMessage(frame);
 		}
@@ -510,15 +537,18 @@ int main(int argc, char **argv) {
 			steer_decimator = 0;
 			double steer_torque = 0.0;
 			bool steerRequest = false;
+			unsigned char lkaState = 0;
 			if (health.controls_allowed) {
 				double joystickValue = mJoystickState.getRX();
 				if ( fabs(joystickValue ) > 0.01) {
-					steer_torque = 1500 * joystickValue;
+					//const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+					steer_torque = 1500 * joystickValue;	// range: 1500
 					steerRequest = true;
+					lkaState = 0; // Real LKA steering control data shows this to be 0
 				}
-				//steer_torque = 0.0 * sin(time); //range: -1500:1500
+				//steer_torque = 0.0 * sin(time);
 			}
-			frame = buildSteeringLKA( steer_counter++, steer_torque, steerRequest );
+			frame = buildSteeringLKA( steer_counter++, steer_torque, steerRequest, lkaState );
 			//printf("STEERING_LKA at %d: ", (int) steer_torque); printFrame(frame);
 			pandaHandler.getCan().sendMessage(frame);
 		}
@@ -531,21 +561,26 @@ int main(int argc, char **argv) {
 			bool releaseStandstill = false;
 			bool miniCar = false;
 			if (health.controls_allowed) {
-				double joystickValue = mJoystickState.getLY();
+				double joystickValue = -mJoystickState.getLY();
 				if ( fabs(joystickValue ) > 0.01) {
 					//const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s2
 					//const int TOYOTA_MIN_ACCEL = -3000;       // -3.0 m/s2
+					// The following limits can be achieved by setting the panda into "unsafe" mode:
 					//const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s2
 					//const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
-				
-					acc = -1.0 * joystickValue; // range: -20:20
+					if (joystickValue > 0) {
+						acc = 1.5*joystickValue;
+					} else if (joystickValue < 0) {
+						acc = 3.0*joystickValue;
+					}
+					//acc = 1.0 * joystickValue; // range: -20:20
 					permitBraking = true;
 					releaseStandstill = true;
 					miniCar = true;
 				}
 			}
-			
-			frame = buildACC_CONTROL( acc, permitBraking, releaseStandstill, miniCar );
+			bool cancelRequest = mJoystickState.getSquare();
+			frame = buildACC_CONTROL( acc, permitBraking, releaseStandstill, miniCar, cancelRequest );
 			//printf("ACC_CONTROL at %02f: ", acc); printFrame(frame);
 			pandaHandler.getCan().sendMessage(frame);
 		

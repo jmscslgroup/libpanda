@@ -837,6 +837,10 @@ void Usb::sendHeartBeat() {
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_HEARTBEAT, 0, 0);	// TODO test this
 }
 
+void Usb::setPowerSaveEnable( bool enable ) {
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_USB_POWER_SAVE, enable, 0);
+}
+
 void Usb::canPurge() {
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_RX, 0);
 	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_1, 0);
@@ -903,7 +907,8 @@ struct tm Usb::getRtc() {
 void Usb::setSafetyMode(uint16_t mode) {
 	// comma.ai code has a discrepency in the two following calls:
 //	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 0);	// python Panda class has this
+	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 73);	// python Panda class has this
+	// the value 73 comes from openpilot/selfdrive/car/toyota/interface.py in the RAV4 section, ret.safetyParam
 }
 
 

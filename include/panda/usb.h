@@ -118,6 +118,7 @@ namespace Panda {
 		struct tm getRtc();
 		void setSafetyMode(uint16_t mode);
 		void sendHeartBeat();  // Call more that 0.5 Hz to geet talking to panda
+		void setPowerSaveEnable( bool enable );
 
 		// The standard getters/setters:
 		void setOperatingMode(UsbMode mode);

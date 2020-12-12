@@ -165,6 +165,11 @@
 #define USB_POWER_CDP 2U
 #define USB_POWER_DCP 3U
 
+// copied from power_saving.h from comma.ai panda firmware
+#define POWER_SAVE_STATUS_DISABLED 0
+#define POWER_SAVE_STATUS_ENABLED 1
+
+
 // This order was copied from cereal based nt he boardd.cc code.  The order however seems wrong.
 // This is known to work, based on tests, for the white, grey and black pandas
 enum {
