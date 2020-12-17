@@ -28,146 +28,93 @@
 #include <cstring>
 #include <cmath>
 
-#include "panda.h"
+#include "panda/toyota.h"
 
-#include "device.h"
+#include "joystickState.h"
 
-// A simple concrete instance of a CAN listener
-class SimpleCanObserver : public Panda::CanListener {
-private:
-	void newDataNotification( Panda::CanFrame* canData ) {
-		// Gets called for every incomiming can data with data:
-		
-		// canData->messageID;					// unsigned int
-		// canData->dataLength;					// unsigned char
-		// canData->busTime;						// unsinged int
-		// canData->bus;							// unsigned char
-		// canData->data[CAN_DATA_MAX_LENGTH];	// unsigned char[8]
-		// canData->sysTime;						// struct timeval
-	}
-};
-
-// A simple concrete instance of a GPS listener
-/*
-class SimpleGpsObserver : public Panda::GpsListener {
-private:
-	int notificationCount = 0;
-	void newDataNotification( Panda::GpsData* gpsData ) {
-		notificationCount++;
-		if(notificationCount > 10) {
-			std::cerr << "g";
-			notificationCount = 0;
-		}
-	}
-};
-*/
-
-class JoystickListener : public DeviceObserver {
-private:
-	void newDeviceEvent( const DeviceEvent* event ) {	// override from DeviceObserver
-		if (event->type == TYPE_AXIS) {
-			switch (event->id) {
-				case AXIS_RX: axisRX = ((double)event->value)/32768.0; break;
-				case 3: axisRY = ((double)event->value)/32768.0; break;
-				case AXIS_LX: axisLX = ((double)event->value)/32768.0; break;
-				case AXIS_LY: axisLY = ((double)event->value)/32768.0; break;
-				default: break;
-			}
-			//std::cout << "Event id:" << (int)event->id << "\tvalue:" << event->value << std::endl;
-		} else if (event->type == TYPE_BUTTON) {
-			switch (event->id) {
-				case BUTTON_TRIANGLE: buttonTriangle = event->value; break;
-				case BUTTON_SQUARE: buttonSquare = event->value; break;
-				case BUTTON_CIRCLE: buttonCircle = event->value; break;
-				default: break;
-			}
-		}
-	}
-	
-	double axisRX;
-	double axisRY;
-	double axisLX;
-	double axisLY;
-	bool buttonTriangle;
-	bool buttonSquare;
-	bool buttonCircle;
-public:
-	JoystickListener()
-	:axisRX(0), axisRY(0), axisLX(0), axisLY(0), buttonTriangle(false), buttonSquare(false), buttonCircle(false) {
-	}
-	double getRX() { return axisRX; }
-	double getRY() { return axisRY; }
-	double getLX() { return axisLX; }
-	double getLY() { return axisLY; }
-	bool getTriangle() { return buttonTriangle; }
-	bool getSquare() { return buttonSquare; }
-	bool getCircle() { return buttonCircle; }
-};
-
-//using namespace std;
 int main(int argc, char **argv) {
 	
-	JoystickListener mJoystickState;
+	// Build the joystick reader:
+	JoystickState mJoystickState;
 	Joystick mJoystick;
 
 	mJoystick.addObserver(&mJoystickState);
 	mJoystick.open("/dev/input/js0");
 	mJoystick.start();
-	
-	//SimpleCanObserver canObserver;
-	//SimpleGpsObserver myGpsObserver;
 
-	// Initialize Usb, this requires a connected Panda
+
+	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
-	
 	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
 	
-	//pandaHandler.addCanObserver(canObserver);
-	//pandaHandler.addGpsObserver(myGpsObserver);
-
 	// Let's roll
 	pandaHandler.initialize();
-	
 	toyotaHandler.start();
 	
+	// These are for setting the HUD
+	unsigned char hudLaneLeft = 2;
+	unsigned char hudLaneRight = 2;
+	
 	while(1) {
-		usleep(1000000.0/10.0);	// run at 10 Hz
+		usleep(1000000.0/10.0);	// run at ~10 Hz
 
+		// Setting HUD elements:
+		toyotaHandler.setHudLdaAlert( mJoystickState.getTriangle() );
+		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
+		hudLaneLeft += mJoystickState.getButtonL1Rising();
+		hudLaneLeft -= mJoystickState.getButtonL2Rising();
+		hudLaneRight += mJoystickState.getButtonR1Rising();
+		hudLaneRight -= mJoystickState.getButtonR2Rising();
+		toyotaHandler.setHudLanes(hudLaneLeft, hudLaneRight);
+		toyotaHandler.setHudTwoBeeps( mJoystickState.getX() );
+		toyotaHandler.setHudBarrier( mJoystickState.getDY() > 0 );
+		toyotaHandler.setHudRepeatedBeeps( mJoystickState.getSelect() );
+		
+		// Acceleration command building.  Units are m/s^2
 		double acceleration = 0.0;
-		double joystickValue = -mJoystickState.getLY();
-
+		double joystickValue = mJoystickState.getLY();
 		//const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s2
 		//const int TOYOTA_MIN_ACCEL = -3000;       // -3.0 m/s2
 		// The following limits can be achieved by setting the panda into "unsafe" mode:
 		//const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s2
 		//const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
 		if (joystickValue > 0) {
-			acceleration = 1.5*joystickValue;
+			acceleration = 1.5 * joystickValue;
 		} else if (joystickValue < 0) {
-			acceleration = 3.0*joystickValue;
+			acceleration = 3.0 * joystickValue;
 		}
-
 		
-		toyotaHandler.setHudLdaAlert( mJoystickState.getTriangle() );
-		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
-		
+		// Steering torque command.  Deosn't yet work, unknown units
 		joystickValue = mJoystickState.getRX();
 		//const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
-		int steerTorque = 1500 * joystickValue;	// range: 1500
+		int steerTorque = 1500 * joystickValue;	// range: -1500:1500
 		
+		
+		// Send the Steering and Scceleration commands:
 		if (!mJoystickState.getCircle()) {	// Holding circle tests the heartbeat (stopping it)
 			toyotaHandler.setAcceleration(acceleration);
 			toyotaHandler.setSteerTorque(steerTorque);
 		}
 		
-		
-		std::cout << "Joystick RX:" << mJoystickState.getRX() <<
-					" RY:" << mJoystickState.getRY() <<
-					" LX:" << mJoystickState.getLX() <<
-					" LY:" << mJoystickState.getLY() <<
-					" btnTri: " << mJoystickState.getTriangle() <<
-					" btnSqu: " << mJoystickState.getSquare() <<
-					" btnCir: " << mJoystickState.getCircle() << std::endl;
+		// Debug Joystick:
+//		std::cout << "Joystick L1:" << mJoystickState.getL1() <<
+//		" L2:" << mJoystickState.getL2() <<
+//		" L3:" << mJoystickState.getL3() <<
+//		" R1:" << mJoystickState.getR1() <<
+//		" R2:" << mJoystickState.getR2() <<
+//		" R3:" << mJoystickState.getR3() <<
+//		" X:" << mJoystickState.getX() <<
+//		" Tri:" << mJoystickState.getTriangle() <<
+//		" Squ:" << mJoystickState.getSquare() <<
+//		" Cir:" << mJoystickState.getCircle() <<
+//		" Pause:" << mJoystickState.getPause() <<
+//		" Select:" << mJoystickState.getSelect() <<
+//		"\tLX:" << mJoystickState.getLX() <<
+//		"\tLY:" << mJoystickState.getLY() <<
+//		"\tRX:" << mJoystickState.getRX() <<
+//		"\tRY:" << mJoystickState.getRY() <<
+//		"\tDX:" << mJoystickState.getDX() <<
+//		"\tDY:" << mJoystickState.getDY() <<  std::endl;
 		
 	}
 	

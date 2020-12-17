@@ -31,15 +31,15 @@
 
 #include "panda.h"
 
-#define TOYOTA_COMMAND_THREAD_RATE (1000.0)
+#define TOYOTA_COMMAND_THREAD_RATE (600.0)
 #define TOYOTA_RATE_HEARTBEAT (1.0)	// This is for the panda in general, not Toyota specific
-#define TOYOTA_RATE_LDA (1.0)
+#define TOYOTA_RATE_LKA (1.0)
 #define TOYOTA_RATE_TRACK_B (40.0)
 #define TOYOTA_RATE_STEER (100.0)
 #define TOYOTA_RATE_ACC (30.0)
 
 #define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
-#define TOYOTA_DECIMATOR_MAX_LDA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LDA)
+#define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
 #define TOYOTA_DECIMATOR_MAX_TRACK_B (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_TRACK_B)
 #define TOYOTA_DECIMATOR_MAX_STEER (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_STEER)
 #define TOYOTA_DECIMATOR_MAX_ACC (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_ACC)
@@ -47,37 +47,46 @@
 namespace Panda {
 
 /*!
- \brief Converts a buffer from Panda to CanFrame data
- \param buffer The buffer from the Panda read.
- \param bufferLength The number of bytes in the buffer.  Should be 8-16
- \return A constructed CanFrame, populated witht eh bufffer data
+ \brief Constructs the LKAS_HUS command that works on a Toyota RAV4
+ \param lkaAlert Will invoke a "Please grab steering wheel" notification on the car HUD
+ \param leftlane Can be 0-3, and will show different left lane visuals on the HUD
+ \param rightlane Can be 0-3, and will show different right lane visuals on the HUD
+ \param barrier Will display a barrier on the right and left lanes
+ \param twoBeeps Will cause an audible alert in the car.  If called too frequently then it may not trigger
+ \param repeatedBeeps Will cause an audible alert in the car.  If called too frequently then it may not trigger
+ \return A constructed LKA_HUD CanFrame
  */
-CanFrame bufferToCanFrame( char* buffer, int bufferLength);
-CanFrame buildLkasHud();
-CanFrame buildLdaAlert(bool LDA_ALERT, unsigned char leftLane, unsigned char rightLane, bool barrier);
+CanFrame buildLkasHud(bool lkaAlert, unsigned char leftLane, unsigned char rightLane, bool barrier, bool twoBeeps, bool repeatedBeeps);
 
-CanFrame buildTwoBeeps(bool enable);
-
-uint8_t toyotaChecksum(Panda::CanFrame& frame);
-
-CanFrame buildSteeringLKA( unsigned char count, int16_t steer_torque, bool steerRequest, unsigned char lkaState );
+/*!
+ \brief Constructs the STEERING_LKA command, used for sending steering torque
+ \param count This needs to increase by 1 on each send, probably for error checking.
+ \param steerTorque In unknown units, but is valid from -1500:1500.
+ \param steerRequest Should be set to 1 when a steering torque is sent.  This is shown by CAN reading of the built-in LKA
+ \param lkaState Unknown, labeled in the DBC.  Stays 0 based on CAN data.
+ \return A constructed STEERING_LKA CanFrame
+ */
+CanFrame buildSteeringLKA( unsigned char count, int16_t steerTorque, bool steerRequest, unsigned char lkaState );
 CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar, bool cancelRequest);
+CanFrame buildTRACK_B_1(unsigned char count);
 
 CanFrame buildPCM_CRUISE_2(unsigned char SET_SPEED);
-
 CanFrame buildDSU_CRUISE(unsigned char SET_SPEED);
 
-CanFrame buildTRACK_B_1(unsigned char count);
+// This computes particular checksums within the CAN message, and is not the CRC for the CAN frmae itself
+uint8_t toyotaChecksum(Panda::CanFrame& frame);
+
+// This funciton is helpful for debugging but should either not live in toyota.h or shoul dbe removed:
 void printFrame( Panda::CanFrame frame );
 
-class Handler;
+
 class ToyotaHandler : public Mogi::Thread {
 private:
 	void entryAction(); // Overloaded from Mogi::Thread
 	void doAction(); // Overloaded from Mogi::Thread
 	
 	void sendHeartBeat();
-	void sendLda();
+	void sendLka();
 	void sendTrackB();
 	void sendSteer();
 	void sendAcc();
@@ -91,7 +100,7 @@ private:
 	PandaHealth health;
 	
 	int decimatorHeartbeat;
-	int decimatorLda;
+	int decimatorLka;
 	int decimatorTrackB;
 	int decimatorSteer;
 	int decimatorAcc;
@@ -104,6 +113,8 @@ private:
 	bool hudBarrier;//!barrier;
 	unsigned char hudLeftLane;
 	unsigned char hudRightLane;
+	bool hudTwoBeeps;
+	bool hudRepeatedBeeps;
 	
 	// Steering Control:
 	double steerTorqueControl;
@@ -125,8 +136,21 @@ public:
 	
 	ToyotaHandler(Panda::Handler* handler);
 	
+	// Tells the driver to grab the steering wheel:
 	void setHudLdaAlert( bool hudLdaAlert );
+	// Shows barriers on the HUD
+	void setHudBarrier( bool hudBarrier );
+	// Shows divverent lanes for the right and left side.  Valid values 0-3:
+	// 0: off
+	// 1: white
+	// 2: hollow white
+	// 3: blinking orange
+	void setHudLanes( unsigned char laneLeft, unsigned char laneRight );
 	
+	void setHudTwoBeeps( bool twoBeeps );
+	void setHudRepeatedBeeps( bool repeatedBeeps );
+	
+	// Invokes a cruise contorl cancel request, for the driver to take control over vehicle
 	void setHudCruiseCancelRequest( bool cancelRequest );
 	
 	/* The comma.ai panda code has the following limits for steeerTorque:

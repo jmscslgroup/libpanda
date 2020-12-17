@@ -32,7 +32,7 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 	this->pandaHandler = handler;
 	
 	decimatorHeartbeat = 0;
-	decimatorLda = 0;
+	decimatorLka = 0;
 	decimatorTrackB = 0;
 	decimatorSteer = 0;
 	decimatorAcc = 0;
@@ -45,6 +45,7 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 	hudBarrier = false;
 	hudLeftLane = 2;
 	hudRightLane = 2;
+	hudTwoBeeps = 0;
 	
 	// Default Steer:
 	steerTorqueControl = 0.0;
@@ -70,7 +71,7 @@ void ToyotaHandler::entryAction() {
 void ToyotaHandler::doAction() {
 	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 1000 Hz
 	
-	// We cannot have integer rollovers here at aytime, so only increase if
+	// We cannot have integer rollovers here at anytime, so only increase if not already failed
 	if(heartbeatAccelerationPass()) {
 		heartBeatSteer++;
 	}
@@ -83,12 +84,15 @@ void ToyotaHandler::doAction() {
 		sendHeartBeat();
 	}
 
-	if (decimatorLda++ >= TOYOTA_DECIMATOR_MAX_LDA) {	// 1Hz
-		decimatorLda = 0;
-		sendLda();
+	if (hudTwoBeeps) {
+		decimatorLka += 20;	//  increase rate to ensure HUD responds
+	}
+	if (decimatorLka++ >= TOYOTA_DECIMATOR_MAX_LKA) {	// 1Hz
+		decimatorLka = 0;
+		sendLka();
 	}
 	
-	if (decimatorTrackB++ >= TOYOTA_DECIMATOR_MAX_TRACK_B) {	// 1/0.025 = 40Hz
+	if (decimatorTrackB++ >= TOYOTA_DECIMATOR_MAX_TRACK_B) {	// 40Hz
 		decimatorTrackB = 0;
 		sendTrackB();
 	}
@@ -98,7 +102,7 @@ void ToyotaHandler::doAction() {
 		sendSteer();
 	}
 	
-	if (decimatorAcc++ >= TOYOTA_DECIMATOR_MAX_ACC) {	// 1/0.033 = 30 Hz
+	if (decimatorAcc++ >= TOYOTA_DECIMATOR_MAX_ACC) {	// 30 Hz
 		decimatorAcc = 0;
 		sendAcc();
 	}
@@ -119,9 +123,10 @@ void ToyotaHandler::sendHeartBeat() {
 	Panda::printPandaHealth(health);
 }
 
-void ToyotaHandler::sendLda() {
-	Panda::CanFrame frame = buildLdaAlert(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier);
-	//printf("LKAS_HUD: "); printFrame(frame);
+void ToyotaHandler::sendLka() {
+//	Panda::CanFrame frame = buildLdaAlert(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier);
+	Panda::CanFrame frame = buildLkasHud(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeeps);
+//	printf("LKAS_HUD: "); printFrame(frame);
 	pandaHandler->getCan().sendMessage(frame);
 }
 
@@ -172,12 +177,46 @@ void ToyotaHandler::sendAcc() {
 }
 
 
-void ToyotaHandler::setHudLdaAlert( bool hudLdaAlert ) {
-	this->hudLdaAlert = hudLdaAlert;
+void ToyotaHandler::setHudLdaAlert( bool ldaAlert ) {
+	if( this->hudLdaAlert != ldaAlert ) {
+		this->hudLdaAlert = ldaAlert;
+		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+	}
+}
+
+void ToyotaHandler::setHudBarrier( bool barrier ) {
+	if( this->hudBarrier != barrier) {
+		this->hudBarrier = barrier;
+		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+	}
+}
+
+void ToyotaHandler::setHudLanes( unsigned char laneLeft, unsigned char laneRight ) {
+	if( this->hudLeftLane != laneLeft ||
+	  this->hudRightLane != laneRight ) {
+		this->hudLeftLane = laneLeft;
+		this->hudRightLane = laneRight;
+		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+	}
 }
 
 void ToyotaHandler::setHudCruiseCancelRequest( bool cancelRequest ) {
 	this->cancelRequest = cancelRequest;
+}
+
+void ToyotaHandler::setHudTwoBeeps( bool twoBeeps ) {
+	this->hudTwoBeeps = twoBeeps;
+	
+//	Panda::CanFrame frame = buildLkasHud(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps);
+//	//printf("LKAS_HUD: "); printFrame(frame);
+//	pandaHandler->getCan().sendMessage(frame);
+}
+
+void ToyotaHandler::setHudRepeatedBeeps( bool repeatedBeeps ) {
+	if (this->hudRepeatedBeeps != repeatedBeeps) {
+		this->hudRepeatedBeeps = repeatedBeeps;
+		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+	}
 }
 
 /* The comma.ai panda code has the following limits for steeerTorque:

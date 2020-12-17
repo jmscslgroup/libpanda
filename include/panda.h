@@ -29,7 +29,6 @@
 #include "panda/usb.h"
 #include "panda/can.h"
 #include "panda/gps.h"
-#include "panda/toyota.h"
 
 /**
  * @namespace Panda

@@ -30,7 +30,7 @@
 
 using namespace Panda;
 
-CanFrame Panda::buildLkasHud() {
+CanFrame Panda::buildLkasHud(bool ldaAlert, unsigned char leftLane, unsigned char rightLane, bool barrier, bool twoBeeps, bool repeatedBeeps) {
 	CanFrame frame;
 	
 	/* from https://github.com/commaai/opendbc/blob/master/toyota_rav4_2017_pt_generated.dbc
@@ -77,28 +77,28 @@ SG_ SET_ME_X02 : 63|8@0+ (1,0) [0|1] "" XXX
 	frame.messageID = 1042;	// LKAS_HUD
 	*((uint64_t*)frame.data) = 0;
 	
-	bool BARRIERS = 0;
+	bool BARRIERS = barrier;
 	*((uint64_t*)frame.data) = ((uint64_t)BARRIERS << (1+1-2));
-	char RIGHT_LANE = 2;
-	*((uint64_t*)frame.data) |= ((uint64_t)RIGHT_LANE << (3+1-2));
-	char LEFT_LANE = 2;
-	*((uint64_t*)frame.data) |= ((uint64_t)LEFT_LANE << (5+1-2));
+	char RIGHT_LANE = rightLane;
+	*((uint64_t*)frame.data) |= ((uint64_t)(RIGHT_LANE & 0x03) << (3+1-2));
+	char LEFT_LANE = leftLane;
+	*((uint64_t*)frame.data) |= ((uint64_t)(LEFT_LANE & 0x03) << (5+1-2));
 	
 	//SET_ME_X01
 	*((uint64_t*)frame.data) |= ((uint64_t)0x01 << (7+1-2));
 	//SET_ME_X01_2
 	*((uint64_t*)frame.data) |= ((uint64_t)0x01 << (11+1-2));
 	
-	bool LDA_ALERT = 0;
+	bool LDA_ALERT = ldaAlert;
 	*((uint64_t*)frame.data) |= ((uint64_t)LDA_ALERT << (9+1-2));
-	bool TWO_BEEPS = 0;
+	bool TWO_BEEPS = twoBeeps;
 	*((uint64_t*)frame.data) |= ((uint64_t)TWO_BEEPS << (12+1-1));
 	bool ADJUSTING_CAMERA = 0;
 	*((uint64_t*)frame.data) |= ((uint64_t)ADJUSTING_CAMERA << (13+1-1));
 	bool LDA_MALFUNCTION = 0;
 	*((uint64_t*)frame.data) |= ((uint64_t)LDA_MALFUNCTION << (15+1-1));
-	bool REPEATED_BEEPS = 0;
-	*((uint64_t*)frame.data) |= ((uint64_t)REPEATED_BEEPS << (15+1-1));
+	bool REPEATED_BEEPS = repeatedBeeps;
+	*((uint64_t*)frame.data) |= ((uint64_t)REPEATED_BEEPS << (32+1-1));
 	
 	//SET_ME_X0C
 	*((uint64_t*)frame.data) |= ((uint64_t)0x0c << (23+1-8));
@@ -114,28 +114,28 @@ SG_ SET_ME_X02 : 63|8@0+ (1,0) [0|1] "" XXX
 	return frame;
 }
 
-CanFrame Panda::buildLdaAlert(bool LDA_ALERT, unsigned char leftLane, unsigned char rightLane, bool barrier) {
-	CanFrame frame = buildLkasHud();
-	
-	*((uint64_t*)frame.data) |= ((uint64_t)LDA_ALERT << (9+1-2));
-	
-	bool BARRIERS = barrier;
-	*((uint64_t*)frame.data) |= ((uint64_t)BARRIERS << (1+1-2));
-	char RIGHT_LANE = rightLane;
-	*((uint64_t*)frame.data) |= ((uint64_t)(RIGHT_LANE & 0x03) << (3+1-2));
-	char LEFT_LANE = leftLane;
-	*((uint64_t*)frame.data) |= ((uint64_t)(LEFT_LANE & 0x03) << (5+1-2));
-	
-	return frame;
-}
-
-CanFrame Panda::buildTwoBeeps(bool enable) {
-	CanFrame frame = buildLkasHud();
-	
-	*((uint64_t*)frame.data) |= ((uint64_t)enable << (12+1-1));
-	
-	return frame;
-}
+//CanFrame Panda::buildLdaAlert(bool LDA_ALERT, unsigned char leftLane, unsigned char rightLane, bool barrier) {
+//	CanFrame frame = buildLkasHud();
+//
+//	*((uint64_t*)frame.data) |= ((uint64_t)LDA_ALERT << (9+1-2));
+//
+//	bool BARRIERS = barrier;
+//	*((uint64_t*)frame.data) |= ((uint64_t)BARRIERS << (1+1-2));
+//	char RIGHT_LANE = rightLane;
+//	*((uint64_t*)frame.data) |= ((uint64_t)(RIGHT_LANE & 0x03) << (3+1-2));
+//	char LEFT_LANE = leftLane;
+//	*((uint64_t*)frame.data) |= ((uint64_t)(LEFT_LANE & 0x03) << (5+1-2));
+//
+//	return frame;
+//}
+//
+//CanFrame Panda::buildTwoBeeps(bool enable) {
+//	CanFrame frame = buildLkasHud();
+//
+//	*((uint64_t*)frame.data) |= ((uint64_t)enable << (12+1-1));
+//
+//	return frame;
+//}
 
 uint8_t Panda::toyotaChecksum(CanFrame& frame)
 {
@@ -367,6 +367,7 @@ CanFrame Panda::buildTRACK_B_1(unsigned char count) {	// in km/h
 
 	return frame;
 }
+
 void Panda::printFrame( CanFrame frame ) {
 	printf("%d ", frame.messageID);
 	printf("%d ", frame.bus);
