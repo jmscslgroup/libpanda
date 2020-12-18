@@ -50,42 +50,42 @@
 namespace Panda {
 
 /*!
- \brief Constructs the LKAS_HUS command that works on a Toyota RAV4
- \param lkaAlert Will invoke a "Please grab steering wheel" notification on the car HUD
- \param leftlane Can be 0-3, and will show different left lane visuals on the HUD
- \param rightlane Can be 0-3, and will show different right lane visuals on the HUD
- \param barrier Will display a barrier on the right and left lanes
- \param twoBeeps Will cause a single two-beep audible alert in the car.  If called too frequently then it may not trigger
+ \brief Constructs the LKAS_HUS command that works on a Toyota RAV4.
+ \param lkaAlert Will invoke a "Please grab steering wheel" notification on the car HUD.
+ \param leftlane Can be 0-3, and will show different left lane visuals on the HUD.
+ \param rightlane Can be 0-3, and will show different right lane visuals on the HUD.
+ \param barrier Will display a barrier on the right and left lanes.
+ \param twoBeeps Will cause a single two-beep audible alert in the car.  If called too frequently then it may not trigger.
  \param repeatedBeeps Will cause a continuous audible beeping alert.
  \return A constructed LKA_HUD CanFrame
  */
 CanFrame buildLkasHud(bool lkaAlert, unsigned char leftLane, unsigned char rightLane, bool barrier, bool twoBeeps, bool repeatedBeeps);
 
 /*!
- \brief Constructs the STEERING_LKA command, used for sending steering torque
+ \brief Constructs the STEERING_LKA command, used for sending steering torque.
  \param count This needs to increase by 1 on each send, probably for error checking.
  \param steerTorque In unknown units, but is valid from -1500:1500.
- \param steerRequest Should be set to 1 when a steering torque is sent.  This is shown by CAN reading of the built-in LKA
+ \param steerRequest Should be set to 1 when a steering torque is sent.  This is shown by CAN reading of the built-in LKA.
  \param lkaState Unknown, labeled in the DBC.  Stays 0 based on CAN data.
- \return A constructed STEERING_LKA CanFrame
+ \return A constructed STEERING_LKA CanFrame.
  */
 CanFrame buildSteeringLKA( unsigned char count, int16_t steerTorque, bool steerRequest, unsigned char lkaState );
 
 /*!
- \brief Constructs the ACC_CONTROL command, used for sending cruise cntrol accelerations
- \param permitBraking Unsure of purpose outside of name.  Should be 1 when sending control commands, perhaps
- \param releaseStandstill Unsure of purpose outside of name.  Should be 1 when sending control commands when car has been commanded to stop and is desired to let the car continue to be controlle dout of a stop, perhaps
- \param miniCar Will display the "Mini Car" on the HUD, but only works when the cruise control is activated and operating
- \param cancelRequest Will cancel the cruise controller, informing the driver to regain control of the vehicle
- \return A constructed ACC_CONTROL CanFrame
+ \brief Constructs the ACC_CONTROL command, used for sending cruise cntrol accelerations.
+ \param permitBraking Unsure of purpose outside of name.  Should be 1 when sending control commands, perhaps.
+ \param releaseStandstill Unsure of purpose outside of name.  Should be 1 when sending control commands when car has been commanded to stop and is desired to let the car continue to be controlle dout of a stop, perhaps.
+ \param miniCar Will display the "Mini Car" on the HUD, but only works when the cruise control is activated and operating.
+ \param cancelRequest Will cancel the cruise controller, informing the driver to regain control of the vehicle.
+ \return A constructed ACC_CONTROL CanFrame.
  */
 CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar, bool cancelRequest);
 
 /*!
  \brief Constructs the TRACK_B_1 command, needed to fake adaptive cruise controller operation.
- Note that there could be more things to fake in this command, but for use of ACC_CONTROL this command is intercepted to prevent run-time faults of the ACC
+ Note that there could be more things to fake in this command, but for use of ACC_CONTROL this command is intercepted to prevent run-time faults of the ACC.
  \param count  Needs to be increment on each call.  It may be only 6 bits long even though the DBC states 8-bits.  See ToyotaHandler for how this is handeled.
- \return A constructed TRACK_B_1 CanFrame
+ \return A constructed TRACK_B_1 CanFrame.
  */
 CanFrame buildTRACK_B_1(unsigned char count);
 
@@ -115,18 +115,18 @@ void printFrame( Panda::CanFrame frame );
 /*!
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
-
+ \par
  This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
 class ToyotaHandler : public Mogi::Thread {
 private:
 	
-	// Overloaded from Mogi::Thread
-	// This will enable the required power save mode for vehicle control
+	// Overloaded from Mogi::Thread.
+	// This will enable the required power save mode for vehicle control.
 	void entryAction();
 	
-	// Overloaded from Mogi::Thread
-	// This handles the constant updates
+	// Overloaded from Mogi::Thread.
+	// This handles the constant updates.
 	void doAction();
 	
 	// All of the following are called from doAction()
@@ -136,10 +136,10 @@ private:
 	void sendSteer();
 	void sendAcc();
 	
-	// This will max the LKA decimator to trigger an instant send
+	// This will max the LKA decimator to trigger an instant send.
 	void triggerInstantLkaSend();
 
-	// Helper functions to check whether the hearbeats currently pass
+	// Helper functions to check whether the hearbeats currently pass.
 	// These will pass if a command was sent within the corresponding defined times:
 	// TIME_HEARTBEAT_FAIL_STEERING
 	// TIME_HEARTBEAT_FAIL_ACCELERATION
@@ -187,7 +187,7 @@ public:
 	
 	/*!
 	 \brief Construction must be done with a Panda::Handler
-	 \param handler the active interface for the Panda.  The handler should be initialed with Panda::Handler::initialize() before Toyota::Handler::start() is called
+	 \param handler The active interface for the Panda.  The handler should be initialed with Panda::Handler::initialize() before Toyota::Handler::start() is called.
 	 */
 	ToyotaHandler(Panda::Handler* handler);
 	
@@ -205,6 +205,7 @@ public:
 	
 	/*!
 	 \brief Shows different lanes for the right and left side.  Valid values 0-3:
+	 \par
 	  0: Off
 	  1: White
 	  2: Hollow white
@@ -221,16 +222,18 @@ public:
 	void setHudTwoBeeps( bool enable );
 	
 	/*!
-	 \brief Will cause continuous beeping
+	 \brief Will cause continuous beeping.
+	 \par
 	 \param enable Whether the repeated beeping should be played
 	 */
 	void setHudRepeatedBeeps( bool enable );
 	
 	/*!
-	 \brief Displays the "Mini Car" on the HUD
+	 \brief Displays the "Mini Car" on the HUD.
+	 \par
 	 Cruise control must be both on and active from "SET" being pushed for this to appear.
 	 If ACC is SET and not RES, (i.e. starting cruise from a standstill) then MiniCar will blink.  Otherwise MiniCar is solid.
-	 \param enable Whether the Mini Car should be displayed in the HUD
+	 \param enable Whether the Mini Car should be displayed in the HUD.
 	 */
 	void setHudMiniCar( bool enable );
 	
@@ -242,8 +245,10 @@ public:
 	void setHudCruiseCancelRequest( bool enable );
 	
 	/*!
-	 \brief Sends a steering torque to the steering wheel (non-working)
+	 \brief Sends a steering torque to the steering wheel (non-working).
+	 \par
 	 The comma.ai panda code has the following limits for steerTorque:
+	 \par
 	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
 	 */
@@ -251,30 +256,41 @@ public:
 	
 	/*!
 	 \brief Sends acceleration to the cruise controller, in units of m/s^2
+	 \par
 	 The comma.ai panda code has the following limits for acceleration:
+	 \par
 	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
+	 \par
 	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
+	 \par
 	  The following limits can be achieved by setting the panda into "unsafe" mode:
+	 \par
 	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
+	 \par
 	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
+	 \par
 	 The DBC file however has a different supported range of -20:20
 	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
 	 */
 	void setAcceleration( double acceleration );
 	
 	/*!
-	 \brief Returns the Panda report for whether the ignition is on (line)
-	 Note: the Panda also reports "ignition_can but appears to always be off in the RAV4
-	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	 \brief Returns the Panda report for whether the ignition is on (line).
+	 
+	 \par
+	 Note: The Panda also reports "ignition_can but appears to always be off in the RAV4.
+	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT.
 	 \return Whether the ignition is turned on or off.
 	 */
 	bool getIgnitionOn();
 	
 	/*!
 	 \brief Returns the Panda health report for whether controls are allowed.
-	 Controls are allowed when the cruise control is turned on and SET is pushed.
-	 This will get disabled by many events
-	 Example sequence:
+	 Controls are allowed when the cruise control is turned on and active from a SET press.
+	 This will get disabled by many events.  Consider the following sequences with the corresponding return result of this function:
+	 \par
+	 Example sequence 1:
+	 \par
 	 0. Be Parked: 0
 	 1. Before Cruise control enabled: 0
 	 2. Cruise control button pushed, enabling cruise: 0
@@ -284,16 +300,22 @@ public:
 	 6. Brake pushed again: 0
 	 7. controlsAreAllowed will only return 0 unless cruise is cancelled or reset at this stage
 	
-	 Example sequence:
+	 \par
+	 Example sequence 2:
+	 \par
 	 0. Be Driving before Cruise control enabled: 0
 	 1. Cruise control button pushed, enabling cruise: 0
 	 2. SET pushed while moving in drive: 1
 	 3. Brake pushed OR Throttle pushed: 0
 	 4. SET pushed again: 0
 	 5. Cancel pushed, then SET pushed: 1
-	 Note: when the brake is pushed to cancel, the HUD "SET" and radar will also disappear
+	 
+	 \par
+	 \note
+	 Note: When the brake is pushed to cancel, the HUD "SET" and radar will also disappear.
 			However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
 	
+	 \par
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
 	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
