@@ -18,7 +18,6 @@
 #include "device.h"
 
 typedef struct JoystickValues {
-	
 	double axisRX;
 	double axisRY;
 	double axisLX;

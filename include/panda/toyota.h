@@ -34,12 +34,12 @@
 #define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
-#define TOYOTA_COMMAND_THREAD_RATE (600.0)
-#define TOYOTA_RATE_HEARTBEAT (1.0)	// This is for the panda in general, not Toyota specific
-#define TOYOTA_RATE_LKA (1.0)
-#define TOYOTA_RATE_TRACK_B (40.0)
-#define TOYOTA_RATE_STEER (100.0)
-#define TOYOTA_RATE_ACC (30.0)
+#define TOYOTA_COMMAND_THREAD_RATE (600.0)	// Defines the rate of the thread, not for any particular command to be sent.
+#define TOYOTA_RATE_HEARTBEAT (1.0)			// This is for the panda in general, not Toyota specific
+#define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
+#define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
+#define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
+#define TOYOTA_RATE_ACC (30.0)				// Rate of the ACC_CONTROL command
 
 #define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
 #define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
@@ -89,7 +89,14 @@ CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill
  */
 CanFrame buildTRACK_B_1(unsigned char count);
 
+/*!
+ \brief Unused by ToyotaHandler.  Also untested.
+ */
 CanFrame buildPCM_CRUISE_2(unsigned char SET_SPEED);
+
+/*!
+ \brief Unused by ToyotaHandler.  Also untested.
+ */
 CanFrame buildDSU_CRUISE(unsigned char SET_SPEED);
 
 /*!
@@ -109,7 +116,7 @@ void printFrame( Panda::CanFrame frame );
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
 
- This is the intended methodology for reading GPS data.
+ This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
 class ToyotaHandler : public Mogi::Thread {
 private:
@@ -288,7 +295,7 @@ public:
 			However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
 	
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
-	 \return Whether the Panda will allow contorls to be sent to the vehicle.
+	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
 	bool getControlsAllowed();
 	
