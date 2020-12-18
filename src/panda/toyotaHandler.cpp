@@ -69,10 +69,10 @@ void ToyotaHandler::entryAction() {
 }
 
 void ToyotaHandler::doAction() {
-	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 1000 Hz
+	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 600 Hz
 	
 	// We cannot have integer rollovers here at anytime, so only increase if not already failed
-	if(heartbeatAccelerationPass()) {
+	if(heartbeatSteerPass()) {
 		heartBeatSteer++;
 	}
 	if (heartbeatAccelerationPass()) {
@@ -109,10 +109,10 @@ void ToyotaHandler::doAction() {
 }
 
 bool ToyotaHandler::heartbeatSteeringPass() {
-	return heartBeatSteer < (TOYOTA_COMMAND_THREAD_RATE*TIME_HEARTBEAT_FAIL_STEERING);
+	return heartBeatSteer < (TOYOTA_COMMAND_THREAD_RATE * TIME_HEARTBEAT_FAIL_STEERING);
 }
 bool ToyotaHandler::heartbeatAccelerationPass() {
-	return heartBeatAcceleration < (TOYOTA_COMMAND_THREAD_RATE*TIME_HEARTBEAT_FAIL_ACCELERATION);
+	return heartBeatAcceleration < (TOYOTA_COMMAND_THREAD_RATE * TIME_HEARTBEAT_FAIL_ACCELERATION);
 }
 
 void ToyotaHandler::sendHeartBeat() {
@@ -120,7 +120,6 @@ void ToyotaHandler::sendHeartBeat() {
 	
 	// Libpanda should probably automatically do the following:
 	pandaHandler->getUsb().getHealth(&health);	// this should live in Panda::PandaHandler
-	//Panda::printPandaHealth(health);
 }
 
 void ToyotaHandler::sendLka() {
@@ -153,6 +152,8 @@ void ToyotaHandler::sendTrackB() {
 
 void ToyotaHandler::sendSteer() {
 	int steerTorqueControlToSend;
+	// Only send torque if both 1. controls are allowed and 2. the heartbeat passes.
+	// If either of the above two fail, then send 0 torque
 	if (health.controls_allowed && heartbeatSteeringPass()) {
 		steerRequest = true;
 		steerLkaState = 0; // Real LKA steering control data shows this to be 0
@@ -169,6 +170,8 @@ void ToyotaHandler::sendSteer() {
 
 void ToyotaHandler::sendAcc() {
 	double accelerationControlToSend;
+	// Only send acceleration if both 1. controls are allowed and 2. the heartbeat passes.
+	// If either of the above two fail, then send 0 acceleration
 	if (health.controls_allowed && heartbeatAccelerationPass()) {
 		permitBraking = true;
 		releaseStandstill = true;
@@ -176,11 +179,11 @@ void ToyotaHandler::sendAcc() {
 	} else {
 		permitBraking = false;
 		releaseStandstill = false;
-		accelerationControlToSend = 0.0;	// If we send non-0 in this state, curise controll will fault
+		accelerationControlToSend = 0.0;	// If we send non-0 in this state, cruise control will fault
 	}
 	
-//	// The following will sned a cnacel request if controls are allowed and the heartbeat fails, but
-//	// I think I prefer the version without this logic.  LEaving here for future discussion
+//	// The following will send a cnacel request if controls are allowed and the heartbeat fails, but
+//	// I think I prefer the version without this logic.  Leaving here for future discussion
 	bool cancelRequestToSend = cancelRequest;
 //	if(!heartbeatAccelerationPass() && health.controls_allowed) {
 //		cancelRequestToSend = true;
@@ -191,18 +194,22 @@ void ToyotaHandler::sendAcc() {
 	pandaHandler->getCan().sendMessage(frame);
 }
 
+void ToyotaHandler::triggerInstantLkaSend() {
+	decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send by maxing the decimator
+}
+
 
 void ToyotaHandler::setHudLdaAlert( bool enable ) {
 	if( this->hudLdaAlert != enable ) {
 		this->hudLdaAlert = enable;
-		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+		triggerInstantLkaSend();
 	}
 }
 
 void ToyotaHandler::setHudBarrier( bool enable ) {
 	if( this->hudBarrier != enable) {
 		this->hudBarrier = enable;
-		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+		triggerInstantLkaSend();
 	}
 }
 
@@ -211,7 +218,7 @@ void ToyotaHandler::setHudLanes( unsigned char laneLeft, unsigned char laneRight
 	  this->hudRightLane != laneRight ) {
 		this->hudLeftLane = laneLeft;
 		this->hudRightLane = laneRight;
-		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+		triggerInstantLkaSend();
 	}
 }
 
@@ -226,7 +233,7 @@ void ToyotaHandler::setHudTwoBeeps( bool enable ) {
 void ToyotaHandler::setHudRepeatedBeeps( bool enable ) {
 	if (this->hudRepeatedBeeps != enable) {
 		this->hudRepeatedBeeps = enable;
-		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
+		triggerInstantLkaSend();
 	}
 }
 

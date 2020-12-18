@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
 	unsigned char hudLaneRight = 2;
 	
 	int printPandaHealthDecimator = 0;
+	
 	while(1) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
@@ -79,8 +80,8 @@ int main(int argc, char **argv) {
 		toyotaHandler.setHudBarrier( mJoystickState.getDY() > 0 );
 		toyotaHandler.setHudMiniCar( mJoystickState.getDX() > 0 );
 		
-		// This will cancel the cruise control, cruise must be rest by driver to allow controls
-		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );	// more than just a cancel request
+		// This will cancel the cruise control, cruise must be rest by driver to allow further controls
+		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
 		
 		// Acceleration command building.  Units are m/s^2
 		// The following are hard-coded limits in the Panda firmware:
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
 		//const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s2
 		//const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
 		double acceleration = 0.0;
-		double joystickValue = mJoystickState.getLY();
+		double joystickValue = mJoystickState.getLY();	// getLY() returns a range of -1.0:1.0
 		if (joystickValue > 0) {
 			acceleration = 1.5 * joystickValue;
 		} else if (joystickValue < 0) {
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 		// Steering torque command.  Deosn't yet work, unknown units
 		// The following is a hard-coded limit in the Panda firmware:
 		//const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
-		joystickValue = mJoystickState.getRX();
+		joystickValue = mJoystickState.getRX();	// getRX() returns a range of -1.0:1.0
 		int steerTorque = 1500 * joystickValue;	// range: -1500:1500
 		
 		

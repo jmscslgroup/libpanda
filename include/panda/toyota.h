@@ -85,15 +85,30 @@ void printFrame( Panda::CanFrame frame );
 
 class ToyotaHandler : public Mogi::Thread {
 private:
-	void entryAction(); // Overloaded from Mogi::Thread
-	void doAction(); // Overloaded from Mogi::Thread
 	
+	// Overloaded from Mogi::Thread
+	// This will enable the required power save mode for vehicle control
+	void entryAction();
+	
+	// Overloaded from Mogi::Thread
+	// This handles the constant updates
+	void doAction();
+	
+	
+	// All of the following are called from doAction()
 	void sendHeartBeat();
 	void sendLka();
 	void sendTrackB();
 	void sendSteer();
 	void sendAcc();
 	
+	// This will max the LKA decimator to trigger an instant send
+	void triggerInstantLkaSend();
+
+	// Helper functions to check whether the hearbeats currently pass
+	// These will pass if a command was sent within the corresponding defined times:
+	// TIME_HEARTBEAT_FAIL_STEERING
+	// TIME_HEARTBEAT_FAIL_ACCELERATION
 	bool heartbeatSteeringPass();
 	bool heartbeatAccelerationPass();
 	
@@ -137,80 +152,118 @@ public:
 	
 	ToyotaHandler(Panda::Handler* handler);
 	
-	// Tells the driver to grab the steering wheel:
+	/*!
+	 \brief Tells the driver to grab the steering wheel
+	 \param enable Whether the "Grab Steering Wheel" alert should be displayed
+	 */
 	void setHudLdaAlert( bool enable );
 	
-	// Shows barriers on the HUD
+	/*!
+	 \brief Shows lane barriers on the HUD
+	 \param enable Whether the barriers should be displayed
+	 */
 	void setHudBarrier( bool enable );
-	// Shows divverent lanes for the right and left side.  Valid values 0-3:
-	// 0: off
-	// 1: white
-	// 2: hollow white
-	// 3: blinking orange
+	
+	/*!
+	 \brief Shows different lanes for the right and left side.  Valid values 0-3:
+	  0: Off
+	  1: White
+	  2: Hollow white
+	  3: Blinking orange
+	 \param laneLeft The setting for the left lane
+	 \param rightLeft The setting for the right lane
+	 */
 	void setHudLanes( unsigned char laneLeft, unsigned char laneRight );
 	
-	// Will cause a double-beep alert, though appears to be inconsistent if it will trigger
+	/*!
+	 \brief Will cause a double-beep alert.  Appears to be inconsistent in operation
+	 \param enable Whether the Two Beeps should be played
+	 */
 	void setHudTwoBeeps( bool enable );
 	
-	// Will cause continuous beeping
+	/*!
+	 \brief Will cause continuous beeping
+	 \param enable Whether the repeated beeping should be played
+	 */
 	void setHudRepeatedBeeps( bool enable );
 	
-	// Displays the "Mini Car" ont he HUD
-	// Cruis control must be both on and "SET" must be pushed for this to appear
-	// If ACC is SET and not RES, (i.e. starting cruise forma  standstill) then MiniCar will blink.  Otherwise MiniCar is solid
+	/*!
+	 \brief Displays the "Mini Car" on the HUD
+	 Cruise control must be both on and active from "SET" being pushed for this to appear.
+	 If ACC is SET and not RES, (i.e. starting cruise from a standstill) then MiniCar will blink.  Otherwise MiniCar is solid.
+	 \param enable Whether the Mini Car should be displayed in the HUD
+	 */
 	void setHudMiniCar( bool enable );
 	
-	// Invokes a cruise contorl cancel request, for the driver to take control over vehicle
+	/*!
+	 \brief Invokes a cruise control cancel request, for the driver to take control over vehicle.
+	 This will disable cruise control.  Commands can only be sent to the car again if the driver re-activates cruise control.
+	 \param enable Whether to invoke the Cancel Request
+	 */
 	void setHudCruiseCancelRequest( bool enable );
 	
-	/* The comma.ai panda code has the following limits for steeerTorque:
-	const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+	/*!
+	 \brief Sends a steering torque to the steering wheel (non-working)
+	 The comma.ai panda code has the following limits for steerTorque:
+	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
 	 */
 	void setSteerTorque( int steerTorque );
 	
-	/* The comma.ai panda code has the following limits for acceleration:
-	const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s2
-	const int TOYOTA_MIN_ACCEL = -3000;       // -3.0 m/s2
-	 The following limits can be achieved by setting the panda into "unsafe" mode:
-	const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s2
-	const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
-	
-	 DBC range states: -20:20
+	/*!
+	 \brief Sends acceleration to the cruise controller, in units of m/s^2
+	 The comma.ai panda code has the following limits for acceleration:
+	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
+	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
+	  The following limits can be achieved by setting the panda into "unsafe" mode:
+	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
+	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
+	 The DBC file however has a different supported range of -20:20
+	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
 	 */
-	void setAcceleration( double acceleration );	// units are m/s2, valid range is -3.0:1.5
+	void setAcceleration( double acceleration );
 	
-	// Returns the Panda report for whether the ignition is on (line)
-	// Note: the Panda also reports "ignition_can but appears to always be off in the RAV4
-	// This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	/*!
+	 \brief Returns the Panda report for whether the ignition is on (line)
+	 Note: the Panda also reports "ignition_can but appears to always be off in the RAV4
+	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	 \return Whether the ignition is turned on or off.
+	 */
 	bool getIgnitionOn();
 	
-	// Returns the Panda report for whether controls are allowed.
-	// Controls are allowed when the cruise control is turned on and SET is pushed.
-	// This will get disabled by many events
-	// Example sequence:
-	// 0. Be Parked: 0
-	// 1. Before Cruise control enabled: 0
-	// 2. Cruise control button pushed, enabling cruise: 0
-	// 3. SET pushed while still in Park: 0
-	// 4. SET pushed after shifting to Drive with brake held: 1
-	// 5. Brake released: 1
-	// 6. Brake pushed again: 0
-	// 7. controlsAreAllowed will only return 0 unless cruise is cancelled or reset at this stage
-	//
-	// Example sequence:
-	// 0. Be Driving before Cruise control enabled: 0
-	// 1. Cruise control button pushed, enabling cruise: 0
-	// 2. SET pushed while moving in drive: 1
-	// 3. Brake pushed OR Throttle pushed: 0
-	// 4. SET pushed again: 0
-	// 5. Cancel pushed, then SET pushed: 1
-	// Note: when the brake is pushed to cancel, the HUD "SET" and radar will also disappear
-	//		However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
-	//
-	// This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	/*!
+	 \brief Returns the Panda health report for whether controls are allowed.
+	 Controls are allowed when the cruise control is turned on and SET is pushed.
+	 This will get disabled by many events
+	 Example sequence:
+	 0. Be Parked: 0
+	 1. Before Cruise control enabled: 0
+	 2. Cruise control button pushed, enabling cruise: 0
+	 3. SET pushed while still in Park: 0
+	 4. SET pushed after shifting to Drive with brake held: 1
+	 5. Brake released: 1
+	 6. Brake pushed again: 0
+	 7. controlsAreAllowed will only return 0 unless cruise is cancelled or reset at this stage
+	
+	 Example sequence:
+	 0. Be Driving before Cruise control enabled: 0
+	 1. Cruise control button pushed, enabling cruise: 0
+	 2. SET pushed while moving in drive: 1
+	 3. Brake pushed OR Throttle pushed: 0
+	 4. SET pushed again: 0
+	 5. Cancel pushed, then SET pushed: 1
+	 Note: when the brake is pushed to cancel, the HUD "SET" and radar will also disappear
+			However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
+	
+	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	 \return Whether the Panda will allow contorls to be sent to the vehicle.
+	 */
 	bool getControlsAllowed();
 	
-	// Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
+	/*!
+	 \brief Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
+	 \return The last read state of the panda's state
+	 */
 	const PandaHealth& getPandaHealth() const;
 };
 
