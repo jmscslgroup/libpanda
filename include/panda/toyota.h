@@ -70,19 +70,47 @@ CanFrame buildLkasHud(bool lkaAlert, unsigned char leftLane, unsigned char right
  \return A constructed STEERING_LKA CanFrame
  */
 CanFrame buildSteeringLKA( unsigned char count, int16_t steerTorque, bool steerRequest, unsigned char lkaState );
+
+/*!
+ \brief Constructs the ACC_CONTROL command, used for sending cruise cntrol accelerations
+ \param permitBraking Unsure of purpose outside of name.  Should be 1 when sending control commands, perhaps
+ \param releaseStandstill Unsure of purpose outside of name.  Should be 1 when sending control commands when car has been commanded to stop and is desired to let the car continue to be controlle dout of a stop, perhaps
+ \param miniCar Will display the "Mini Car" on the HUD, but only works when the cruise control is activated and operating
+ \param cancelRequest Will cancel the cruise controller, informing the driver to regain control of the vehicle
+ \return A constructed ACC_CONTROL CanFrame
+ */
 CanFrame buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar, bool cancelRequest);
+
+/*!
+ \brief Constructs the TRACK_B_1 command, needed to fake adaptive cruise controller operation.
+ Note that there could be more things to fake in this command, but for use of ACC_CONTROL this command is intercepted to prevent run-time faults of the ACC
+ \param count  Needs to be increment on each call.  It may be only 6 bits long even though the DBC states 8-bits.  See ToyotaHandler for how this is handeled.
+ \return A constructed TRACK_B_1 CanFrame
+ */
 CanFrame buildTRACK_B_1(unsigned char count);
 
 CanFrame buildPCM_CRUISE_2(unsigned char SET_SPEED);
 CanFrame buildDSU_CRUISE(unsigned char SET_SPEED);
 
-// This computes particular checksums within the CAN message, and is not the CRC for the CAN frmae itself
+/*!
+ \brief Computes particular checksums within the CAN message, and is not the CRC for the CAN frame itself
+ \param frame The frame for the checksum to be computer
+ \return The resulting checksum for the CAN frame.
+ */
 uint8_t toyotaChecksum(Panda::CanFrame& frame);
 
-// This funciton is helpful for debugging but should either not live in toyota.h or shoul dbe removed:
+/*!
+ \brief This funciton is helpful for debugging but should either not live in toyota.h or shoul dbe removed:
+ \param frame The frame to be printed to the console
+ */
 void printFrame( Panda::CanFrame frame );
 
+/*!
+ @class ToyotaHandler
+ \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
 
+ This is the intended methodology for reading GPS data.
+ */
 class ToyotaHandler : public Mogi::Thread {
 private:
 	
@@ -93,7 +121,6 @@ private:
 	// Overloaded from Mogi::Thread
 	// This handles the constant updates
 	void doAction();
-	
 	
 	// All of the following are called from doAction()
 	void sendHeartBeat();
@@ -121,6 +148,7 @@ private:
 	int decimatorSteer;
 	int decimatorAcc;
 	
+	// For building proper CanFrames for steering and track B:
 	unsigned char counterSteer;
 	unsigned char counterTrackB;
 	
@@ -150,6 +178,10 @@ private:
 	
 public:
 	
+	/*!
+	 \brief Construction must be done with a Panda::Handler
+	 \param handler the active interface for the Panda.  The handler should be initialed with Panda::Handler::initialize() before Toyota::Handler::start() is called
+	 */
 	ToyotaHandler(Panda::Handler* handler);
 	
 	/*!

@@ -29,6 +29,7 @@
 using namespace Panda;
 
 ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
+	// TODO: should reorganize this, or have some assertion that handler is valid.
 	this->pandaHandler = handler;
 	
 	decimatorHeartbeat = 0;
