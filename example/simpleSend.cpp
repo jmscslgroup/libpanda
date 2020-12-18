@@ -83,13 +83,14 @@ int main(int argc, char **argv) {
 		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );	// more than just a cancel request
 		
 		// Acceleration command building.  Units are m/s^2
-		double acceleration = 0.0;
-		double joystickValue = mJoystickState.getLY();
+		// The following are hard-coded limits in the Panda firmware:
 		//const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s2
 		//const int TOYOTA_MIN_ACCEL = -3000;       // -3.0 m/s2
 		// The following limits can be achieved by setting the panda into "unsafe" mode:
 		//const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s2
 		//const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
+		double acceleration = 0.0;
+		double joystickValue = mJoystickState.getLY();
 		if (joystickValue > 0) {
 			acceleration = 1.5 * joystickValue;
 		} else if (joystickValue < 0) {
@@ -97,8 +98,9 @@ int main(int argc, char **argv) {
 		}
 		
 		// Steering torque command.  Deosn't yet work, unknown units
-		joystickValue = mJoystickState.getRX();
+		// The following is a hard-coded limit in the Panda firmware:
 		//const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+		joystickValue = mJoystickState.getRX();
 		int steerTorque = 1500 * joystickValue;	// range: -1500:1500
 		
 		
