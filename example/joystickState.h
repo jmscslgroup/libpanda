@@ -86,6 +86,9 @@ public:
 	bool getButtonR3Rising();
 	bool getButtonPauseRising();
 	bool getButtonSelectRising();
+	
+	// For debugging:
+	void printState();
 
 };
 #endif

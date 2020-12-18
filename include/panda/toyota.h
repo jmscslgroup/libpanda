@@ -31,6 +31,9 @@
 
 #include "panda.h"
 
+#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
+#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
+
 #define TOYOTA_COMMAND_THREAD_RATE (600.0)
 #define TOYOTA_RATE_HEARTBEAT (1.0)	// This is for the panda in general, not Toyota specific
 #define TOYOTA_RATE_LKA (1.0)
@@ -52,8 +55,8 @@ namespace Panda {
  \param leftlane Can be 0-3, and will show different left lane visuals on the HUD
  \param rightlane Can be 0-3, and will show different right lane visuals on the HUD
  \param barrier Will display a barrier on the right and left lanes
- \param twoBeeps Will cause an audible alert in the car.  If called too frequently then it may not trigger
- \param repeatedBeeps Will cause an audible alert in the car.  If called too frequently then it may not trigger
+ \param twoBeeps Will cause a single two-beep audible alert in the car.  If called too frequently then it may not trigger
+ \param repeatedBeeps Will cause a continuous audible beeping alert.
  \return A constructed LKA_HUD CanFrame
  */
 CanFrame buildLkasHud(bool lkaAlert, unsigned char leftLane, unsigned char rightLane, bool barrier, bool twoBeeps, bool repeatedBeeps);
@@ -95,8 +98,6 @@ private:
 	bool heartbeatAccelerationPass();
 	
 	Panda::Handler* pandaHandler;
-	
-	//Panda::CanFrame frame;	// for building and sending
 	PandaHealth health;
 	
 	int decimatorHeartbeat;
@@ -137,9 +138,10 @@ public:
 	ToyotaHandler(Panda::Handler* handler);
 	
 	// Tells the driver to grab the steering wheel:
-	void setHudLdaAlert( bool hudLdaAlert );
+	void setHudLdaAlert( bool enable );
+	
 	// Shows barriers on the HUD
-	void setHudBarrier( bool hudBarrier );
+	void setHudBarrier( bool enable );
 	// Shows divverent lanes for the right and left side.  Valid values 0-3:
 	// 0: off
 	// 1: white
@@ -147,11 +149,19 @@ public:
 	// 3: blinking orange
 	void setHudLanes( unsigned char laneLeft, unsigned char laneRight );
 	
-	void setHudTwoBeeps( bool twoBeeps );
-	void setHudRepeatedBeeps( bool repeatedBeeps );
+	// Will cause a double-beep alert, though appears to be inconsistent if it will trigger
+	void setHudTwoBeeps( bool enable );
+	
+	// Will cause continuous beeping
+	void setHudRepeatedBeeps( bool enable );
+	
+	// Displays the "Mini Car" ont he HUD
+	// Cruis control must be both on and "SET" must be pushed for this to appear
+	// If ACC is SET and not RES, (i.e. starting cruise forma  standstill) then MiniCar will blink.  Otherwise MiniCar is solid
+	void setHudMiniCar( bool enable );
 	
 	// Invokes a cruise contorl cancel request, for the driver to take control over vehicle
-	void setHudCruiseCancelRequest( bool cancelRequest );
+	void setHudCruiseCancelRequest( bool enable );
 	
 	/* The comma.ai panda code has the following limits for steeerTorque:
 	const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
@@ -169,6 +179,39 @@ public:
 	 */
 	void setAcceleration( double acceleration );	// units are m/s2, valid range is -3.0:1.5
 	
+	// Returns the Panda report for whether the ignition is on (line)
+	// Note: the Panda also reports "ignition_can but appears to always be off in the RAV4
+	// This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	bool getIgnitionOn();
+	
+	// Returns the Panda report for whether controls are allowed.
+	// Controls are allowed when the cruise control is turned on and SET is pushed.
+	// This will get disabled by many events
+	// Example sequence:
+	// 0. Be Parked: 0
+	// 1. Before Cruise control enabled: 0
+	// 2. Cruise control button pushed, enabling cruise: 0
+	// 3. SET pushed while still in Park: 0
+	// 4. SET pushed after shifting to Drive with brake held: 1
+	// 5. Brake released: 1
+	// 6. Brake pushed again: 0
+	// 7. controlsAreAllowed will only return 0 unless cruise is cancelled or reset at this stage
+	//
+	// Example sequence:
+	// 0. Be Driving before Cruise control enabled: 0
+	// 1. Cruise control button pushed, enabling cruise: 0
+	// 2. SET pushed while moving in drive: 1
+	// 3. Brake pushed OR Throttle pushed: 0
+	// 4. SET pushed again: 0
+	// 5. Cancel pushed, then SET pushed: 1
+	// Note: when the brake is pushed to cancel, the HUD "SET" and radar will also disappear
+	//		However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
+	//
+	// This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
+	bool getControlsAllowed();
+	
+	// Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
+	const PandaHealth& getPandaHealth() const;
 };
 
 }

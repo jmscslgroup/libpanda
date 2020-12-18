@@ -190,3 +190,27 @@ bool JoystickState::getButtonSelectRising() {
 	}
 	return false;
 }
+
+
+void JoystickState::printState() {
+	std::cout <<
+	"Joystick L1:" << getL1() <<
+	" L2:" << getL2() <<
+	" L3:" << getL3() <<
+	" R1:" << getR1() <<
+	" R2:" << getR2() <<
+	" R3:" << getR3() <<
+	" X:" << getX() <<
+	" Tri:" << getTriangle() <<
+	" Squ:" << getSquare() <<
+	" Cir:" << getCircle() <<
+	" Pause:" << getPause() <<
+	" Select:" << getSelect() <<
+	"\tLX:" << getLX() <<
+	"\tLY:" << getLY() <<
+	"\tRX:" << getRX() <<
+	"\tRY:" << getRY() <<
+	"\tDX:" << getDX() <<
+	"\tDY:" << getDY() <<
+	std::endl;
+}

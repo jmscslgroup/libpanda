@@ -109,23 +109,35 @@ void ToyotaHandler::doAction() {
 }
 
 bool ToyotaHandler::heartbeatSteeringPass() {
-	return heartBeatSteer < TOYOTA_COMMAND_THREAD_RATE;	// Should fail at 1 second
+	return heartBeatSteer < (TOYOTA_COMMAND_THREAD_RATE*TIME_HEARTBEAT_FAIL_STEERING);
 }
 bool ToyotaHandler::heartbeatAccelerationPass() {
-	return heartBeatAcceleration < TOYOTA_COMMAND_THREAD_RATE;	// Should fail at 1 second
+	return heartBeatAcceleration < (TOYOTA_COMMAND_THREAD_RATE*TIME_HEARTBEAT_FAIL_ACCELERATION);
 }
 
 void ToyotaHandler::sendHeartBeat() {
 	pandaHandler->getUsb().sendHeartBeat();
 	
 	// Libpanda should probably automatically do the following:
-	pandaHandler->getUsb().getHealth(&health);	// this shoudl live in Panda::PandaHandler
-	Panda::printPandaHealth(health);
+	pandaHandler->getUsb().getHealth(&health);	// this should live in Panda::PandaHandler
+	//Panda::printPandaHealth(health);
 }
 
 void ToyotaHandler::sendLka() {
 //	Panda::CanFrame frame = buildLdaAlert(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier);
-	Panda::CanFrame frame = buildLkasHud(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeeps);
+	bool hudRepeatedBeepsToSend = hudRepeatedBeeps;
+	
+	if ((!heartbeatSteeringPass() || !heartbeatAccelerationPass()) &&
+		health.controls_allowed ) {
+		hudRepeatedBeepsToSend = true;
+	}
+	
+	bool hudLkaAlertToSend = hudLdaAlert;
+	if (health.controls_allowed && !heartbeatSteeringPass()) {
+		hudLkaAlertToSend = true;
+	}
+	
+	Panda::CanFrame frame = buildLkasHud(hudLkaAlertToSend, hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeepsToSend);
 //	printf("LKAS_HUD: "); printFrame(frame);
 	pandaHandler->getCan().sendMessage(frame);
 }
@@ -158,35 +170,38 @@ void ToyotaHandler::sendSteer() {
 void ToyotaHandler::sendAcc() {
 	double accelerationControlToSend;
 	if (health.controls_allowed && heartbeatAccelerationPass()) {
-	
 		permitBraking = true;
 		releaseStandstill = true;
-		miniCar = true;
 		accelerationControlToSend = accelerationControl;	// Apply the user-set acceleration
-		//		}
 	} else {
 		permitBraking = false;
 		releaseStandstill = false;
-		miniCar = false;
 		accelerationControlToSend = 0.0;	// If we send non-0 in this state, curise controll will fault
 	}
+	
+//	// The following will sned a cnacel request if controls are allowed and the heartbeat fails, but
+//	// I think I prefer the version without this logic.  LEaving here for future discussion
+	bool cancelRequestToSend = cancelRequest;
+//	if(!heartbeatAccelerationPass() && health.controls_allowed) {
+//		cancelRequestToSend = true;
+//	}
 
-	Panda::CanFrame frame = buildACC_CONTROL( accelerationControlToSend, permitBraking, releaseStandstill, miniCar, cancelRequest );
+	Panda::CanFrame frame = buildACC_CONTROL( accelerationControlToSend, permitBraking, releaseStandstill, miniCar, cancelRequestToSend );
 	//printf("ACC_CONTROL at %02f: ", acc); printFrame(frame);
 	pandaHandler->getCan().sendMessage(frame);
 }
 
 
-void ToyotaHandler::setHudLdaAlert( bool ldaAlert ) {
-	if( this->hudLdaAlert != ldaAlert ) {
-		this->hudLdaAlert = ldaAlert;
+void ToyotaHandler::setHudLdaAlert( bool enable ) {
+	if( this->hudLdaAlert != enable ) {
+		this->hudLdaAlert = enable;
 		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
 	}
 }
 
-void ToyotaHandler::setHudBarrier( bool barrier ) {
-	if( this->hudBarrier != barrier) {
-		this->hudBarrier = barrier;
+void ToyotaHandler::setHudBarrier( bool enable ) {
+	if( this->hudBarrier != enable) {
+		this->hudBarrier = enable;
 		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
 	}
 }
@@ -200,23 +215,23 @@ void ToyotaHandler::setHudLanes( unsigned char laneLeft, unsigned char laneRight
 	}
 }
 
-void ToyotaHandler::setHudCruiseCancelRequest( bool cancelRequest ) {
-	this->cancelRequest = cancelRequest;
+void ToyotaHandler::setHudCruiseCancelRequest( bool enable ) {
+	this->cancelRequest = enable;
 }
 
-void ToyotaHandler::setHudTwoBeeps( bool twoBeeps ) {
-	this->hudTwoBeeps = twoBeeps;
-	
-//	Panda::CanFrame frame = buildLkasHud(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps);
-//	//printf("LKAS_HUD: "); printFrame(frame);
-//	pandaHandler->getCan().sendMessage(frame);
+void ToyotaHandler::setHudTwoBeeps( bool enable ) {
+	this->hudTwoBeeps = enable;
 }
 
-void ToyotaHandler::setHudRepeatedBeeps( bool repeatedBeeps ) {
-	if (this->hudRepeatedBeeps != repeatedBeeps) {
-		this->hudRepeatedBeeps = repeatedBeeps;
+void ToyotaHandler::setHudRepeatedBeeps( bool enable ) {
+	if (this->hudRepeatedBeeps != enable) {
+		this->hudRepeatedBeeps = enable;
 		decimatorLka = TOYOTA_DECIMATOR_MAX_LKA;	// Trigger an instant send
 	}
+}
+
+void ToyotaHandler::setHudMiniCar( bool enable ) {
+	this->miniCar = enable;
 }
 
 /* The comma.ai panda code has the following limits for steeerTorque:
@@ -240,3 +255,16 @@ void ToyotaHandler::setAcceleration( double acceleration ) {	// units are m/s2, 
 	this->accelerationControl = acceleration;
 	heartBeatAcceleration = 0;
 }
+
+bool ToyotaHandler::getIgnitionOn() {
+	return health.ignition_line;
+}
+
+bool ToyotaHandler::getControlsAllowed() {
+	return health.controls_allowed;
+}
+
+const PandaHealth& ToyotaHandler::getPandaHealth() const {
+	return health;
+}
+

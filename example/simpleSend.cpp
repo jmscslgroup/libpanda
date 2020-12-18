@@ -55,20 +55,32 @@ int main(int argc, char **argv) {
 	unsigned char hudLaneLeft = 2;
 	unsigned char hudLaneRight = 2;
 	
+	int printPandaHealthDecimator = 0;
 	while(1) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
+		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
+			printPandaHealthDecimator = 0;
+			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
+			std::cout << "Controls Allowed: " << toyotaHandler.getControlsAllowed() << std::endl;
+			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
+		}
+		
 		// Setting HUD elements:
-		toyotaHandler.setHudLdaAlert( mJoystickState.getTriangle() );
-		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
 		hudLaneLeft += mJoystickState.getButtonL1Rising();
 		hudLaneLeft -= mJoystickState.getButtonL2Rising();
 		hudLaneRight += mJoystickState.getButtonR1Rising();
 		hudLaneRight -= mJoystickState.getButtonR2Rising();
 		toyotaHandler.setHudLanes(hudLaneLeft, hudLaneRight);
+		
+		toyotaHandler.setHudLdaAlert( mJoystickState.getTriangle() );
 		toyotaHandler.setHudTwoBeeps( mJoystickState.getX() );
-		toyotaHandler.setHudBarrier( mJoystickState.getDY() > 0 );
 		toyotaHandler.setHudRepeatedBeeps( mJoystickState.getSelect() );
+		toyotaHandler.setHudBarrier( mJoystickState.getDY() > 0 );
+		toyotaHandler.setHudMiniCar( mJoystickState.getDX() > 0 );
+		
+		// This will cancel the cruise control, cruise must be rest by driver to allow controls
+		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );	// more than just a cancel request
 		
 		// Acceleration command building.  Units are m/s^2
 		double acceleration = 0.0;
@@ -91,30 +103,15 @@ int main(int argc, char **argv) {
 		
 		
 		// Send the Steering and Scceleration commands:
-		if (!mJoystickState.getCircle()) {	// Holding circle tests the heartbeat (stopping it)
+		// Holding circle tests the heartbeat (stopping it)
+		// The heartbeat failing will also trigger some HUD elements like setHudRepeatedBeeps and setHudLdaAlert
+		if ( !mJoystickState.getCircle() ) {
 			toyotaHandler.setAcceleration(acceleration);
 			toyotaHandler.setSteerTorque(steerTorque);
 		}
 		
 		// Debug Joystick:
-//		std::cout << "Joystick L1:" << mJoystickState.getL1() <<
-//		" L2:" << mJoystickState.getL2() <<
-//		" L3:" << mJoystickState.getL3() <<
-//		" R1:" << mJoystickState.getR1() <<
-//		" R2:" << mJoystickState.getR2() <<
-//		" R3:" << mJoystickState.getR3() <<
-//		" X:" << mJoystickState.getX() <<
-//		" Tri:" << mJoystickState.getTriangle() <<
-//		" Squ:" << mJoystickState.getSquare() <<
-//		" Cir:" << mJoystickState.getCircle() <<
-//		" Pause:" << mJoystickState.getPause() <<
-//		" Select:" << mJoystickState.getSelect() <<
-//		"\tLX:" << mJoystickState.getLX() <<
-//		"\tLY:" << mJoystickState.getLY() <<
-//		"\tRX:" << mJoystickState.getRX() <<
-//		"\tRY:" << mJoystickState.getRY() <<
-//		"\tDX:" << mJoystickState.getDX() <<
-//		"\tDY:" << mJoystickState.getDY() <<  std::endl;
+		//mJoystickState.printState();
 		
 	}
 	
