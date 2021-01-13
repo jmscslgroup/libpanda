@@ -73,7 +73,7 @@ void ToyotaHandler::doAction() {
 	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 600 Hz
 	
 	// We cannot have integer rollovers here at anytime, so only increase if not already failed
-	if(heartbeatSteerPass()) {
+	if(heartbeatSteeringPass()) {
 		heartBeatSteer++;
 	}
 	if (heartbeatAccelerationPass()) {
