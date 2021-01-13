@@ -313,7 +313,7 @@ public:
 	 \par
 	 \note
 	 Note: When the brake is pushed to cancel, the HUD "SET" and radar will also disappear.
-			However when the throttle is pressed, "SET" does no disappear even though controls are no longer allowed
+			However when the throttle is pressed, "SET" does not disappear even though controls are no longer allowed
 	
 	 \par
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
