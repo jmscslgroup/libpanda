@@ -29,6 +29,7 @@
 #include "panda/usb.h"
 #include "panda/can.h"
 #include "panda/gps.h"
+#include "panda/gpsTime.h"
 
 /**
  * @namespace Panda

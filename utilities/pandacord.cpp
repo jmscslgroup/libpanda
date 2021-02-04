@@ -129,12 +129,16 @@ int main(int argc, char **argv) {
 
 	SimpleCanObserver canObserver;
 	SimpleGpsObserver myGpsObserver;
+	
+	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
+	Panda::SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
+	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 
 	if (gpsFilename != NULL) {
 		pandaHandler.getGps().saveToCsvFile(gpsFilename);
@@ -151,11 +155,24 @@ int main(int argc, char **argv) {
 
 	// Let's roll
 	pandaHandler.initialize();
+	
+	std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
+	std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
+	int lastNmeaMessageCount = 0;
+	while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
+		   keepRunning == true ) {
+		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
+			std::cerr << ".";
+			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+		}
+		usleep(10000);
+	}
+	
+	std::cout << "Time is synced with GPS!" << std::endl;
 	std::cout << std::endl << "Press ctrl-c to exit" << std::endl;
 	std::cout << " - Each \'c\' represents 1000 CAN notifications received." << std::endl;
 	std::cout << " - Each \'.\' represents 100 NMEA messages received." << std::endl;
 	std::cout << " - Each \'g\' represents 10 GPS notifications received." << std::endl;
-	int lastNmeaMessageCount = 0;
 	while (keepRunning == true) {
 		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
 			std::cerr << ".";

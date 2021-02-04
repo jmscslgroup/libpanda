@@ -37,16 +37,16 @@ echo "Configuring startup scripts"
 
 cp pandarecord.sh /usr/local/sbin/pandarecord
 
-cp pandasettime.service.txt  /etc/systemd/system/pandasettime.service
+#cp pandasettime.service.txt  /etc/systemd/system/pandasettime.service
 cp pandarecord.service.txt  /etc/systemd/system/pandarecord.service
-chmod 655 /etc/systemd/system/pandasettime.service
+#chmod 655 /etc/systemd/system/pandasettime.service
 chmod 655 /etc/systemd/system/pandarecord.service
 
 systemctl daemon-reload
 
 echo "Enabling startup scripts"
 
-systemctl enable pandasettime.service
+#systemctl enable pandasettime.service
 systemctl enable pandarecord.service
 
 echo "Done."
