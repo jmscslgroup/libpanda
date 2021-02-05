@@ -140,19 +140,6 @@ int main(int argc, char **argv) {
 	pandaHandler.addGpsObserver(myGpsObserver);
 	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 
-	if (gpsFilename != NULL) {
-		pandaHandler.getGps().saveToCsvFile(gpsFilename);
-	}
-	if (nmeaFilename != NULL) {
-		pandaHandler.getGps().saveToFile(nmeaFilename);
-	}
-	if (canCsvFilename != NULL) {
-		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
-	}
-	if (canRawFilename != NULL) {
-		pandaHandler.getCan().saveToFile(canRawFilename);
-	}
-
 	// Let's roll
 	pandaHandler.initialize();
 	
@@ -166,6 +153,19 @@ int main(int argc, char **argv) {
 			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
 		}
 		usleep(10000);
+	}
+	
+	if (gpsFilename != NULL) {
+		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+	}
+	if (nmeaFilename != NULL) {
+		pandaHandler.getGps().saveToFile(nmeaFilename);
+	}
+	if (canCsvFilename != NULL) {
+		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
+	}
+	if (canRawFilename != NULL) {
+		pandaHandler.getCan().saveToFile(canRawFilename);
 	}
 	
 	std::cout << "Time is synced with GPS!" << std::endl;

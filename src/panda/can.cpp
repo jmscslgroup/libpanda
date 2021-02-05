@@ -61,8 +61,9 @@ void Can::saveToFile( const char* filename ) {
 }
 
 void Can::saveToCsvFile(const char* filename) {
-	csvDump = fopen(filename, "w");
+	FILE* csvDump = fopen(filename, "w");
 	fprintf(csvDump, "Time,Bus,MessageID,Message,MessageLength\n");
+	this->csvDump = csvDump;
 }
 
 void Can::setUsb( Panda::Usb* usbHandler ) {
