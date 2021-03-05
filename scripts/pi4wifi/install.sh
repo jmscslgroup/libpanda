@@ -82,6 +82,10 @@ systemctl daemon-reload
 systemctl unmask hostapd
 systemctl enable crazypifi.service
 
+# We will be managing the below services manually
+systemctl disable hostapd
+systemctl disable isc-dhcp-server
+systemctl disable wpa_supplicant
 
 # Setup Wifi AP:
 

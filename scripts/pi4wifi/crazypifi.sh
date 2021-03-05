@@ -2,25 +2,35 @@
 # Author: Matt Bunting
 # Inspired from: https://www.raspberrypi.org/forums/viewtopic.php?t=111529
 
+LOG=/var/panda/crazpypifi.log
+
+exec > >(tee -ia $LOG)
+exec > >(tee -ia $LOG >&2)
+
 echo "--------------------------------"
 echo "Scanning for known WiFi networks"
+
+echoGood ()
+{
+	echo -e "\e[1m\e[32m$1\e[0m"
+}
+
+echoBad ()
+{
+	echo -e "\e[1m\e[31m$1\e[0m"
+}
+
 
 setupDhcpServer ()
 {
 #	echo "Restarting dhcpcd"
 #	service dhcpcd restart
-	echo " - Restarting isc-dhcp-server"
-	service isc-dhcp-server restart
-}
-
-echoGood ()
-{
-	echo -e " - \e[1m\e[32m$1\e[0m"
-}
-
-echoBad ()
-{
-	echo -e " - \e[1m\e[31m$1\e[0m"
+	echo -n " - Restarting isc-dhcp-server..."
+	if service isc-dhcp-server restart; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+	fi
 }
 
 connectToKnownWifi ()
@@ -28,41 +38,119 @@ connectToKnownWifi ()
 	echo " - Configuring interfaces"
 	cp /etc/network/interfaces.client /etc/network/interfaces
 #	service dhcpcd stop
-	echo " - Stopping DHCP server"
-	service isc-dhcp-server stop
 
-	echo " - Stopping Hostapd"
-	service hostapd stop
+	echo -n " - Stopping DHCP server..."
+	if systemctl stop isc-dhcp-server; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		return 0
+	fi
 
-	echo " - Removing static IP"
-	ifconfig wlan0 0.0.0.0
+	echo -n " - Stopping Hostapd..."
+	if service hostapd stop; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		return 0
+	fi
 
-	echo " - Restarting wpa_supplicant"
+	echo -n " - Removing static IP..."
+	if ifconfig wlan0 0.0.0.0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		return 0
+	fi
+
+
+#	echo -n " - Restarting wpa_supplicant"
 #	service wpa_supplicant restart
 
-	echo " - Restarting wlan0"
-	ifdown wlan0
-	ifup wlan0
+	echo -n " - Stopping wlan0..."
+	if ifdown wlan0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		return 0
+	fi
+
+	echo -n " - Starting wlan0..."
+	if ifup wlan0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		return 0
+	fi
 
 	#ssids=$1
 
 
 
-	echo " - Starting wpa_supplicant for WPA/WPA2"
-	wpa_supplicant -B -i wlan0 -c /etc/wap_supplicant/wpa_supplicant.conf > /dev/null 2>&1
+#	echo -n " - Starting wpa_supplicant for WPA/WPA2..."
+#	if wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; then
+#	if wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; then
+#		echoGood "Done."
+#	else
+#		echoBad "FAILED!"
+#		#return 0
+#	fi
 
-	echo " - Selecting AP SSID: " $1
-	wpa_cli select_network $1
 
-	echo " - Releasing DHCP lease"
-	dhclient -r wlan0
-	echo " - Obtaining IP from DHCP"
-	if dhclient -1 wlan0;
+	echo -n " - Selecting AP SSID: " $1 "..."
+	if wpa_cli -i wlan0 select_network $1 > /dev/null; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
+
+	echo -n " - Finding wpa_cli nework number..."
+	networkNumber=$(wpa_cli list_networks | grep -Po "[0-9]*(?=[\s]$1[\s].*)")
+
+	if [ -z $networkNumber ]; then
+		echoBad "Unable to find it!"
+		return
+	else
+		echoGood "$networkNumber"
+	fi
+
+	echo -n " - Enabling network..."
+	if wpa_cli -i wlan0 enable_network $networkNumber > /dev/null; then
+		echoGood "Done"
+	else
+		echoBad "FAILED"
+		return 0
+	fi
+
+	for (( attempt=1; attempt<=30; attempt++ )); do
+ 		echo " - - Waiting for connection to $1, attempt $attempt"
+		sleep 1
+		if wpa_cli -i wlan0 status | grep "wpa_state=COMPLETED"; then
+			break
+		fi
+	done
+
+	if [ "$attempt" -ge 11 ]; then
+		echoBad "Unable to connect to $1"
+		return 0
+	fi
+
+#	echo -n " - Releasing DHCP lease..."
+#	if dhclient -r wlan0 -v; then
+#		echoGood "Done."
+#	else
+#		echoBad "FAILED!"
+#		#return 0
+#	fi
+
+	echo -n " - Obtaining IP from DHCP..."
+	if dhclient wlan0 -v;
 	then
-		echoGood "- Connected to WiFi: $1"
+		echoGood "Connected to WiFi: $1"
 		return 1
 	else
-		echoBad "- Unable to get IP"
+		echoBad "Unable to get IP"
 #wpa_cli terminate
 	fi
 
@@ -71,25 +159,63 @@ connectToKnownWifi ()
 
 setupAp ()
 {
-	echo " - Releasing DHCP lease"
-	dhclient -r wlan0
+	echo -n " - Releasing DHCP lease..."
+	if dhclient -r wlan0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
 
-	echo " - Stopping wpa_supplicant"
-	wpa_cli terminate
-#	service wpa_supplicant stop
 
-	echo " - Configuring interfaces"
-	cp /etc/network/interfaces.accesspoint /etc/network/interfaces
+	echo -n " - Stopping wpa_supplicant..."
+	if wpa_cli -i wlan0 disconnect > /dev/null; then
+#	if service wpa_supplicant stop; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
 
-	echo " - Restarting wlan0"
-	ifdown wlan0
-	ifup wlan0
+	echo -n " - Configuring interfaces..."
+	if cp /etc/network/interfaces.accesspoint /etc/network/interfaces; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
 
-	echo " - Setting static IP"
-	ifconfig wlan0 10.3.141.1/24
+	echo -n " - Stopping wlan0..."
+	if ifdown wlan0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
 
-	echo " - Restarting hostapd"
-	service hostapd restart
+	echo -n " - Starting wlan0..."
+	if ifup wlan0; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
+
+	echo -n " - Setting static IP..."
+	if ifconfig wlan0 10.3.141.1/24; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
+
+	echo -n " - Restarting hostapd..."
+	if service hostapd restart; then
+		echoGood "Done."
+	else
+		echoBad "FAILED!"
+		#return 0
+	fi
 
 	setupDhcpServer
 }
@@ -148,10 +274,10 @@ cleanup ()
 
 doStuff ()
 {
-	echo "Beginning network status check."
+#	echo "Beginning network status check."
 
 # If internet exists, things are probably in an acceptable state.
-	echo "Checking Internet status..."
+	echo -n "Checking Internet status..."
 	haveInternet
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
@@ -168,7 +294,7 @@ doStuff ()
 	ethernetConnected=false
 
 # check for a physical connection on ethernet
-	echo "Checking for eth0 link status"
+	echo -n "Checking for eth0 link status..."
 	haveEthernetPhysicalConnection
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
@@ -185,9 +311,10 @@ doStuff ()
 #		setupDhcpServer
 	fi
 
-	if systemctl is-active --quiet hostapd; then
+#	if systemctl is-active --quiet hostapd; then
+	if iwconfig wlan0 | grep "Mode:Master"; then
 # If any wifi clients exist, don't change anything to cause a disconnection
-		echo "Checking if wlan0 is busy with clients"
+		echo -n "Checking if wlan0 is busy with clients..."
 		wificlients=$(iw dev wlan0 station dump)
 		if [ -z "$wificlients" ]; then
 			echo "0" > /etc/libpanda.d/hasapclients
@@ -200,7 +327,7 @@ doStuff ()
 	fi
 
 # Check if wifi is currently a client
-	echo "Checking if wifi is connected to AP"
+	echo -n "Checking if wifi is connected to AP..."
 	haveWifiConnection
 	if [ $? -eq 1 ]; then
 		echoGood "Connected to ${currentSsid}"
@@ -210,18 +337,32 @@ doStuff ()
 		echoBad "Disconnected"
 		echo "0" > /etc/libpanda.d/isapclient
 
-		echo "Searching for known APs"
+		echo -n "Checking state of wlan0..."
+		if ifconfig | grep "wlan0:" > /dev/null 2>&1; then
+			echoGood "UP"
+		else
+			echoBad "DOWN"
+			echo -n " - Attempting to bring up wlan0..."
+			if ifup wlan0 > /dev/null 2>&1; then
+				echoGood "Success"
+			else
+				echoBad "FAILED"
+			fi
+		fi
+
+		echo "Searching for known APs..."
 #		Get known SSIDs:
-		ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
+#		ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
+		ssids=($(wpa_cli list_networks | grep -Po "(?<=^[0-9][\s])[\s]*([a-zA-Z0-9\-_]*)(?=.*)"))
 #		Scan for available SSIDs:
 		ssidsavailable=($(iwlist wlan0 scan | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*"))
-		echo " - Available ESSIDs :" ${ssidsavailable[@]}
+		echo " - Available ESSIDs : ${ssidsavailable[@]}"
 
 		for ssid in "${ssids[@]}"
 		do
-			if echo ${ssidsavailable[@]} | grep $ssid > /dev/null
-			then
-				echo "Connecting to $ssid"
+			echo -n "Checking for $ssid in [${ssidsavailable[@]}]..."
+			if echo "${ssidsavailable[@]}" | grep "\b$ssid\b" > /dev/null; then
+				echoGood "Found!"
 				connectToKnownWifi $ssid
 				if [ $? -eq 1 ]; then
 					wifiConnected=true	# Success!
@@ -229,6 +370,8 @@ doStuff ()
 					break
 				fi
 				# If we are here, then try the next ssid
+			else
+				echoBad "Does not Exist"
 			fi
 		done
 	fi
@@ -236,12 +379,12 @@ doStuff ()
 	if [ "$wifiConnected" = true ]; then
 		echo "No need to setup AP"
 	else
-		echo "Unable to connect to WiFi, checking if AP is active"
+		echo -n "Unable to connect to WiFi, checking AP state..."
 		if systemctl is-active --quiet hostapd; then
 			echo "1" > /etc/libpanda.d/isaphost
-			echoGood "AP is active"
+			echoGood "Active"
 		else
-			echoBad "AP inactive"
+			echoBad "Inactive"
 			echo "Starting AP"
 			setupAp
 			echo "1" > /etc/libpanda.d/isaphost
@@ -259,7 +402,7 @@ doStuff ()
 doEthernet ()
 {
 	# check for a physical connection on ethernet
-	echo "Checking for eth0 link status"
+	echo -n "Checking for eth0 link status..."
 	haveEthernetPhysicalConnection
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"

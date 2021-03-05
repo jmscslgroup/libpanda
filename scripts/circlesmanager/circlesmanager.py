@@ -47,6 +47,8 @@ def loop():
 	logging.info("External Power:  " + str(hasExternalPower))
 
 	if not hasExternalPower:
+		logging.info(" - Power Disconnected!  Running final scripts...")
+		os.system("echo \"- - This is where we run a script\"")
 		logging.info(" - Shutting system down...")
 		f = open(fileX725HasExtenalPower, "w")
 		f.write("1")
