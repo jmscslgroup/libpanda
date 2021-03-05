@@ -48,10 +48,16 @@ def loop():
 
 	if not hasExternalPower:
 		logging.info(" - Shutting system down...")
+		f = open(fileX725HasExtenalPower, "w")
+		f.write("1")
+		f.close()
 		os.system("x725shutdown")
 
 
 if __name__ == "__main__":
+	f = open(fileX725HasExtenalPower, "w")
+	f.write("1")
+	f.close()
 	while True:
 		time.sleep(1.0/updateRate)
 		loop()

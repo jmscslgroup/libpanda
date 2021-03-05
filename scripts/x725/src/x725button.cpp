@@ -29,8 +29,17 @@
 
 #include "rpigpio.h"
 
-#define X725_BUTTON (4)
+#define X725_SHUTDOWN (4)
+#define X725_BUTTON (18)
 #define X725_BOOT (17)
+
+#define X728_SHUTDOWN (5)
+#define X728_BUTTON (13)
+#define X728_BOOT (12)
+
+#define X_BUTTON X728_BUTTON
+#define X_SHUTDOWN X728_SHUTDOWN
+#define X_BOOT X728_BOOT
 
 int main(int argc, char **argv)
 {
@@ -51,48 +60,61 @@ int main(int argc, char **argv)
 	 \************************************************************************/
 
 	// Set GPIO pins 7-11 to output
-	for (g=7; g<=11; g++)
+/*	for (g=7; g<=11; g++)
 	{
 		setOutput( gpio, g );
 	}
+*/
+	setOutput( gpio, X_BOOT ); // BOOT
+	setGpio(gpio, 1 << X_BOOT);
 
-	setOutput( gpio, 17 ); // BOOT
-	setGpio(gpio, 1<<17);
 
 
-
-	setInput( gpio, 4);	// x725 power button
+	setInput( gpio, X_SHUTDOWN);	// x725 power button
 	bool onMode = true;
 	bool currentlyTimingButton = false;
 	double totalTime = 0;
 
-	double buttonDelayMs = 0.2;
+	double buttonDelayMs = 200;
+
+	bool buttonState = 0;
 
 	while(1) {
-		usleep(1000000.0 * buttonDelayMs);
+		usleep(1000.0 * buttonDelayMs);
 
-		if (readButton(gpio, 4)) {
+		buttonState = readButton(gpio, X_SHUTDOWN);
+
+//		fprintf(stderr, "Button State: %d\n", buttonState);
+
+		if (buttonState) {
 			if (currentlyTimingButton == false) {
-				currentlyTimingButton = true;
 				fprintf(stderr,"Button Pressed!\n");
-				buttonDelayMs = 0.02;
+				currentlyTimingButton = true;
+				buttonDelayMs = 20;
 			}
 			totalTime += buttonDelayMs;
-			if (totalTime >= 0.600) {
-				fprintf(stderr,"Shutting system down now...");
+			if (totalTime >= 600) {
+				totalTime = 0;
+				fprintf(stderr,"Shutting system down now...\n");
+#ifdef POWERCTL
 				system("poweroff");
 				exit(0);
+#endif
 			}
 		} else {
 			if (currentlyTimingButton == true) {
 				fprintf(stderr,"Button was released!  Time pressed: %0.2f\n", totalTime);
 				currentlyTimingButton = false;
-				buttonDelayMs = 0.2;
+				buttonDelayMs = 200;
 
-				if ((totalTime >= 0.400) && (totalTime <= 0.600)) {
-					fprintf(stderr,"System rebooting now...");
+				if ((totalTime >= 200) && (totalTime <= 600)) {
+					fprintf(stderr,"System rebooting now...\n");
+#ifdef POWERCTL
 					system("reboot");
 					exit(0);
+#endif
+				} else {
+					fprintf(stderr, "Press was too fast, doing nothing...\n");
 				}
 
 				totalTime = 0;
@@ -100,7 +122,7 @@ int main(int argc, char **argv)
 		}
 
 		// Status in HW LEDs:
-		if (onMode) {
+/*		if (onMode) {
 			if(g <= 11) {
 				setGpio(gpio, 1<<g++);
 			} else {
@@ -115,6 +137,7 @@ int main(int argc, char **argv)
 				onMode = true;
 			}
 		}
+*/
 	}
 
 	return 0;

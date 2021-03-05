@@ -2,7 +2,8 @@
 # This is the script installed by the x725 installtion process
 # This simply invokes a safe-shutdown signal by faking a button press
 
-BUTTON=18
+#BUTTON=18 # x725
+BUTTON=13 # x728
 
 echo "$BUTTON" > /sys/class/gpio/export;
 echo "out" > /sys/class/gpio/gpio$BUTTON/direction
@@ -15,7 +16,7 @@ if ! [[ $SLEEP =~ $re ]] ; then
 	echo "error: sleep time not a number" >&2; exit 1
 fi
 
-echo "X750 Shutting down..."
+echo "X728 Shutting down..."
 echo $SLEEP
 /bin/sleep $SLEEP
 

@@ -100,17 +100,17 @@ int main(int argc, char **argv) {
 	//  new values for these registers, meaning that they may
 	result = i2c_read_word(i2cFile, 8);
 	if (result != 2) {
-		printf("%s: x725 NOT Avaiable\n", argv[0]);
+		printf("%s: x725 NOT Avaliable\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
 	result = i2c_read_word(i2cFile, 12);
 	if (result != 38656) {
-		printf("%s: x725 NOT Avaiable\n", argv[0]);
+		printf("%s: x725 NOT Avaliable\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	printf("%s: x725 Avaiable!\n", argv[0]);
+	printf("%s: x725 Available!\n", argv[0]);
 	return EXIT_SUCCESS;
 }
 

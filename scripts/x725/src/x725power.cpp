@@ -32,7 +32,11 @@
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 
-#define CHARGED_THRESHOLD (0.1) // in "amps" to determine range
+#include "rpigpio.h"
+
+#define X728_POWER_DISCONNECT_PIN (6)	// not supported on X725
+
+#define CHARGED_THRESHOLD (0.3) // in "amps" to determine range
 
 #define x725_ADDRESS (0x36)
 
@@ -104,6 +108,14 @@ int main(int argc, char **argv) {
 
 	char lineToWrite[100];
 
+	// Initialize file so we don't auto shutdown
+	writeToFileThenClose( filenameExternalPower, "1");
+
+
+#ifdef X728_POWER_DISCONNECT_PIN
+	GpioHandler *gpio = setup_io();
+	setInput( gpio, 1 << X728_POWER_DISCONNECT_PIN);
+#endif
 	// if a single argument is passed, it will be the name of the script to be run prior to system shutdown.
 	char scriptToRunBeforeShutdown[] = "scriptToRunBeforeShutdown";
 	char* exitScript = scriptToRunBeforeShutdown;
@@ -194,8 +206,6 @@ int main(int argc, char **argv) {
 		writeToFileThenClose(filenameCapacity, lineToWrite);
 		sprintf(lineToWrite, "%f", current);
 		writeToFileThenClose(filenameBatteryCurrent, lineToWrite);
-		sprintf(lineToWrite, current < -CHARGED_THRESHOLD ? "0" : "1" );
-		writeToFileThenClose(filenameExternalPower, lineToWrite);
 
 		if ((current < CHARGED_THRESHOLD ) && (current > -CHARGED_THRESHOLD )) {
 			batteryState = CHARGED;
@@ -218,16 +228,33 @@ int main(int argc, char **argv) {
 		if ( capacity <= 0 ) {
 			fprintf(stderr, "Batteries are drained!  Shutting Down...\n");
 			//keepRunning = false;
+#ifdef POWERCTL
+			writeToFileThenClose( filenameExternalPower, "1");
 			system("x725shutdown");
+#endif
 		}
 
 		if ( voltage < 3.2 ) {
 			fprintf(stderr, "Battery voltage is low!  Shutting Down...\n");
 			//keepRunning = false;
+#ifdef POWERCTL
+			writeToFileThenClose( filenameExternalPower, "1");
 			system("x725shutdown");
+#endif
 		}
 
+#ifdef X728_POWER_DISCONNECT_PIN
+		bool powerDisconnectState = readButton( gpio, X728_POWER_DISCONNECT_PIN );
+		sprintf(lineToWrite, powerDisconnectState ? "0" : "1" );
+		writeToFileThenClose(filenameExternalPower, lineToWrite);
+		if ( powerDisconnectState ) {
+			fprintf(stderr, "X728 detected a power interruption!\n");
+
+#else
+		sprintf(lineToWrite, current < -CHARGED_THRESHOLD ? "0" : "1" );
+		writeToFileThenClose(filenameExternalPower, lineToWrite);
 		if ( batteryState == DISCHARGING ) {
+#endif
 			//fprintf(stderr, "External Power loss!  Running upload script...\n");
 
 
@@ -244,6 +271,7 @@ int main(int argc, char **argv) {
 			//fprintf(stderr, "Shutting Down...\n");
 
 		}
+
 		if ( priorBatterState != batteryState ) {
 			priorBatterState = batteryState;
 			switch (batteryState) {

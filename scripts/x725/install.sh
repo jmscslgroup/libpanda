@@ -27,6 +27,12 @@ fi
 #g++ x725power.cpp -o x725power
 #mv x725power /usr/local/bin/x725power
 
+echo "Enabling i2c-dev module"
+grep -qxF 'i2c-dev' /etc/modules || echo 'i2c-dev' >> /etc/modules
+echo "Enabling i2c-1"
+grep -qxF 'dtparam=i2c1=on' /boot/config.txt || echo 'dtparam=i2c1=on' >> /boot/config.txt
+
+
 if [ ! -d "build" ]; then
 	mkdir build
 fi
@@ -59,18 +65,23 @@ fi
 
 if [ ! -f /etc/libpanda.d/x725hasexternalpower ]; then
 	touch /etc/libpanda.d/x725hasexternalpower
+	echo "1" > /etc/libpanda.d/x725hasexternalpower
 fi
 
 if [ ! -f /etc/libpanda.d/x725batteryvoltage ]; then
 	touch /etc/libpanda.d/x725batteryvoltage
+	echo "1" > /etc/libpanda.d/x725batteryvoltage
 fi
 
 if [ ! -f /etc/libpanda.d/x725capacity ]; then
 	touch /etc/libpanda.d/x725capacity
+	echo "1" > /etc/libpanda.d/x725capacity
 fi
+
 
 if [ ! -f /etc/libpanda.d/x725batterycurrent ]; then
 	touch /etc/libpanda.d/x725batterycurrent
+	echo "1" > /etc/libpanda.d/x725batterycurrent
 fi
 
 echo "Done."

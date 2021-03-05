@@ -24,7 +24,7 @@ def getFileContents( filename ):
 	f = open(filename, "r")
 	contents = f.read()
 	f.close()
-	#	print("From " + filename + " Read: " + contents )
+	print("From " + filename + " Read: " + contents )
 	return contents
 
 while True:
