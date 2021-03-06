@@ -60,6 +60,7 @@ sed -i 's/#DAEMON_CONF=.*/DAEMON_CONF=\"\/etc\/hostapd\/hostapd.conf\"/' /etc/de
 #	mv /etc/dhcpcd.conf /etc/dhcpcd.conf.bak
 #fi
 #cp dhcpcd.conf /etc/dhcpcd.conf
+sed -i 's/INTERFACESv4=""/INTERFACESv4="wlan0"/' /etc/default/isc-dhcp-server
 
 if [ ! -f /etc/dhcp/dhcpd.conf.bak ]; then
 	echo "Backing up /etc/dhcp/dhcpd.conf to /etc/dhcp/dhcpd.conf.bak"
@@ -81,6 +82,11 @@ systemctl daemon-reload
 
 systemctl unmask hostapd
 systemctl enable crazypifi.service
+
+# On raspbian we have to not block wifi
+systemctl stop wpa_supplicant
+rm /var/run/wpa_supplicant/*
+rfkill unblock wifi
 
 # We will be managing the below services manually
 systemctl disable hostapd
