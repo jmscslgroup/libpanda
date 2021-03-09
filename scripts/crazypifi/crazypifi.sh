@@ -131,7 +131,7 @@ connectToKnownWifi ()
 		fi
 	done
 
-	if [ "$attempt" -ge 11 ]; then
+	if [ "$attempt" -ge 31 ]; then
 		echoBad "Unable to connect to $1"
 		return 0
 	fi
