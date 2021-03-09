@@ -1,0 +1,22 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node1 [label="CNMEAParser",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node1 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="Panda::Gps",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_gps.html",tooltip="A class that handles the GPS data. "];
+  Node3 [label="Mogi::Thread",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_mogi_1_1_thread.html",tooltip="Abstract class, handles a single thread. Features mutual exclusion and pause/resume. "];
+  Node3 -> Node4 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node4 [label="Panda::Can",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_can.html",tooltip="A class that handles the CAN data. "];
+  Node3 -> Node2 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="Panda::ToyotaHandler",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_toyota_handler.html",tooltip="A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler..."];
+  Node3 -> Node6 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 [label="Panda::Usb",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_usb.html"];
+  Node7 [label="Panda::UsbListener",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_usb_listener.html"];
+  Node7 -> Node4 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 [label="Strym",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_strym.html"];
+}

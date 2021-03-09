@@ -1,0 +1,16 @@
+digraph "Panda::_GpsData"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{Panda::_GpsData\n|+ time\l+ timeMilliseconds\l+ magneticVariation\l+ satelitesInUse\l+ satelitesInView\l+ successfulParseCount\l|+ _GpsData()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node2 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +quality" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node2 [label="{Panda::_GpsQuality\n|+ indicator\l+ PDOP\l+ HDOP\l+ VDOP\l|}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$struct_panda_1_1___gps_quality.html"];
+  Node3 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +pose" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node3 [label="{Panda::_GpsPosition\n|+ latitude\l+ longitude\l+ altitude\l+ geoidalSeparation\l|}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$struct_panda_1_1___gps_position.html"];
+  Node4 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +info" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node4 [label="{Panda::_GpsInfo\n|+ status\l+ diffId\l+ diffAge\l+ automode\l+ fixType\l+ GGAcount\l|}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$struct_panda_1_1___gps_info.html"];
+  Node5 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +satellites" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node5 [label="{std::map\< int, Panda\l::_GpsSatellite \>\n|+ keys\l|}",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node6 -> Node1 [color="grey25",fontsize="10",style="solid",label=" +motion" ,arrowhead="odiamond",fontname="Helvetica"];
+  Node6 [label="{Panda::_GpsMotion\n|+ speed\l+ verticalSpeed\l+ course\l|}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$struct_panda_1_1___gps_motion.html"];
+}
