@@ -8,7 +8,7 @@ pi = 3.1415926535897
 
 
 maxLevel = 0.250	# Max = 1.0, 0.0 = off
-updateRate = 1.0	# Hz
+updateRate = 2.0	# Hz
 
 fileInternet = "/etc/libpanda.d/hasinternet"
 fileIsApClient = "/etc/libpanda.d/isapclient"
@@ -20,14 +20,33 @@ fileX725BatteryCurrent = "/etc/libpanda.d/x725batterycurrent"
 fileX725BatteryVoltage = "/etc/libpanda.d/x725batteryvoltage"
 fileX725Capacity = "/etc/libpanda.d/x725capacity"
 
+filePandaRecording = "/etc/libpanda.d/pandaRecording"
+filePandaGps = "/etc/libpanda.d/pandaHaveGPS"
+
+fileBlinkt = "/etc/libpanda.d/blinkt"
+
+
 def getFileContents( filename ):
-	f = open(filename, "r")
+	try:
+		f = open(filename, "r")
+	except:
+		print( "File: " + filename + "does not exist, generating...")
+		f = open(filename, "w+")
+		f.write("-1")
+		f.close()
+		return -1
 	contents = f.read()
 	f.close()
 	print("From " + filename + " Read: " + contents )
 	return contents
 
+
+blinkRecord = 0
+blinkGps = 0
+
 while True:
+	time.sleep(1.0/updateRate)
+
 	#hue = (time.time()*16.0 % 360)/360.0
 	#for x in range(8):
 		#lev = pow(math.cos((x-3.5)*2.0*pi/64.0 + math.sin(time.time()*0.4)*pi/4.0), 64.0)
@@ -45,9 +64,15 @@ while True:
 		batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
 		batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
 		capacity = float(getFileContents( fileX725Capacity ))
+
+		pandaRecording = float(getFileContents( filePandaRecording ))
+		pandaGps = float(getFileContents( filePandaGps ))
+
+		#testBlinkt = getFileContents( fileBlinkt )
 	except:
 		continue
-# LED 0
+
+# LED 0: Constantly changing to show that blinkt script is running
 	hue = (time.time()*32.0 % 360)/360.0
 	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1, maxLevel)]
 	set_pixel(0, r, g, b)
@@ -72,38 +97,51 @@ while True:
 # LED 3:
 # purple for having clients, off otherwise
 #	print("Has Clients: " + str(hasApClients) )
-	if hasApClients:
-		set_pixel(3, 100, 0, 100)
-	else:
-		set_pixel(3, 0, 0, 0)
+#	if hasApClients:
+#		set_pixel(3, 100, 0, 100)
+#	else:
+#		set_pixel(3, 0, 0, 0)
 
 # LED 4:
-	newCapacity = max(min(capacity, 100.0), 0.0)
-	hue = newCapacity/100.0 * 120.0/360.0	# green = charged, red = discharged
-	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
-	set_pixel(4, r, g, b)
+#	newCapacity = max(min(capacity, 100.0), 0.0)
+#	hue = newCapacity/100.0 * 120.0/360.0	# green = charged, red = discharged
+#	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
+#	set_pixel(4, r, g, b)
 
 # LED 5:
-	newVoltage = max(min(batteryVoltage, 4.2), 3.0)
-	hue = (newVoltage-3.0)/(4.2 - 3.0) * 120.0/360.0	# green = charged, red = discharged
-	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
-	set_pixel(5, r, g, b)
+#	newVoltage = max(min(batteryVoltage, 4.2), 3.0)
+#	hue = (newVoltage-3.0)/(4.2 - 3.0) * 120.0/360.0	# green = charged, red = discharged
+#	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
+#	set_pixel(5, r, g, b)
 
-# LED 6:
-#	print("Battery current = " + str(batteryCurrent))
-	batteryCurrent = max(min(batteryCurrent, 1.0), -1.0)
-#	print("new Battery current = " + str(batteryCurrent))
-	hue = (-(batteryCurrent - -1.0)/(1.0 - -1.0) * 120.0 + 360.0)/360.0	# green = charged, red = discharged
-#	print(" - hue = " + str(hue))
-	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
-	set_pixel(6, r, g, b)
+# LED 6: Red: Not recording, green: recording
+##	print("Battery current = " + str(batteryCurrent))
+#	batteryCurrent = max(min(batteryCurrent, 1.0), -1.0)
+##	print("new Battery current = " + str(batteryCurrent))
+#	hue = (-(batteryCurrent - -1.0)/(1.0 - -1.0) * 120.0 + 360.0)/360.0	# green = charged, red = discharged
+##	print(" - hue = " + str(hue))
+#	r, g, b = [int(pow(c,2.2) * 255) for c in colorsys.hsv_to_rgb(hue, 1.0, maxLevel)]
+#	set_pixel(6, r, g, b)
 
-# LED 7:
-	if hasExternalPower:
-		set_pixel(7, 0, int(255.0*maxLevel), int(255.0*maxLevel))
+	if pandaRecording == 1:
+		set_pixel(6, 0, 0, int(255.0*maxLevel))
+	elif pandaRecording == 0:
+		set_pixel(6, int(255.0*maxLevel)*blinkRecord, 0, 0)
+		blinkRecord = not blinkRecord
+	else:	# not active or other error
+		set_pixel(6, 0, 0, 0);
+
+# LED 7: Red: no panda GPS, blue: GPS time synced
+	#if hasExternalPower:
+	#	set_pixel(7, 0, int(255.0*maxLevel), int(255.0*maxLevel))
+	#else:
+	#	set_pixel(7, int(255.0*maxLevel), 0, 0)
+	if pandaGps == 1:
+		set_pixel(7, 0, 0, int(255.0*maxLevel))
+	elif pandaGps == 0:
+		set_pixel(7, int(255.0*maxLevel)*blinkGps, 0, 0)
+		blinkGps = not blinkGps
 	else:
-		set_pixel(7, int(255.0*maxLevel), 0, 0)
-
+		set_pixel(7, 0, 0, 0)
 
 	show()
-	time.sleep(1.0/updateRate)

@@ -61,9 +61,9 @@ void Can::saveToFile( const char* filename ) {
 }
 
 void Can::saveToCsvFile(const char* filename) {
-	FILE* csvDump = fopen(filename, "w");
-	fprintf(csvDump, "Time,Bus,MessageID,Message,MessageLength\n");
-	this->csvDump = csvDump;
+	FILE* csvDumpTemp = fopen(filename, "w");
+	fprintf(csvDumpTemp, "Time,Bus,MessageID,Message,MessageLength\n");
+	this->csvDump = csvDumpTemp;
 }
 
 void Can::setUsb( Panda::Usb* usbHandler ) {
@@ -145,7 +145,7 @@ void Can::doAction() {
 	//	currentlyRequesting = true;
 	usbHandler->requestCanData(); // only request data when we have nothing to process
 	//}
-	
+	 
 //	if (canFrames.size() == 0) {
 //		usleep(1000);	// some breathing room maybe?
 //		return;

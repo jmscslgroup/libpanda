@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <cstring>
 
 #include "panda.h"
 
@@ -38,6 +39,11 @@ void killPanda(int killSignal) {
 
 // A simple concrete instance of a CAN listener
 class SimpleCanObserver : public Panda::CanListener {
+public:
+	int getNotificationCount() {
+		return notificationCount;
+	}
+
 private:
 	int notificationCount = 0;
 	void newDataNotification( Panda::CanFrame* canData ) {
@@ -92,6 +98,12 @@ static struct option long_options[] =
 	{NULL, 0, NULL, 0}
 };
 
+void writeToFileThenClose(const char* filename, const char* data) {
+	FILE* file = fopen( filename, "w+");
+	fwrite( data, 1, strlen(data), file);
+	fclose(file);
+};
+
 using namespace std;
 int main(int argc, char **argv) {
 	// Argument parsing
@@ -122,6 +134,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	const char filenamePandaStatus[] = "/etc/libpanda.d/pandaRecording";
+	const char filenameGpsStatus[] = "/etc/libpanda.d/pandaHaveGPS";
+	writeToFileThenClose(filenamePandaStatus, "-1\n");
+	writeToFileThenClose(filenameGpsStatus, "-1\n");
+
 	std::cout << "Starting " << argv[0] << std::endl;
 
 	//Set up graceful exit
@@ -129,7 +146,7 @@ int main(int argc, char **argv) {
 
 	SimpleCanObserver canObserver;
 	SimpleGpsObserver myGpsObserver;
-	
+
 	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
 	Panda::SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
 
@@ -142,7 +159,10 @@ int main(int argc, char **argv) {
 
 	// Let's roll
 	pandaHandler.initialize();
-	
+
+	writeToFileThenClose(filenameGpsStatus, "0\n");	// state 0: on but time not set
+
+
 	std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
 	std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
 	int lastNmeaMessageCount = 0;
@@ -154,7 +174,10 @@ int main(int argc, char **argv) {
 		}
 		usleep(10000);
 	}
-	
+	writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
+	writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
+
+
 	if (gpsFilename != NULL) {
 		pandaHandler.getGps().saveToCsvFile(gpsFilename);
 	}
@@ -167,17 +190,38 @@ int main(int argc, char **argv) {
 	if (canRawFilename != NULL) {
 		pandaHandler.getCan().saveToFile(canRawFilename);
 	}
-	
+
 	std::cout << "Time is synced with GPS!" << std::endl;
 	std::cout << std::endl << "Press ctrl-c to exit" << std::endl;
 	std::cout << " - Each \'c\' represents 1000 CAN notifications received." << std::endl;
 	std::cout << " - Each \'.\' represents 100 NMEA messages received." << std::endl;
 	std::cout << " - Each \'g\' represents 10 GPS notifications received." << std::endl;
+
+	int priorCanCount = 0;
+	int gpsHeartbeat = 0;
 	while (keepRunning == true) {
+		// GPS status checking:
 		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
 			std::cerr << ".";
 			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+			gpsHeartbeat = 0;
+			writeToFileThenClose(filenameGpsStatus, "1\n");
 		}
+		gpsHeartbeat++;
+		if(gpsHeartbeat > 100) {
+			writeToFileThenClose(filenameGpsStatus, "0\n");
+		}
+
+		// CAN recording status checking:
+		if (priorCanCount == canObserver.getNotificationCount()) {
+			writeToFileThenClose(filenamePandaStatus, "0\n");
+			priorCanCount = canObserver.getNotificationCount();
+		} else {
+			writeToFileThenClose(filenamePandaStatus, "1\n");
+		}
+
+
+
 		usleep(10000);
 	}
 	//pandaHandler.stop();
