@@ -44,6 +44,10 @@ if [ ! -d /etc/libpanda.d ]; then
 	mkdir /etc/libpanda.d
 fi
 
+if [ ! -d /etc/libpanda.d/health ]; then
+	mkdir /etc/libpanda.d/health
+fi
+
 if [ ! -f /etc/libpanda.d/x725hasexternalpower ]; then
 	touch /etc/libpanda.d/x725hasexternalpower
 fi

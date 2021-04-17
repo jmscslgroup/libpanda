@@ -183,7 +183,7 @@ void ToyotaHandler::sendAcc() {
 		accelerationControlToSend = 0.0;	// If we send non-0 in this state, cruise control will fault
 	}
 	
-//	// The following will send a cnacel request if controls are allowed and the heartbeat fails, but
+//	// The following will send a cancel request if controls are allowed and the heartbeat fails, but
 //	// I think I prefer the version without this logic.  Leaving here for future discussion
 	bool cancelRequestToSend = cancelRequest;
 //	if(!heartbeatAccelerationPass() && health.controls_allowed) {

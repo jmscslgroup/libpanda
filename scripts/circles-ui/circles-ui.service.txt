@@ -1,0 +1,11 @@
+[Unit]
+Description=The Circles Web-UI
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/sbin/circles-ui.py
+
+
+[Install]
+WantedBy=multi-user.target

@@ -65,8 +65,8 @@ while True:
 		batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
 		capacity = float(getFileContents( fileX725Capacity ))
 
-		pandaRecording = float(getFileContents( filePandaRecording ))
-		pandaGps = float(getFileContents( filePandaGps ))
+		pandaRecording = int(getFileContents( filePandaRecording ))
+#		pandaGps = int(getFileContents( filePandaGps ))
 
 		#testBlinkt = getFileContents( fileBlinkt )
 	except:

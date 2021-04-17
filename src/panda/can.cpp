@@ -161,7 +161,7 @@ void Can::doAction() {
 
 		// Notify observers:
 		for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
-			(*it)->newDataNotification(&canFrame);
+			(*it)->newDataNotificationProxy(&canFrame);
 		}
 
 		// Save data to log
@@ -267,4 +267,32 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		canFrames.push_back(newFrame);	// FIFO insert
 	}
 	unlock();
+}
+
+void Panda::CanListener::addToBlacklistBus( const int& busToBlock ) {
+	blacklistBus.push_back(busToBlock);
+}
+
+void Panda::CanListener::addToBlacklistMessageId( const int& idToBlock ) {
+	blacklistId.push_back(idToBlock);
+}
+
+void Panda::CanListener::newDataNotificationProxy(CanFrame* canFrame) {
+	for (std::vector<int>::iterator it=blacklistId.begin();
+		 it != blacklistId.end();
+		 it++) {
+		int& Id = *it;
+		if (canFrame->messageID == Id) {
+			return;	// kill the notification
+		}
+	}
+	for (std::vector<int>::iterator it=blacklistBus.begin();
+		 it != blacklistBus.end();
+		 it++) {
+		int& bus = *it;
+		if (canFrame->bus == bus) {
+			return;	// kill the notification
+		}
+	}
+	newDataNotification(canFrame);
 }

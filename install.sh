@@ -9,11 +9,13 @@ cd ../crazypifi
 ./install.sh
 cd ../xUps
 ./install.sh
+cd ../circles-ui
+./install.sh
 cd ../..
 
 systemctl enable ssh
 systemctl start ssh
 
-cp scripts/addWifiAp.sh ../
-../setVin.sh
-../addWifiAp.sh
+#cp scripts/addWifiAp.sh ../
+#../setVin.sh
+#../addWifiAp.sh

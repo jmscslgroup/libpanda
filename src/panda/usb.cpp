@@ -51,6 +51,7 @@ const char* Usb::getModeAsString() const {
 		case MODE_ISOCHRONOUS:
 			return "Isochronous";
 	}
+	return "UNKOWN mode";
 }
 
 void Usb::setOperatingMode(UsbMode mode) {
@@ -124,7 +125,7 @@ void Usb::initialize() {
 //	std::cout << " - Setting Safety elm327:" << std::endl;
 //	setSafetyMode(SAFETY_ELM327);	// OBD II port
 //		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
-// 	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
+ //	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
 //	std::cout << " - Enabling CAN Loopback:" << std::endl;
 //	setCanLoopback(true);

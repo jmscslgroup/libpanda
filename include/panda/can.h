@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <list>
+#include <vector>
 
 #include "mogi/thread.h"
 
@@ -62,6 +63,9 @@ namespace Panda {
 	class CanListener {
 	private:
 		friend class Can;
+		
+		std::vector<int> blacklistBus;
+		std::vector<int> blacklistId;
 	protected:
 		/*!
 		 \brief Called on a successful RMC message parse
@@ -70,9 +74,22 @@ namespace Panda {
 		 \param canFrame The most recent CAN frame.
 		 */
 		virtual void newDataNotification(CanFrame* canFrame) = 0;
+		
+		void newDataNotificationProxy(CanFrame* canFrame);
 
 	public:
 		virtual ~CanListener() { };
+		
+		/*! \brief Adds a BUS number to the blacklist
+		 \param busToBlock The bus to be blockes
+		 */
+		void addToBlacklistBus( const int& busToBlock );
+		
+		
+		/*! \brief Adds a message ID number to the blacklist
+		 \param idToBlock The message ID to be blocked
+		 */
+		void addToBlacklistMessageId( const int& idToBlock );
 		
 	};
 
