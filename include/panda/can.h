@@ -128,6 +128,11 @@ namespace Panda {
 		 \param listener The observer for fresh CAN data.
 		 */
 		void addObserver( CanListener* listener );
+		
+		/*! \brief Removes an Observer that was previously added
+		 \param listener The observer to be removed from notifications.
+		 */
+		void removeObserver( CanListener* listener );
 
 		/*! \brief Starts a reading and parsing thread.
 		 A valid and initialized USB handler is needed to be set for success.

@@ -77,7 +77,29 @@ void Can::setUsb( Panda::Usb* usbHandler ) {
 
 
 void Can::addObserver( CanListener* listener ) {
+	lock();
+	
 	listeners.push_back(listener);
+	
+	unlock();
+}
+
+
+void Can::removeObserver( CanListener* listener ) {
+	lock();
+	
+	std::vector<CanListener*>::iterator it = listeners.begin();
+	for (; it != listeners.end(); it++) {
+		if (*it == listener) {
+			break;
+		}
+	}
+	
+	if (it != listeners.end()) {
+		listeners.erase(it);
+	}
+	
+	unlock();
 }
 
 void Can::startParsing() {
@@ -92,26 +114,26 @@ void Can::startParsing() {
 	
 	// Read the VIN here:
 	std::cout << " - Attempting to read the VIN:";
-	ObdPidRequest* vinRequest = new ObdPidRequest(*this);
+	ObdPidRequest vinRequest(*this);
 	int vinAttempts = 0;
 	while( vinAttempts++ < 10 ) {
 		std::cerr << std::endl << " - - Attempt " << vinAttempts << "/10...";
-		vinRequest->request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
 		sleep(1);
-		if (vinRequest->complete()) {
+		if (vinRequest.complete()) {
 			break;
 		}
 	}
-	if (vinRequest->complete()) {
+	if (vinRequest.complete()) {
 		// We got it!
 		printf("Success! Read: ");
-		for (int i = 0; i < vinRequest->dataLength; i++) {
-			printf("%c", vinRequest->data[i]);
+		for (int i = 0; i < vinRequest.dataLength; i++) {
+			printf("%c", vinRequest.data[i]);
 		}
 		printf("\n");
 		// Save the VIN:
 		FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
-		fwrite( vinRequest->data, 1, vinRequest->dataLength, file);
+		fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
 		fclose(file);
 		
 		// Notify a new vin has been read:
@@ -201,9 +223,11 @@ void Can::doAction() {
 		unlock();
 
 		// Notify observers:
+		lock();
 		for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
 			(*it)->newDataNotificationProxy(&canFrame);
 		}
+		unlock();
 
 		// Save data to log
 		//writeCsvToFile(&canFrame);

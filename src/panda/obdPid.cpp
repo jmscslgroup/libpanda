@@ -42,6 +42,8 @@ ObdPidRequest::ObdPidRequest(Can& handler)
 }
 
 ObdPidRequest::~ObdPidRequest() {
+	canHandler->removeObserver(this);
+	
 	if (data) {
 		free(data);
 	}
