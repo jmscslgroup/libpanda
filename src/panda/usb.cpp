@@ -120,10 +120,10 @@ void Usb::initialize() {
 	// Void function:
 	libusb_free_device_list(devices, 1);
 
-	std::cout << " - Setting Safety:" << std::endl;
-	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+	std::cout << " - Setting Safety to ELM327:" << std::endl;
+//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 //	std::cout << " - Setting Safety elm327:" << std::endl;
-//	setSafetyMode(SAFETY_ELM327);	// OBD II port
+	setSafetyMode(SAFETY_ELM327);	// OBD II port
 //		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
  //	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
@@ -162,6 +162,32 @@ void Usb::initialize() {
 		default:
 			std::cout << " |-- This is UNKOWN HARDWARE" << std::endl;
 	}
+	
+//	// Read the VIN here:
+//	ObdPidRequest vinRequest(*this);
+//	int vinAttempts = 0;
+//	while(!vinRequest.complete() &&
+//		  vinAttempts++ < 10 ) {
+//		std::cout << " - Attempt " << vinAttempts << " reading VIN..." << std::endl;
+//		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+//		sleep(1);
+//	}
+//	if (vinRequest.complete()) {
+//		// We got it!
+//		printf(" - - Read VIN:");
+//		for (int i = 0; i < vinRequest.dataLength; i++) {
+//			printf("%c", vinRequest.data[i]);
+//		}
+//		printf("\n");
+//		FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
+//		fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
+//		fclose(file);
+//	} else {
+//		std::cerr << "WARNING: Unable to read the VIN!" << std::endl;
+//	}
+//	
+//	std::cout << " - Setting Safety to Toyota:" << std::endl;
+//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 
 	std::cerr << " - USB Done." << std::endl;
 }

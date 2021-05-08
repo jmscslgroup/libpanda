@@ -24,19 +24,21 @@
  */
 
 #include "panda/obd-pid.h"
+#include "panda/obd-pid-definitions.h"
 
 #include <cstring>
 
 using namespace Panda;
 
-ObdPidRequest::ObdPidRequest(Handler& handler)
-:data(NULL), dataLength(0), assignedId(0), busy(false) {
+ObdPidRequest::ObdPidRequest(Can& handler)
+:data(NULL), dataLength(0), assignedId(-1), busy(false) {
 	// Only care about bus 1
 	addToBlacklistBus(0);
 	addToBlacklistBus(2);
 	
-	mPandaHandler = &handler;
-	mPandaHandler->addCanObserver(*this);
+	canHandler = &handler;
+//	mPandaHandler->addCanObserver(*this);
+	canHandler->addObserver(this);
 }
 
 ObdPidRequest::~ObdPidRequest() {
@@ -68,7 +70,7 @@ void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
 	vinRequest.dataLength = 8;
 	
 	start();
-	mPandaHandler->getCan().sendMessage(vinRequest);
+	canHandler->sendMessage(vinRequest);
 }
 
 bool ObdPidRequest::complete() {
@@ -91,7 +93,7 @@ void ObdPidRequest::sendFlowControl() {
 	vinRequest.data[7] = 0x00;
 	vinRequest.dataLength = 8;
 	
-	mPandaHandler->getCan().sendMessage(vinRequest);
+	canHandler->sendMessage(vinRequest);
 }
 
 void ObdPidRequest::doAction() {
@@ -115,6 +117,7 @@ void ObdPidRequest::doAction() {
 		}
 		printf("\n");
 		*/
+		
 		
 		// then process
 		// TODO: Take the below logic and make a CAN multi-header handler
@@ -206,7 +209,7 @@ void ObdPidRequest::doAction() {
 
 void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 	if ( (assignedId == (canFrame->messageID - 8)) ||
-		(assignedId == 0 &&
+		(assignedId == -1 &&
 		canFrame->messageID >= 0x7E8 &&
 		canFrame->messageID <= 0x7EF)) {
 		// This is a message of interest

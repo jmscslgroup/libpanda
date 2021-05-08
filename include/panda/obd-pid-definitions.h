@@ -23,12 +23,9 @@
 
  */
 
-#ifndef OBD_PID_H
-#define OBD_PID_H
+#ifndef OBD_PID_DEFINITIONSS_H
+#define OBD_PID_DEFINITIONSS_H
 
-#include <queue>
-
-#include "can.h"
 
 
 #define CAN_FRAME_TYPE_MASK (0xF0)
@@ -36,58 +33,29 @@
 namespace Panda {
 
 
-// TODO: Codify some PID codes from here as enums/defines
-// https://en.wikipedia.org/wiki/OBD-II_PIDs#Service_09
+// TODO: Finish codifying some PID codes from here as enums/defines
+// https://en.wikipedia.org/wiki/OBD-II_PIDs
 
 
-//enum CanFrameTypes {
-//	CAN_FRAME_SINGLE = 0x00,
-//	CAN_FRAME_FIRST = 0x01,
-//	CAN_FRAME_CONSECUTIVE = 0x02,
-//	CAN_FRAME_FLOW_CONTROL = 0x03
-//};
-
-
-//class Handler;
-class ObdPidRequest : public CanListener, public Mogi::Thread {
-	
-public:
-	unsigned char* data;
-	int dataLength; // this should always be 17
-	
-	ObdPidRequest(Can& handler);
-	~ObdPidRequest();
-	
-	void request( unsigned char mode, unsigned char pid );
-	
-	bool complete();
-	
-private:
-	unsigned char* tempData;
-	int tempLength;
-	
-	int assignedId;
-	
-	bool busy;
-	
-	unsigned char mode;
-	unsigned char pid;
-	Can *canHandler;
-	
-	std::queue<CanFrame> frameQueue;
-	
-	void sendFlowControl();
-	
-	// Override from Mogi::Thread
-	void doAction();
-	
-	// Override from CanListener:
-	void newDataNotification( CanFrame* canFrame );
-	
+enum CanFrameTypes {
+	CAN_FRAME_SINGLE = 0x00,
+	CAN_FRAME_FIRST = 0x01,
+	CAN_FRAME_CONSECUTIVE = 0x02,
+	CAN_FRAME_FLOW_CONTROL = 0x03
 };
 
 
-}
+enum ObdPidModes {
+	OBD_PID_SERVICE_CURRENT_DATA = 0x01,
+	OBD_PID_SERVICE_FREEZE_FRAME_DATA = 0x02,
+	OBD_PID_SERVICE_VEHICLE_INFO = 0x09
+};
 
+enum ObdPidVehicleInfo {
+	OBD_PID_VEHICLE_INFO_VIN_COUNT = 0x01,
+	OBD_PID_VEHICLE_INFO_VIN = 0x02
+};
+
+}
 
 #endif

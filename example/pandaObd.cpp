@@ -34,6 +34,7 @@
 
 #include "panda.h"
 #include "panda/obd-pid.h"
+#include "panda/obd-pid-definitions.h"
 
 // A ctrl-c handler for safe panda handler destruction
 static volatile bool keepRunning = true;
@@ -58,11 +59,11 @@ int main(int argc, char **argv) {
 	
 	std::cout << "Attempting to acquire VIN..." << std::endl;
 	
-	Panda::ObdPidRequest vinRequest(pandaHandler);
+	Panda::ObdPidRequest vinRequest(pandaHandler.getCan());
 	
 	int i = 2;
 	while (keepRunning == true) {
-		vinRequest.request(0x09, 0x02);
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
 		
 		sleep(1);	// only once every 1 seconds
 		
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
 	
 	keepRunning = true;
 	std::cout << "Attempting to acquire RPM..." << std::endl;
-	Panda::ObdPidRequest rpmRequest(pandaHandler);
+	Panda::ObdPidRequest rpmRequest(pandaHandler.getCan());
 	i = 2;
 	while (keepRunning == true) {
 		rpmRequest.request(0x01, 0x0c);
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
 	
 	keepRunning = true;
 	std::cout << "Attempting to acquire MAF sensor..." << std::endl;
-	Panda::ObdPidRequest fuelRequest(pandaHandler);
+	Panda::ObdPidRequest fuelRequest(pandaHandler.getCan());
 	i = 2;
 	while (keepRunning == true) {
 		fuelRequest.request(0x01, 0x10);

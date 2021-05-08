@@ -19,6 +19,8 @@ fileX725BatteryCurrent = "/etc/libpanda.d/x725batterycurrent"
 fileX725BatteryVoltage = "/etc/libpanda.d/x725batteryvoltage"
 fileX725Capacity = "/etc/libpanda.d/x725capacity"
 
+fileVin = "/etc/libpanda.d/vin"
+
 def getFileContents( filename ):
 	f = open(filename, "r")
 	contents = f.read()
@@ -47,6 +49,12 @@ class CirclesManager:
 		except Exception as e:
 			logging.info(e)
 			return
+			
+		try:
+			os.system("vinToHostname")
+		except Exception as e:
+			logging.info(e)
+		
 
 		logging.info("Battery Voltage: " + str(batteryVoltage))
 		logging.info("External Power:  " + str(hasExternalPower))

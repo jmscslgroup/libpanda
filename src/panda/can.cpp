@@ -24,6 +24,9 @@
  */
 
 #include "panda/can.h"
+#include "panda/obd-pid.h"
+#include "panda/obd-pid-definitions.h"
+
 #include <unistd.h>
 #include <time.h>
 #include <cstring> // memcpy
@@ -49,6 +52,7 @@ Can::~Can() {
 
 void Can::initialize() {
 	std::cout << "Initializing CAN" <<std::endl;
+	
 
 	std::cout << " - Purging ring buffers" << std::endl;
 	usbHandler->canPurge();
@@ -83,6 +87,43 @@ void Can::startParsing() {
 	}
 
 	start();
+	
+	
+	
+	// Read the VIN here:
+	std::cout << " - Attempting to read the VIN:";
+	ObdPidRequest* vinRequest = new ObdPidRequest(*this);
+	int vinAttempts = 0;
+	while( vinAttempts++ < 10 ) {
+		std::cerr << std::endl << " - - Attempt " << vinAttempts << "/10...";
+		vinRequest->request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+		sleep(1);
+		if (vinRequest->complete()) {
+			break;
+		}
+	}
+	if (vinRequest->complete()) {
+		// We got it!
+		printf("Success! Read: ");
+		for (int i = 0; i < vinRequest->dataLength; i++) {
+			printf("%c", vinRequest->data[i]);
+		}
+		printf("\n");
+		// Save the VIN:
+		FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
+		fwrite( vinRequest->data, 1, vinRequest->dataLength, file);
+		fclose(file);
+		
+		// Notify a new vin has been read:
+		file = fopen( "/etc/libpanda.d/newVin", "w+");
+		fwrite( "1\n", 1, strlen("1\n"), file);
+		fclose(file);
+	} else {
+		std::cerr << std::endl << " - - WARNING: Unable to read the VIN!" << std::endl;
+	}
+	
+	std::cout << " - Setting Safety to Toyota:" << std::endl;
+	usbHandler->setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 }
 
 void Can::stopParsing() {
