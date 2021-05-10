@@ -34,21 +34,27 @@ class CirclesManager:
 		self.powerDisconnectTime = 0
 
 	def loop(self):
-		logging.info("in loop()")
+		#logging.info("in loop()")
 
+		hasExternalPower = True
 		try:
 			hasInternet = int(getFileContents( fileInternet ))
 			isApClient = int(getFileContents( fileIsApClient ))
 			isApHost = int(getFileContents( fileisApHost ))
 			hasApClients = int(getFileContents( fileHasApClients ))
+		except Exception as e:
+			logging.info(e)
 
+		try:
 			hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
 			batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
 			batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
 			capacity = float(getFileContents( fileX725Capacity ))
+			
+			logging.info("Battery Voltage: " + str(batteryVoltage))
+			logging.info("External Power:  " + str(hasExternalPower))
 		except Exception as e:
 			logging.info(e)
-			return
 			
 		try:
 			os.system("vinToHostname")
@@ -56,8 +62,7 @@ class CirclesManager:
 			logging.info(e)
 		
 
-		logging.info("Battery Voltage: " + str(batteryVoltage))
-		logging.info("External Power:  " + str(hasExternalPower))
+		
 
 		if not hasExternalPower:
 			self.powerDisconnectTime += 1.0/updateRate
