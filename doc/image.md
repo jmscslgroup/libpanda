@@ -62,10 +62,10 @@ By default, before connecting the Pi to a car:
 - WiFi AP passkey: circles0   <- needs to be either 6 or 8 characters unfortunately
 
 Once the Pi boots to a connected car and correctly reads the VIN, it will reboot with the new credentials:
-- Hostname: <VIN>
+- Hostname: The vehicle's VIN
 - Username: circles
 - Password: circles
-- WiFi AP Name: <VIN>
+- WiFi AP Name: The vehicle's VIN
 - WiFi AP psk: circles0   
 
 The above VIN-based naming conventions will persist and will only change if connected to a vehicle with a different VIN.
