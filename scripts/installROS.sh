@@ -23,18 +23,25 @@ cd ~/ros_catkin_ws
 
 mkdir -p src
 
+# If installing multiple times, we need to remove the .rosinstall file (or modify it)
+if [ -f src/.rosinstall ]; then
+	rm src/.rosinstall
+fi
 
-rosinstall_generator ros_comm --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
+#rosinstall_generator ros_comm --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
+# The below is edited from above simply to include common_msgs
+rosinstall_generator ros_comm common_msgs --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
 wstool init src melodic-ros_comm-wet.rosinstall
 
 cd ~/ros_catkin_ws
 rosdep install -y --from-paths src --ignore-src --rosdistro melodic -r --os=debian:buster
 
+# The below does not allow other packages tobe compiled against common_msgs, see above instead
 # Bunting: I included the below block for also installing common ROS messages
 # I also feel like this should be instlalled via apt, not sure if that's possible
-cd src
-git clone https://github.com/ros/common_msgs.git
-cd ..
+#cd src
+#git clone https://github.com/ros/common_msgs.git
+#cd ..
 
 sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j4
 
