@@ -35,6 +35,8 @@ ___
 
 Download the image and flash it to your SD card using any steps you are comfortable with.  If you have never done this before, then you can try the [Raspberry Pi Image Flashing Tool](https://www.raspberrypi.org/software/) and select a custom image.
 
+>Note: If you are flashing only one SD card then you can select the .img.gz file directly, however this may be a bit slower.  If you play on making many SD cards then extract the .img.gz to a pure .img to potentailly speedier flashing.
+
 
 ## First Boot
 On first boot the image will automatically resize itself to fill the free space on the SD card.  This will cause a reboot.
