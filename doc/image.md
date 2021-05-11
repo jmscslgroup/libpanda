@@ -203,8 +203,8 @@ $ sudo poweroff
 4. Make an image of the card and run PiShrink
 ```bash
 $ sudo dd bs=4M if=/dev/sdb of=~/circles-raspbian-`date +%Y-%m-%d`.img
-$ sudo ./pipishrink.sh ~/circles-raspbian-`date +%Y-%m-%d`.img
-$ tar -czvf ~/circles-raspbian-`date +%Y-%m-%d`.img.gz ~/circles-raspbian-`date +%Y-%m-%d`.img
+$ sudo ./pishrink.sh ~/circles-raspbian-`date +%Y-%m-%d`.img
+$ tar -czvf ~/circles-raspbian-`date +%Y-%m-%d`.img.tar.gz ~/circles-raspbian-`date +%Y-%m-%d`.img
 ```
 >Note: Make sure you use the right drive letter in the above command regarding /dev/sd*
 
