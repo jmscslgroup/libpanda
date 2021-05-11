@@ -5,6 +5,9 @@ A library that handles communication with a comma.ai Panda interface device.  Si
 A tutorial for hardware setup is located here:
 [https://jmscslgroup.github.io/libpanda/](https://jmscslgroup.github.io/libpanda/)
 
+Full Raspbian-based images with ROS/libpanda preinstalled can be found here:
+[https://jmscslgroup.github.io/libpanda/doc/image.md](docs/image.md)
+
 ## Dependencies:
 1. Required - libusb-1.0-0-dev
 2. Optional - libcurses5-dev
