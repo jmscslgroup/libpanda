@@ -75,22 +75,18 @@ The above VIN-based naming conventions will persist and will only change if conn
 Every time the Pi boots it will attempt to open the panda device and begin recording using low-level libpanda utilities.  It is not possible to run any other libpanda utilities when this service is running since the panda device will be claimed.  If you desire to run ROS-based control commands, you need to stop the service:
 
 ```bash
-$ systemctl stop pandarecord
+$ sudo systemctl stop pandarecord
 ```
 Stopping the service will not prevent it from starting again on boot.  If going out for field experiments involving control or dedicating the Pi to something other than data collection, then I recommend disabling the service to stop it from running on boot.  Disabling does not stop the service in the current boot, so also stop the service if needed:
 ```bash
-$ systemctl disable pandarecord
-$ systemctl stop pandarecord
+$ sudo systemctl disable pandarecord
+$ sudo systemctl stop pandarecord
 ```
 
 
-
-<a name="hardware"></a>
-___
-# Setup Steps
-
 <a name="Steps"></a>
 ___
+# Setup Steps
 
 The steps listed here are what have been used to build the preconfigured image.  They do not need to be run when using the image.  The purpose of noting these steps is to inform others on exactly how it has been configured if there are issues or if others need to build a slightly modified image.  The following steps are not the only way to run everything, but are the exact steps used to set up this distributed image with ROS/libpanda preinstalled.
 
