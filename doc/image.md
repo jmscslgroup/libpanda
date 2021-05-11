@@ -198,11 +198,13 @@ Prior to distribution the image is resized the smallest size possible to easier 
 ```bash
 $ sudo poweroff
 ```
-2. Remove SD card and insert it into another running Linux instance with GParted
-3. In GParted right-click the main partition and resize it to the smallest possible size
-4. Apply changes (checkmark button)
-5. Make an image of the card
+2. Remove SD card and insert it into another running Linux instance
+3. On this Linux, download [PiShrink](https://github.com/Drewsif/PiShrink)
+4. Make an image of the card and run PiShrink
 ```bash
-$ sudo dd bs=4M if=/dev/sdb | gzip > ~/circles-raspbian-`date +%Y-%m-%d`.img.gz
+$ sudo dd bs=4M if=/dev/sdb of=~/circles-raspbian-`date +%Y-%m-%d`.img
+$ sudo ./pipishrink.sh ~/circles-raspbian-`date +%Y-%m-%d`.img
+$ tar -czvf ~/circles-raspbian-`date +%Y-%m-%d`.img.gz ~/circles-raspbian-`date +%Y-%m-%d`.img
 ```
 >Note: Make sure you use the right drive letter in the above command regarding /dev/sd*
+
