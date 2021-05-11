@@ -1,4 +1,4 @@
-Raspberry Pi Image                         {#mainpage}
+CIRCLES Raspberry Pi Images
 ============
 
 
