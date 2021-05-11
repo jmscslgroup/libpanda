@@ -36,12 +36,12 @@ ___
 Download the image and flash it to your SD card using any steps you are comfortable with.  If you have never done this before, then you can try the [Raspberry Pi Image Flashing Tool](https://www.raspberrypi.org/software/) and select a custom image.
 
 
-#### First Boot
+## First Boot
 On first boot the image will automatically resize itself to fill the free space on the SD card.  This will cause a reboot.
 
 When connected to a supported vehicle with panda hardware, then the Pi will read the VIN and immediately perform another reboot.
 
-#### List of Running Packages
+## List of Running Packages
 libpanda features a set of packages that run as systemd services.
 
 - pandarecord: Runs a low-level CAN/GPS data recoder
@@ -52,7 +52,7 @@ libpanda features a set of packages that run as systemd services.
 - x725power: Reads the current power state
 - x725button: Reads the ups button for invoking software shutdowns
 
-#### Credentials and Naming
+## Credentials and Naming
 
 By default, before connecting the Pi to a car:
 - Hostname: circles
@@ -70,7 +70,7 @@ Once the Pi boots to a connected car and correctly reads the VIN, it will reboot
 
 The above VIN-based naming conventions will persist and will only change if connected to a vehicle with a different VIN.
 
-#### The Service pandarecord Is Enabled
+## The Service pandarecord Is Enabled
 
 Every time the Pi boots it will attempt to open the panda device and begin recording using low-level libpanda utilities.  It is not possible to run any other libpanda utilities when this service is running since the panda device will be claimed.  If you desire to run ROS-based control commands, you need to stop the service:
 
