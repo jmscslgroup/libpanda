@@ -41,7 +41,7 @@ Download the image and flash it to your SD card using any steps you are comforta
 ## First Boot
 On first boot the image will automatically resize itself to fill the free space on the SD card.  This will cause a reboot.
 
-When connected to a supported vehicle with panda hardware, then the Pi will read the VIN and immediately perform another reboot.
+When connected to a supported vehicle with panda hardware, the Pi will read the VIN and immediately perform another reboot to set the hostname and WiFi AP name.
 
 ## List of Running Packages
 libpanda features a set of packages that run as systemd services.
