@@ -66,7 +66,25 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 }
 
 void ToyotaHandler::entryAction() {
+	std::cout << "In ToyotaHandler::entryAction():" << std::endl;
+	
+	std::cout << " - Setting power save to POWER_SAVE_STATUS_DISABLED:" << std::endl;
 	pandaHandler->getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+	
+	std::cout << " - Setting Safety to Toyota:" << std::endl;
+	pandaHandler->getUsb().setSafetyMode(SAFETY_TOYOTA);
+	
+}
+
+void ToyotaHandler::exitAction() {
+	std::cout << "In ToyotaHandler::exitAction():" << std::endl;
+	
+	std::cout << " - Setting Safety to ELM327:" << std::endl;
+	pandaHandler->getUsb().setSafetyMode(SAFETY_ELM327);
+	
+	std::cout << " - Setting power save to POWER_SAVE_STATUS_ENABLED:" << std::endl;
+	pandaHandler->getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_ENABLED);
+	
 }
 
 void ToyotaHandler::doAction() {

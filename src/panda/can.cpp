@@ -144,8 +144,8 @@ void Can::startParsing() {
 		std::cerr << std::endl << " - - WARNING: Unable to read the VIN!" << std::endl;
 	}
 	
-	std::cout << " - Setting Safety to Toyota:" << std::endl;
-	usbHandler->setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+	//std::cout << " - Setting Safety to Toyota:" << std::endl;
+	//usbHandler->setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 }
 
 void Can::stopParsing() {

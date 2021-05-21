@@ -119,6 +119,9 @@ void Usb::initialize() {
 
 	// Void function:
 	libusb_free_device_list(devices, 1);
+	
+	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
+	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 
 	std::cout << " - Setting Safety to ELM327:" << std::endl;
 //	setSafetyMode(SAFETY_TOYOTA);	// OBD II port

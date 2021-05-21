@@ -13,6 +13,7 @@ CIRCLES Raspberry Pi Images
 	* [Installation of libpanda](#installation-libpanda)
 	* [Installation of ROS](#installation-ros)
 	* [Installation of can_to_ros](#installation-can-to-ros)
+	* [Installing irods-icommands](#installing-irods)
 	* [Image Resizing](#image-resize)
 
 
@@ -72,6 +73,15 @@ Once the Pi boots to a connected car and correctly reads the VIN, it will reboot
 
 The above VIN-based naming conventions will persist and will only change if connected to a vehicle with a different VIN.
 
+## SSH
+
+An SSH server is enabled.  Access your pi with the following, assuming default hostname
+```bash
+$ ssh circles@circles.local
+$ ssh circles@<IP>
+$ ssh circles@<VIN>.local
+```
+
 ## The Service pandarecord Is Enabled
 
 Every time the Pi boots it will attempt to open the panda device and begin recording using low-level libpanda utilities.  It is not possible to run any other libpanda utilities when this service is running since the panda device will be claimed.  If you desire to run ROS-based control commands, you need to stop the service:
@@ -84,7 +94,27 @@ Stopping the service will not prevent it from starting again on boot.  If going 
 $ sudo systemctl disable pandarecord
 $ sudo systemctl stop pandarecord
 ```
+## irods Setup
 
+irods is installed on the image, however you will need to add your CyVerse login credentials.  The following steps have been 
+
+1. Log into your pi (see SSH above or connect monitor/keyboard)
+2. run `iinit` and enter your user/pass as well as the necessary info for cyverse
+```bash
+$ iinit 
+```
+   The parameters you should use are from here: https://learning.cyverse.org/projects/data_store_guide/en/latest/step2.html
+```
+ hostname: data.cyverse.org
+ port #: 1247
+ username: [.cyverse username.]
+ zone: iplant
+ password: [.cyverse password.]
+```
+3. Try the put command on some test data to see if it works. The below one will copy any folders in your pi's recorded data onto cyverse in Rahul's shared folder.
+```bash
+$ iput -r -v /var/panda/CyverseData/JmscslgroupData/PandaData/* /iplant/home/rahulbhadani/JmscslgroupData/PandaData
+```
 
 <a name="Steps"></a>
 ___
@@ -149,7 +179,7 @@ Ensure the Pi is connected to internet, preferably with an ethernet cable.
 Run the following commands:
 ```bash
 $ sudo apt update && sudo apt install git -y
-$ git clone httpd://github.com/jmscslgroup/libpanda.git
+$ git clone https://github.com/jmscslgroup/libpanda.git
 $ cd libpanda
 $ sudo ./install.sh
 ```
@@ -188,6 +218,44 @@ $ git clone https://github.com/jmscslgroup/can_to_ros.git
 $ cd ~/catkin_ws
 $ catkin_make
 ```
+
+
+<a name="installing-irods"></a>
+___
+## Installing irods-icommands
+
+These steps follow the irods-icommands-rpi.md file found in /iplant/home/rahulbhadani/JmscslgroupData/PandaDevelopment/ on cyverse.org
+
+0. Fetch the irods-icommands-debs.tgz from /iplant/home/rahulbhadani/JmscslgroupData/PandaDevelopment/ and send it to the pi.  On macOs, the following comamnd works:
+```bash
+$ scp ~/Downloads/irods-icommands-debs.tgz circles@circles.local:~/
+```
+1. Extract to your pi
+```bash
+$ tar xzf irods-icommands-debs.tgz
+$ rm irods-icommands-debs.tgz
+$ cd irods-icommands-debs
+```
+2. run the install script in there
+```
+$ ./install.sh
+```
+   This, when it completes, will install all the necessary prerequisites, and may require your sudo password.
+
+>Note: At this stage commands like iinit have been omitted since they require cyverse login credentials
+
+
+
+
+1. 
+```bash
+$ sudo apt-get install help2man libfuse-dev libcurl4-gnutls-dev libpam0g-dev libxml2-dev libjson-perl
+$ wget https://files.renci.org/pub/irods/releases/4.1.12/irods-4.1.12.tar.gz
+$ tar xvf irods-4.1.12.tar.gz 
+$ cd irods-4.1.12/
+$ ./packaging/build.sh icommands
+```
+
 
 <a name="image-resize"></a>
 ___

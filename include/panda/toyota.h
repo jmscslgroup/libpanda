@@ -124,6 +124,7 @@ private:
 	// Overloaded from Mogi::Thread.
 	// This will enable the required power save mode for vehicle control.
 	void entryAction();
+	void exitAction();
 	
 	// Overloaded from Mogi::Thread.
 	// This handles the constant updates.
