@@ -86,7 +86,8 @@ Libpanda may be able to work on most linux machines, however the following hardw
 
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
-*  [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
+* [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
+* [USB A to A to connect Pi to Panda](https://www.amazon.com/NIMASO-Double-Compatible-External-Player/dp/B08DK8RPRW/)
 * [Pimoroni Blinkt!](https://www.adafruit.com/product/3195)
 
 	This is a nifty, inexpensive, and compact set of addressable LEDs that will be supported for displaying the state of various scripting components such as WiFi connectivity, data upload, and power states, but is not required for any functionality.
@@ -226,7 +227,7 @@ Currently Ubuntu 18.04 LTS is the only supported OS though it is very possible t
 
 * [Ubuntu 18.04 LTS Raspberry Pi 4 Installation Guide](https://ubuntu.com/download/raspberry-pi)
 
-Once the OS is flashed, insert the SD card into the Pi 4.  Etherrnet is by default enabled with a DHCP client.  There are two ways to configure the Pi 4 from this point, either by plugging in a keyboard and monitor using the HDMI adapter from the [Optional Hardware](#hardware-optional), or through the preinstalled SSH server.  The default credentials for this image are:
+Once the OS is flashed, insert the SD card into the Pi 4.  Ethernet is by default enabled with a DHCP client.  There are two ways to configure the Pi 4 from this point, either by plugging in a keyboard and monitor using the HDMI adapter from the [Optional Hardware](#hardware-optional), or through the preinstalled SSH server.  The default credentials for this image are:
 
 * Username: ubuntu
 * Password: ubuntu
@@ -258,6 +259,23 @@ Here is an example of logging into a Pi after obtaining an IP address of 10.0.1.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/w7WJoFv7HlY?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </center>
 \endhtmlonly
+
+## Setup with IRODS iCommands
+
+### Install/setup iCommands
+Use [this page](https://cyverse.atlassian.net/wiki/spaces/DS/pages/241869823/Setting+Up+iCommands) for tutorial on setting up iCommands on Linux, MacOC, or Windows.
+
+### Setting up data upload
+If you have flashed an image with iRods installed, or you've installed it yourself, make sure to run the iinit command to setup your interface.
+1. Run command: iinit
+2. Host name: data.cyverse.org
+3. Port: 1247
+4. Username: [put your username for cyverse]
+5. Zone: iplant
+6. Password: [your password for cyverse]
+
+If you have an image with iCommands pre-installed, look for and run 'sudo ./setVin.sh' to set you VIN as an ID for your data files.
+
 
 <a name="libpanda-setup"></a>
 ___
