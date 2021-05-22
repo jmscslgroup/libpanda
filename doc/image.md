@@ -5,6 +5,7 @@ CIRCLES Raspberry Pi Images
 
 # Table of Contents
 * [About](#about)
+* [Change Log](#changelog)
 * [Usage and Expectation](#usage)
 * [Setup Steps](#steps)
 	* [Raspbian Image](#raspbian-image)
@@ -29,6 +30,18 @@ An SD card image is distributed for purposes of consistently and deployment conv
 [https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
 
 [https://github.com/jmscslgroup/can_to_ros](https://github.com/jmscslgroup/can_to_ros)
+
+<a name="changelog"></a>
+___
+# Change Log
+
+- [circles-raspbian-2021-05-21.img.tar.gz](https://drive.google.com/file/d/1whDua53SyYLUnU6sM6c9JlXF1aUeAmPP/view?usp=sharing)
+
+	This introduces fixed to libpanda where cruise control would malfunction in data-recording scenarios.
+	
+- [circles-raspbian-2021-05-11.img.tar.gz](https://drive.google.com/file/d/1whDua53SyYLUnU6sM6c9JlXF1aUeAmPP/view?usp=sharing)
+
+	This image is the initial upload, featuring ROS, Libpanda, and can_to_ros
 
 <a name="usage"></a>
 ___
@@ -94,6 +107,8 @@ Stopping the service will not prevent it from starting again on boot.  If going 
 $ sudo systemctl disable pandarecord
 $ sudo systemctl stop pandarecord
 ```
+
+<!---
 ## irods Setup
 
 irods is installed on the image, however you will need to add your CyVerse login credentials.  The following steps have been 
@@ -115,10 +130,14 @@ $ iinit
 ```bash
 $ iput -r -v /var/panda/CyverseData/JmscslgroupData/PandaData/* /iplant/home/rahulbhadani/JmscslgroupData/PandaData
 ```
+-->
+
 
 <a name="Steps"></a>
 ___
 # Setup Steps
+
+>Note: If you downloaded one of the supplied images then DO NOT follow these steps, they have already been done.
 
 The steps listed here are what have been used to build the preconfigured image.  They do not need to be run when using the image.  The purpose of noting these steps is to inform others on exactly how it has been configured if there are issues or if others need to build a slightly modified image.  The following steps are not the only way to run everything, but are the exact steps used to set up this distributed image with ROS/libpanda preinstalled.
 
@@ -220,6 +239,7 @@ $ catkin_make
 ```
 
 
+<!---
 <a name="installing-irods"></a>
 ___
 ## Installing irods-icommands
@@ -258,6 +278,9 @@ $ ./packaging/build.sh icommands
 
 
 <a name="image-resize"></a>
+
+-->
+
 ___
 ## Image Resizing
 
