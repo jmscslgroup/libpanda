@@ -35,7 +35,7 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
-- [circles-raspbian-2021-05-21.img.tar.gz](https://drive.google.com/file/d/1whDua53SyYLUnU6sM6c9JlXF1aUeAmPP/view?usp=sharing)
+- [circles-raspbian-2021-05-21.img.tar.gz](https://drive.google.com/file/d/1u53-8XlpFQcdZwb8dSwQdVgkzwnplou2/view?usp=sharing)
 
 	This introduces fixed to libpanda where cruise control would malfunction in data-recording scenarios.
 	
