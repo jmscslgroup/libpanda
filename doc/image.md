@@ -49,6 +49,8 @@ ___
 
 Download the image and flash it to your SD card using any steps you are comfortable with.  If you have never done this before, then you can try the [Raspberry Pi Image Flashing Tool](https://www.raspberrypi.org/software/) and select a custom image.
 
+After downloading one of the provided images ensure that the image ends in either .tar.gz or .img: on some operating systems like macOS the .tar.gz will become automatically unzipped into a .tar but this will not flash correctly.  Instead of flashing .tar, extract (like any other archive) to ge tthe resulting .img file for proper flashing.
+
 >Note: If you are flashing only one SD card then you can select the .img.gz file directly, however this may be a bit slower.  If you play on making many SD cards then extract the .img.gz to a pure .img to potentailly speedier flashing.
 
 
