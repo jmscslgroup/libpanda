@@ -309,8 +309,12 @@ class Networking(flx.PyWidget):
 				with flx.VBox():
 					self.fieldSsid = flx.LineEdit(style="background-color:#BBBBBB;text-align:center",placeholder_text="ssid")
 					self.fieldPassword = flx.LineEdit(style="background-color:#BBBBBB;text-align:center",placeholder_text="psk")
-			self.b1 = flx.Button(text='Submit')
+			self.submitButton = flx.Button(text='Submit')
 			flx.Widget(flex=1)
+			
+	@flx.reaction('submitButton.pointer_click')
+	def _button_clicked(self, *events):
+		print("Submit button pressed!")
 	
 class Circles(flx.PyWidget):
 	def init(self):
@@ -325,7 +329,7 @@ def start_flexx(loop):
 	
 	flx.App(Circles, title='Circles').serve()
 	
-	flx.create_server(host='0.0.0.0', port=8080, loop=loop)
+	flx.create_server(host='0.0.0.0', port=80, loop=loop)
 	
 	
 	flx.start()

@@ -67,9 +67,18 @@ class CirclesManager:
 		if not hasExternalPower:
 			self.powerDisconnectTime += 1.0/updateRate
 			logging.info(" - Power disconnected, shutting down in " + str(self.powerOffTimeoutInSeconds - self.powerDisconnectTime))
+			
+			# Check for internet connectivity.
+			if os.system("simplePing") == 0:	# Error code 0 means success
+				os.system("echo \"- - -  Internet was found!  Running irsync\"")
+				#os.system("irsyncCyverse -f")
+				os.system("service pandarecord stop")
+				os.system("runuser -l circles -c 'irsyncCyverse -f'")
+				self.powerDisconnectTime = self.powerOffTimeoutInSeconds
+			
 			if self.powerDisconnectTime >= self.powerOffTimeoutInSeconds:
 				logging.info(" - - Power disconnect timeout!  Running final scripts...")
-				os.system("echo \"- - - This is where we run a script\"")
+				#os.system("echo \"- - - This is where we run a script\"")
 				logging.info(" - - Shutting system down...")
 				f = open(fileX725HasExtenalPower, "w")
 				f.write("1")
