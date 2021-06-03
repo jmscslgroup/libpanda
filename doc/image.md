@@ -35,6 +35,10 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-64-2021-06-02.img.tar.gz](https://drive.google.com/file/d/1krjo8meTaXulDfu1BeywtvY-fKL2Fr3H/view?usp=sharing)
+
+	Transition to 64-bit Rasbpian for easier irods support, but gives warnings about libssl1.0.0.  Also includes fixes to libpanda for recording radar data in record-only mode.
+
 - [circles-raspbian-2021-05-21.img.tar.gz](https://drive.google.com/file/d/1u53-8XlpFQcdZwb8dSwQdVgkzwnplou2/view?usp=sharing)
 
 	This introduces fixed to libpanda where cruise control would malfunction in data-recording scenarios.
@@ -149,7 +153,9 @@ ___
 
 1. Download the [Raspberry Pi Image Flashing Tool](https://www.raspberrypi.org/software/)
 2. Select the appropriate SD card
-3. Select Operating System -> Raspberry Pi OS (Other) -> Raspberry Pi OS Lite (32-bit)
+3. Select OS
+	a. 32-bit: Select Operating System -> Raspberry Pi OS (Other) -> Raspberry Pi OS Lite (32-bit)
+	b. 64-bit: Download the [64-bit Lite version](https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2021-05-28/) the Select Operating System -> Use Custom
 4. Write to SD card with the "Write" button
 
 
@@ -164,6 +170,7 @@ $ sudo raspi-config
 ```
 3. Enter Localisation Options -> WLAN Country -> Select US
 4. Enter Localisation Options -> Keyboard -> Generic 105-Key PC (intl.) -> Other -> English (US) -> English (US). Then press enter a few times until back at the main menu
+4. Enter Interface Options -> SSH -> Yes
 5. Select Finish, and reboot
 
 
@@ -199,7 +206,7 @@ Ensure the Pi is connected to internet, preferably with an ethernet cable.
 
 Run the following commands:
 ```bash
-$ sudo apt update && sudo apt install git -y
+$ sudo apt update && sudo apt upgrade && sudo apt install git -y
 $ git clone https://github.com/jmscslgroup/libpanda.git
 $ cd libpanda
 $ sudo ./install.sh
@@ -241,10 +248,10 @@ $ catkin_make
 ```
 
 
-<!---
+
 <a name="installing-irods"></a>
 ___
-## Installing irods-icommands
+## Installing irods-icommands (for 64-bit only)
 
 These steps follow the irods-icommands-rpi.md file found in /iplant/home/rahulbhadani/JmscslgroupData/PandaDevelopment/ on cyverse.org
 
@@ -268,21 +275,7 @@ $ ./install.sh
 
 
 
-
-1. 
-```bash
-$ sudo apt-get install help2man libfuse-dev libcurl4-gnutls-dev libpam0g-dev libxml2-dev libjson-perl
-$ wget https://files.renci.org/pub/irods/releases/4.1.12/irods-4.1.12.tar.gz
-$ tar xvf irods-4.1.12.tar.gz 
-$ cd irods-4.1.12/
-$ ./packaging/build.sh icommands
-```
-
-
 <a name="image-resize"></a>
-
--->
-
 ___
 ## Image Resizing
 
@@ -295,9 +288,9 @@ $ sudo poweroff
 3. On this Linux, download [PiShrink](https://github.com/Drewsif/PiShrink)
 4. Make an image of the card and run PiShrink
 ```bash
-$ sudo dd bs=4M if=/dev/sdb of=~/circles-raspbian-`date +%Y-%m-%d`.img
-$ sudo ./pishrink.sh ~/circles-raspbian-`date +%Y-%m-%d`.img
-$ tar -czvf ~/circles-raspbian-`date +%Y-%m-%d`.img.tar.gz ~/circles-raspbian-`date +%Y-%m-%d`.img
+$ sudo dd bs=4M if=/dev/sdb of=~/circles-raspbian-64-`date +%Y-%m-%d`.img
+$ sudo ./pishrink.sh ~/circles-raspbian-64-`date +%Y-%m-%d`.img
+$ tar -czvf ~/circles-raspbian-`date +%Y-%m-%d`.img.tar.gz ~/circles-raspbian-64-`date +%Y-%m-%d`.img
 ```
 >Note: Make sure you use the right drive letter in the above command regarding /dev/sd*
 

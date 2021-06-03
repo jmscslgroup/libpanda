@@ -37,7 +37,7 @@ Libpanda is a software library and set of utilities intended to interface with v
 
 Full Raspbian-based images with ROS/libpanda preinstalled can be found here:
 
-[https://jmscslgroup.github.io/libpanda/doc/image.md](https://jmscslgroup.github.io/libpanda/doc/image.md)
+[https://github.com/jmscslgroup/libpanda/blob/master/doc/image.md](https://github.com/jmscslgroup/libpanda/blob/master/doc/image.md)
 
 
 The majority of example source code to interface with the Panda is based on python and uses libusb.  We chose to write our own C++ version due to performance issues found with minimalist implementations in Python.  This effects both CPU usage nearing 92%, and missing nearly 50% of CAN data.  Libpanda is able to perform the same tasks as the Python version, with the addition of reading GPS data, at 35% usage, and with twice the throughput of data collection.  These tests were performed on a Raspberry Pi 4.  Here is a video demonstrating our findings:
