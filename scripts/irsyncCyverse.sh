@@ -8,7 +8,9 @@ response=
 while getopts “hf” opt; do
   case $opt in
     h) echo "Uploads data to CyVerse."
-	echo " -f : force upload without prompt" 
+	echo " -f : force upload without prompt"
+    echo ""
+    exit
 	;;
     f) response=y;;
     y) response=y;;
