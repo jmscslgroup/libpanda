@@ -1,0 +1,9 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node1 [label="Panda::GpsListener",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_gps_listener.html",tooltip="An abstract class for new data notifications for new GPS data. "];
+  Node1 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="Panda::SetSystemTimeObserver",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_set_system_time_observer.html"];
+}

@@ -1,0 +1,28 @@
+digraph "Graphical Class Hierarchy"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  rankdir="LR";
+  Node1 [label="Panda::CanListener",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_can_listener.html",tooltip="An abstract class for new data notifications for new CAN data. "];
+  Node1 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node2 [label="Panda::ObdPidRequest",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_obd_pid_request.html"];
+  Node1 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node3 [label="Panda::VinReader",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_vin_reader.html"];
+  Node4 [label="CNMEAParser",height=0.2,width=0.4,color="grey75", fillcolor="white", style="filled"];
+  Node4 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node5 [label="Panda::Gps",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_gps.html",tooltip="A class that handles the GPS data. "];
+  Node6 [label="Mogi::Thread",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_mogi_1_1_thread.html",tooltip="Abstract class, handles a single thread. Features mutual exclusion and pause/resume. "];
+  Node6 -> Node7 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node7 [label="Panda::Can",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_can.html",tooltip="A class that handles the CAN data. "];
+  Node6 -> Node5 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node6 -> Node8 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node8 [label="Panda::ToyotaHandler",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_toyota_handler.html",tooltip="A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler..."];
+  Node6 -> Node9 [dir="back",color="darkgreen",fontsize="10",style="solid",fontname="Helvetica"];
+  Node9 [label="Panda::Usb",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_usb.html"];
+  Node10 [label="Panda::UsbListener",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_usb_listener.html"];
+  Node10 -> Node7 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node10 -> Node5 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node10 -> Node11 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node11 [label="Strym",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_strym.html"];
+}

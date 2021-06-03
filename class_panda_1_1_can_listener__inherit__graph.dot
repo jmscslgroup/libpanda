@@ -1,0 +1,10 @@
+digraph "Panda::CanListener"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node1 [label="{Panda::CanListener\n||+ ~CanListener()\l+ addToBlacklistBus()\l+ addToBlacklistMessageId()\l# newDataNotification()\l# newDataNotificationProxy()\l}",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node1 -> Node2 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node2 [label="{Panda::ObdPidRequest\n|+ data\l+ dataLength\l|+ ObdPidRequest()\l+ ~ObdPidRequest()\l+ request()\l+ complete()\l}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_obd_pid_request.html"];
+  Node1 -> Node3 [dir="back",color="midnightblue",fontsize="10",style="solid",arrowtail="onormal",fontname="Helvetica"];
+  Node3 [label="{Panda::VinReader\n||+ VinReader()\l+ vinRead()\l+ vinResult()\l+ setPandaHandler()\l+ requestVin()\l+ saveToFile()\l}",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$class_panda_1_1_vin_reader.html"];
+}
