@@ -1,8 +1,16 @@
 #/bin/bash
+
 VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
+
+# csv files:
 LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData
 REMOTE=/iplant/home/sprinkjm/private-circles/${VIN}/libpanda
+
+# For rosbagfiles:
+DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-circles/${VIN}/bagfiles/"
+DIR_PATH_LOCAL="/var/panda/CyverseData/JmscslgroupData/bagfiles/"
+
 response=
 
 while getopts “hf” opt; do
@@ -26,7 +34,12 @@ fi
 
 case "$response" in
       [yY][eE][sS]|[yY])
+      #csv files:
 	  irsync -r -v ${LOCAL} i:${REMOTE}
+	  
+	  # rosbag files:
+	  imkdir -pv ${DIR_PATH_CYVERSE}
+	  irsync -r ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           ;;
       *)
           echo "Exiting" 

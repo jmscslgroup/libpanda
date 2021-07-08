@@ -74,7 +74,14 @@ class CirclesManager:
 				#os.system("irsyncCyverse -f")
 				os.system("service pandarecord stop")
 				os.system("runuser -l circles -c 'irsyncCyverse -f'")
-				self.powerDisconnectTime = self.powerOffTimeoutInSeconds
+				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync
+					hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
+					if not hasExternalPower:
+						self.powerDisconnectTime = self.powerOffTimeoutInSeconds
+					else:
+						os.system("service pandarecord start")
+				except Exception as e:
+					logging.info(e)
 			
 			if self.powerDisconnectTime >= self.powerOffTimeoutInSeconds:
 				logging.info(" - - Power disconnect timeout!  Running final scripts...")
