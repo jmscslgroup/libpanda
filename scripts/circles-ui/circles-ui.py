@@ -45,6 +45,9 @@ class Relay(flx.Component):
 	capacity = flx.FloatProp(0, settable=True)
 	pandaRecording = flx.IntProp(0, settable=True)
 	pandaGps = flx.IntProp(0, settable=True)
+	vehicleControlRunning = flx.BoolProp(False, settable=True)
+
+	
 
 	@flx.reaction('vin')
 	def on_vin(self, *events):
@@ -75,6 +78,11 @@ class Relay(flx.Component):
 	def on_pandaGps(self, *events):
 		for ev in events:
 			self.updatePandaGps(ev.new_value)
+						
+	@flx.reaction('vehicleControlRunning')
+	def on_vehicleControlRunning(self, *events):
+		for ev in events:
+			self.updateVehicleControlRunning(ev.new_value)
 			
 	""" Global object to relay paint events to all participants.
 	"""
@@ -100,6 +108,10 @@ class Relay(flx.Component):
 		
 	@flx.emitter
 	def updatePandaGps(self, value):
+		return dict(value=value)
+				
+	@flx.emitter
+	def updateVehicleControlRunning(self, value):
 		return dict(value=value)
 		
 # Create global relay object, shared by all connections
@@ -142,6 +154,11 @@ class CirclesViewController(flx.PyWidget):
 		for ev in events:
 			self.circlesView.updatePandaRecording(ev.value)
 			
+	@relay.reaction('updateVehicleControlRunning')
+	def _updateVehicleControlRunning(self, *events):
+		for ev in events:
+			self.circlesView.updateVehicleControlRunning(ev.value)
+			
 	@relay.reaction('updateGps')
 	def _updateGps(self, *events):
 		for ev in events:
@@ -163,6 +180,7 @@ class CirclesView(flx.PyWidget):
 							flx.Label(style="text-align:right",text='VIN:')
 							flx.Label(style="text-align:right",text='Controls Enabled:')
 							flx.Label(style="text-align:right",text='Time:')
+							flx.Label(style="text-align:right",text='ROS Vehicle Control Running:')
 							flx.Label(style="text-align:right",text='Recording:')
 							flx.Label(style="text-align:right",text='GPS Fix:')
 							flx.Label(style="text-align:right",text='Battery Voltage:')
@@ -172,6 +190,7 @@ class CirclesView(flx.PyWidget):
 							self.labelControls = flx.Label(style="text-align:left",text='False')
 							self.labelTime = flx.Label(style="text-align:left",text='Not Set')
 							#self.labelTime = flx.Label(style="text-align:left",text=lambda: self.root.store.time)
+							self.labelVehicleControl = flx.Label(style="text-align:left",text=str(relay.vehicleControlRunning))
 							self.labelRecording = flx.Label(style="text-align:left",text=str(relay.pandaRecording))
 							self.labelGps = flx.Label(style="text-align:left",text=str(relay.pandaGps))
 							self.labelVoltage = flx.Label(style="text-align:left",text=str(relay.voltage))
@@ -229,6 +248,10 @@ class CirclesView(flx.PyWidget):
 	def updatePandaGps(self, value):
 		self.labelGps.set_text( value )
 		
+	@flx.action
+	def updateVehicleControlRunning(self, value):
+		self.labelVehicleControl.set_text( str(value) )
+		
 	#def tick(self):
 		#global window
 		#t = time()
@@ -282,6 +305,17 @@ class Updater(threading.Thread):
 			logging.info(e)
 			
 		self.count+=1
+		
+		
+		try:
+			result = subprocess.Popen(["systemctl","status","can"])
+			text = result.communicate()[0]
+			if result.returncode == 0:
+				relay.set_vehicleControlRunning(True)
+			else:
+				relay.set_vehicleControlRunning(False)
+		except Exception as e:
+			logging.info(e)
 		
 				
 		

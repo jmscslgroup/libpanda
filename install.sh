@@ -1,36 +1,43 @@
 #!/bin/bash
 
 if [ ! -d /etc/libpanda.d ]; then
-	mkdir /etc/libpanda.d
+	sudo mkdir /etc/libpanda.d
 fi
 
-cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
+sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 if [[ ! -f "/etc/libpanda.d/vin" ]]; then
-	echo "circles" > /etc/libpanda.d/vin
+	sudo eval 'echo "circles" > /etc/libpanda.d/vin'
 fi
 
-./build.sh
+sudo ./build.sh
 cd scripts/blinkt
-./install.sh
+sudo ./install.sh
 cd ../crazypifi
-./install.sh
+sudo ./install.sh
 cd ../xUps
-./install.sh
+sudo ./install.sh
 cd ../circles-ui
-./install.sh
+sudo ./install.sh
 cd ../circlesmanager
-./install.sh
+sudo ./install.sh
 cd ../..
 
 
 
-systemctl enable ssh
-systemctl start ssh
+sudo systemctl enable ssh
+sudo systemctl start ssh
 
 
 #cp scripts/addWifiAp.sh ../
 #../setVin.sh
 #../addWifiAp.sh
+
+# Install ROS:
+cd scripts
+./installROS.sh
+
+# Install can_to_ros:
+./installCanToRos.sh
 
 
 # Build the bagfile directory:
@@ -38,7 +45,7 @@ BAGFILE_DIR=/var/panda/CyverseData/JmscslgroupData/bagfiles
 
 if [ ! -d ${BAGFILE_DIR} ]; then
 	echo "Creating ${BAGFILE_DIR}..."
-	mkdir -p ${BAGFILE_DIR}
+	sudo mkdir -p ${BAGFILE_DIR}
 fi
 
 # The following is authored by Jonathan Sprinkle:

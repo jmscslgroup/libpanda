@@ -30,7 +30,7 @@ fi
 
 #rosinstall_generator ros_comm --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
 # The below is edited from above simply to include common_msgs
-rosinstall_generator ros_comm common_msgs --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
+rosinstall_generator ros_comm common_msgs robot_upstart --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
 wstool init src melodic-ros_comm-wet.rosinstall
 
 cd ~/ros_catkin_ws

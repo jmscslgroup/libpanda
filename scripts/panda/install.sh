@@ -15,10 +15,10 @@ chmod 655 /etc/systemd/system/pandarecord.service
 
 systemctl daemon-reload
 
-echo "Enabling startup scripts"
+echo "Disabling startup scripts"
 
 #systemctl enable pandasettime.service
-systemctl enable pandarecord.service
+systemctl disable pandarecord.service
 
 echo "Done."
 echo "========================="

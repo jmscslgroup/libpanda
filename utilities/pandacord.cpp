@@ -224,6 +224,8 @@ int main(int argc, char **argv) {
 
 		usleep(10000);
 	}
+	writeToFileThenClose(filenamePandaStatus, "0\n");
+	writeToFileThenClose(filenameGpsStatus, "0\n");
 	//pandaHandler.stop();
 	pandaHandler.stop();
 

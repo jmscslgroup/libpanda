@@ -12,8 +12,6 @@ CIRCLES Raspberry Pi Images
 	* [Raspbian Setup](#raspbian-setup)
 	* [Account Setup](#account-setup)
 	* [Installation of libpanda](#installation-libpanda)
-	* [Installation of ROS](#installation-ros)
-	* [Installation of can_to_ros](#installation-can-to-ros)
 	* [Installing irods-icommands](#installing-irods)
 	* [Image Resizing](#image-resize)
 
@@ -219,6 +217,9 @@ At this stage you will notice a trend that everything in this Pi is now "circles
 1. Account
 1. Password
 
+The above ALSO now installs ROS and can_to_ros
+
+<!--
 <a name="installation-ros"></a>
 ___
 ## Installation of ROS
@@ -246,7 +247,7 @@ $ git clone https://github.com/jmscslgroup/can_to_ros.git
 $ cd ~/catkin_ws
 $ catkin_make
 ```
-
+-->
 
 
 <a name="installing-irods"></a>
