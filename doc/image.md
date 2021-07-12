@@ -33,6 +33,10 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-control-2021-07-12.img.tar.gz](https://drive.google.com/file/d/1Nnuk8sEyjMaRw7azkzGogAXUjbXUGxBF/view?usp=sharing)
+
+	This is a 64-bit image that has ROS-based vehicle_control running on boot instead of the pandarecord service
+
 - [circles-raspbian-64-2021-06-02.img.tar.gz](https://drive.google.com/file/d/1krjo8meTaXulDfu1BeywtvY-fKL2Fr3H/view?usp=sharing)
 
 	Transition to 64-bit Rasbpian for easier irods support, but gives warnings about libssl1.0.0.  Also includes fixes to libpanda for recording radar data in record-only mode.
