@@ -13,7 +13,7 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF
 sudo apt-get update
 #sudo apt-get upgrade
 
-sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake
+sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python3-empy python-setuptools python3-yaml
 
 sudo rosdep init
 rosdep update
@@ -43,7 +43,7 @@ rosdep install -y --from-paths src --ignore-src --rosdistro melodic -r --os=debi
 #git clone https://github.com/ros/common_msgs.git
 #cd ..
 
-sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j4
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j4 -DPYTHON_EXECUTABLE=/usr/bin/python3
 
 source /opt/ros/melodic/setup.bash
 echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
