@@ -33,6 +33,9 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2021-07-21.img.tar.gz](https://drive.google.com/file/d/1YYig-W5RhAG5eGe-YnD43nb-LzhEGmCu/view?usp=sharing)
+	This is a 64-bit control based image with pandarecord disabled.  This incorporates the latest vehicle_control.launch files for various patches.
+
 - [circles-raspbian-control-2021-07-12.img.tar.gz](https://drive.google.com/file/d/1Nnuk8sEyjMaRw7azkzGogAXUjbXUGxBF/view?usp=sharing)
 
 	This is a 64-bit image that has ROS-based vehicle_control running on boot instead of the pandarecord service
@@ -211,8 +214,10 @@ Run the following commands:
 $ sudo apt update && sudo apt upgrade && sudo apt install git -y
 $ git clone https://github.com/jmscslgroup/libpanda.git
 $ cd libpanda
-$ sudo ./install.sh
+$ ./install.sh
 ```
+
+>Note: An image named "account only" has been made with the last run command being the git installation.  This has the accounts already setup in a 64-bit image along with SSH enabled
 
 Running the above will invoke an automatic reboot and rename the hostname from "raspberrypi" to "circles"
 
