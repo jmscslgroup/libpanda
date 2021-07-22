@@ -43,7 +43,7 @@ rosdep install -y --from-paths src --ignore-src --rosdistro melodic -r --os=debi
 #git clone https://github.com/ros/common_msgs.git
 #cd ..
 
-sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j4 -DPYTHON_EXECUTABLE=/usr/bin/python3
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j4 #-DPYTHON_EXECUTABLE=/usr/bin/python3
 
 source /opt/ros/melodic/setup.bash
 echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc

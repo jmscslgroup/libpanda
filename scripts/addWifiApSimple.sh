@@ -37,7 +37,7 @@ then
 
 	unset passphrase
 
-	echo "Conifugarion set:"
+	echo "Conifugaration set:"
 	echo "- /etc/wpa_supplicant/wpa_supplicant.conf"
 fi
 echo "----------------------------"
