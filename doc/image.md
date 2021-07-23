@@ -33,6 +33,9 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2021-07-22.img.tar.gz](https://drive.google.com/file/d/1VMWyizQZmgilzcBVBV6IBep39JNNPc8w/view?usp=sharing)
+	The prior two images had instalation issues.  These have been remedied in this image.  This image also features the ROS components intended to be performed on 7/21/2021
+
 - [circles-raspbian-2021-07-21.img.tar.gz](https://drive.google.com/file/d/1YYig-W5RhAG5eGe-YnD43nb-LzhEGmCu/view?usp=sharing)
 	This is a 64-bit control based image with pandarecord disabled.  This incorporates the latest vehicle_control.launch files for various patches.
 

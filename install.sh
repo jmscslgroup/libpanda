@@ -33,11 +33,13 @@ sudo systemctl start ssh
 #../addWifiAp.sh
 
 # Install ROS:
-cd scripts
-./installROS.sh
+#cd scripts
+#./installROS.sh
 
 # Install can_to_ros:
-./installCanToRos.sh
+#./installCanToRos.sh
+
+
 
 
 # Build the bagfile directory:
@@ -60,3 +62,9 @@ sudo chmod -R g+w .
 
 sudo chmod g+s .
 # With these changes in place (which can be done during install for the libpanda stuff) we can have everything such that you do not need to be sudo su to write to the bagfiles.
+
+
+cd ~
+git clone https://github.com/graciegumm/libpanda-check-mismatched-files.git
+cd ~/libpanda-check-mismatched-files
+sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
