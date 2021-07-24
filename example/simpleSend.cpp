@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
 	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
+	pandaHandler.getCan().addObserver(&toyotaHandler);
 	
 	// Let's roll
 	pandaHandler.initialize();
@@ -60,11 +61,12 @@ int main(int argc, char **argv) {
 	while(1) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
-		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
+		if(printPandaHealthDecimator++ >= 1) {	// run at 1Hz
 			printPandaHealthDecimator = 0;
-			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
-			std::cout << "Controls Allowed: " << toyotaHandler.getControlsAllowed() << std::endl;
-			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
+			//Panda::printPandaHealth(toyotaHandler.getPandaHealth());
+			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaHealth().controls_allowed << std::endl;
+			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getControlsAllowed() << std::endl;
+//			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
 		}
 		
 		// Setting HUD elements:
@@ -81,7 +83,7 @@ int main(int argc, char **argv) {
 		toyotaHandler.setHudMiniCar( mJoystickState.getDX() > 0 );
 		
 		// This will cancel the cruise control, cruise must be rest by driver to allow further controls
-		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
+//		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
 		
 		// Acceleration command building.  Units are m/s^2
 		// The following are hard-coded limits in the Panda firmware:
@@ -110,11 +112,12 @@ int main(int argc, char **argv) {
 		// The heartbeat failing will also trigger some HUD elements like setHudRepeatedBeeps and setHudLdaAlert
 		if ( !mJoystickState.getCircle() ) {
 			toyotaHandler.setAcceleration(acceleration);
-			toyotaHandler.setSteerTorque(steerTorque);
+//			toyotaHandler.setSteerTorque(steerTorque);
+			toyotaHandler.setSteerTorque(0);
 		}
 		
 		// Debug Joystick:
-		//mJoystickState.printState();
+//		mJoystickState.printState();
 		
 	}
 	
