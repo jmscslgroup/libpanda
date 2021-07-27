@@ -86,6 +86,7 @@ Libpanda may be able to work on most linux machines, however the following hardw
 
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
+
 * [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
 * [USB A to A to connect Pi to Panda](https://www.amazon.com/AINOPE-Rupture-Compatible-Enclosures-Cool-Grey/dp/B08FTDWPTX/ref=sr_1_2_sspa?dchild=1&keywords=USB+A+to+USB+A+10+FT%2C+NIMASO&qid=1627424318&s=industrial&sr=1-2-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEzUjdNRVgwQTJNQjY1JmVuY3J5cHRlZElkPUEwNDk1NTg2MVVKR0NXV0RYTDVSNSZlbmNyeXB0ZWRBZElkPUEwNzc1OTMyMjRBMlQ3WDRRWEEmd2lkZ2V0TmFtZT1zcF9hdGYmYWN0aW9uPWNsaWNrUmVkaXJlY3QmZG9Ob3RMb2dDbGljaz10cnVl)
 * [Pimoroni Blinkt!](https://www.adafruit.com/product/3195)
@@ -107,7 +108,7 @@ These items are for convenience and will not change the function of the baove ha
 #### Optional power for data collection
 
 * [x728 Raspebrry Pi UPS](https://www.amazon.com/Geekworm-Raspberry-Management-Detection-Shutdown/dp/B087FXLZZH)
-* [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/liogea-LG3400G-3400mAh-Rechargeable-Batteries/dp/B07YBTQSQL/ref=sr_1_2?keywords=18650b&qid=1585673515&s=electronics&sr=1-2)
+* [18650 Batteries with no built-in protection, qty 2 per x750](https://www.amazon.com/Upgraded-AexPower-Li-Polymer-EB-BG930ABE-Replacement/dp/B07BC9RW22/ref=sr_1_3?dchild=1&keywords=18650+3400mah&qid=1626384741&sr=8-3)
 
 
 The x728 and batteries are shown as optional since they are not required to record data, nor needed for future control of the vehicle.  They will allow for the automatic data-upload upon power shut-down from the vehicle by maintaining power to the Pi, which will be able to detect the new power state and invoke a CyVerse data synchronization before shutting itself down.
@@ -169,10 +170,13 @@ The Black Panda does not feature any DIP switches, but the associated Car Harnes
 
 >Note: The above items were found out by assuming that the USB connectors followed standard protocols but this is **very importantly not the case**.  **Thus to make use of the Black Panda, modification or special parts must be ordered to not cause any hardware failure**.
 
-Fortunately htere are a few workarounds that will let you safely make use of the Black Panda.  
+Fortunately there are a few workarounds that will let you safely make use of the Black Panda.  
 
-#### Purchasing an Adapter:
-The least invasive method is to purchase a cable that has only the data lines connected.  These are however difficult to comeby.  One example of a cable is [this power-switchable cable](https://www.amazon.com/dp/B07T9BRNHW/ref=sspa_dk_detail_5?psc=1&pd_rd_i=B07T9BRNHW&pd_rd_w=L4Rlk&pf_rd_p=48d372c1-f7e1-4b8b-9d02-4bd86f5158c5&pd_rd_wg=TWwR4&pf_rd_r=46V14Z53DTJWNP6WXF3Q&pd_rd_r=5f3b21c8-2c73-4df3-a883-129fbd9c115a&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExTlZMTDJIU1JXVVY4JmVuY3J5cHRlZElkPUEwMDAxMDA3MVQ2QlFZN0lORTVWOCZlbmNyeXB0ZWRBZElkPUEwMzY4MzU0MTBNRDJQQkpWRkdVTSZ3aWRnZXROYW1lPXNwX2RldGFpbCZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=), however please keep in mind that you must ensure that the switch is never accidentally flipped.  Also, this means that a person new tot he Black Panda may be unaware of the cables importance, bypass the cable, and cause hardware damage.
+#### Purchasing a Panda Paw:
+The easiest approach is to buy a [Panda Paw](https://comma.ai/shop/products/panda-paw), which lets you safely connect the Panda to a laptop or other USB host. No hardware hacks or nonstandard cables are required. You just need to remember to flip the power switch to OFF when you connect the Panda to your car.
+
+#### Purchasing Another Adapter:
+Another approach is to purchase a USB-A-to-USB-A cable, along with an adapter that has only the data lines connected.  These are however difficult to come by.  One example of an adapter is [this power-switchable cable](https://www.amazon.com/dp/B07T9BRNHW/), however please keep in mind that you must ensure that the switch is never accidentally flipped.  Also, this means that a person new to the Black Panda may be unaware of the cable's importance, bypass the cable, and cause hardware damage.
 
 #### Using Scotch Tape on the USB Cable:
 A simple solution without the purchase of a separate adapter that can be easily done at home is to tape-off the +5V line in the USB cable.  In the following image, you can see the placement of the tape within the cable.  This end may be plugged into either the Black Panda or the Raspberry Pi.  This method is non-invasive and easily reversible.  To read more about the pinouts with USB type A connectors, refer to [this website](https://www.electroschematics.com/usb-how-things-work/?utm_referrer=https%3A%2F%2Fwww.google.com).  This method also has the same issue as using the adapter method above regarding having knowledge about the cable, but even moreso since the cable change with tape is subtle.  A person could potentially swap out cables without realizing the tape is on the old cable, causing hardware damage.

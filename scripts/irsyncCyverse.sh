@@ -1,5 +1,7 @@
 #/bin/bash
 
+/usr/local/sbin/check_VIN_before_upload
+
 VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
 

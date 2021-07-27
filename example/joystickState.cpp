@@ -26,12 +26,12 @@ JoystickState::JoystickState() {
 void JoystickState::newDeviceEvent( const DeviceEvent* event ) {	// override from DeviceObserver
 	if (event->type == TYPE_AXIS) {
 		switch (event->id) {
-			case AXIS_RX: valuesCurrent.axisRX = ((double)event->value)/32768.0; break;
-			case AXIS_RY: valuesCurrent.axisRY = -((double)event->value)/32768.0; break;
-			case AXIS_LX: valuesCurrent.axisLX = ((double)event->value)/32768.0; break;
-			case AXIS_LY: valuesCurrent.axisLY = -((double)event->value)/32768.0; break;
-			case AXIS_DX: valuesCurrent.axisDX = ((double)event->value)/32768.0; break;
-			case AXIS_DY: valuesCurrent.axisDY = -((double)event->value)/32768.0; break;
+			case AXIS_RX: valuesCurrent.axisRX = ((double)event->value)/32767.0; break;
+			case AXIS_RY: valuesCurrent.axisRY = -((double)event->value)/32767.0; break;
+			case AXIS_LX: valuesCurrent.axisLX = ((double)event->value)/32767.0; break;
+			case AXIS_LY: valuesCurrent.axisLY = -((double)event->value)/32767.0; break;
+			case AXIS_DX: valuesCurrent.axisDX = ((double)event->value)/32767.0; break;
+			case AXIS_DY: valuesCurrent.axisDY = -((double)event->value)/32767.0; break;
 			default:
 				std::cout << "Unrecognized Axis id: " << (int)event->id << "value:" << event->value << std::endl;
 				break;

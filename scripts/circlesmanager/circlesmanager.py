@@ -72,14 +72,20 @@ class CirclesManager:
 			if os.system("simplePing") == 0:	# Error code 0 means success
 				os.system("echo \"- - -  Internet was found!  Running irsync\"")
 				#os.system("irsyncCyverse -f")
+				pandarecordWasRunning = os.system("simpleCheckPandarecord")
+				canWasRunning = os.system("simpleCheckCan")
 				os.system("service pandarecord stop")
+				os.system("service can stop")
 				os.system("runuser -l circles -c 'irsyncCyverse -f'")
 				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync
 					hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
 					if not hasExternalPower:
 						self.powerDisconnectTime = self.powerOffTimeoutInSeconds
 					else:
-						os.system("service pandarecord start")
+						if pandarecordWasRunning:
+							os.system("service pandarecord start")
+						if canWasRunning:
+							os.system("service can start")
 				except Exception as e:
 					logging.info(e)
 			

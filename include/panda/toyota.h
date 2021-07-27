@@ -35,7 +35,7 @@
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
 #define TOYOTA_COMMAND_THREAD_RATE (600.0)	// Defines the rate of the thread, not for any particular command to be sent.
-#define TOYOTA_RATE_HEARTBEAT (1.0)			// This is for the panda in general, not Toyota specific
+#define TOYOTA_RATE_HEARTBEAT (0.1)			// This is for the panda in general, not Toyota specific
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
 #define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
@@ -118,7 +118,7 @@ void printFrame( Panda::CanFrame frame );
  \par
  This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
-class ToyotaHandler : public Mogi::Thread {
+class ToyotaHandler : public Mogi::Thread, public Panda::CanListener {
 private:
 	
 	// Overloaded from Mogi::Thread.
@@ -149,6 +149,8 @@ private:
 	
 	Panda::Handler* pandaHandler;
 	PandaHealth health;
+	bool controls_allowed_prior;
+	bool controls_allowed;	// This is based on a rising edge of the panda health
 	
 	int decimatorHeartbeat;
 	int decimatorLka;
@@ -183,6 +185,14 @@ private:
 	// Safety management, only send control commands if they are continuously updated
 	int heartBeatSteer;
 	int heartBeatAcceleration;
+	
+	// These are read directly from teh CAN bus:
+	bool gas_released; // message ID 466
+	bool brake_pressed; // message ID 550
+	bool car_cruise_ready_for_commands; // message ID 466
+	
+	// listend to CAN information for state handling:
+	void newDataNotification(CanFrame* canFrame);
 	
 public:
 	
