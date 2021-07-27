@@ -26,7 +26,7 @@ cd ../circlesmanager
 sudo ./install.sh
 cd ../..
 
-sudo apt install bpom
+sudo apt install bmon
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
@@ -68,13 +68,25 @@ sudo chmod g+s .
 # With these changes in place (which can be done during install for the libpanda stuff) we can have everything such that you do not need to be sudo su to write to the bagfiles.
 
 
+MISMATCHFILES=libpanda-check-mismatched-files
 cd ~
-git clone https://github.com/graciegumm/libpanda-check-mismatched-files.git
-cd ~/libpanda-check-mismatched-files
+if [ -d ${MISMATCHFILES} ]; then
+	echo "${MISMATCHFILES} already exists...executing git pull"
+	cd ${MISMATCHFILES}
+	git pull
+	cd ~
+else
+	git clone https://github.com/graciegumm/libpanda-check-mismatched-files.git
+fi
+cd ~/${MISMATCHFILES}
 sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
+
 
 
 # the following needs to run AFTER installing irods commands
 cd ~/irods-icommands-debs
 ./install.sh
 sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
+=======
+cd ~
+
