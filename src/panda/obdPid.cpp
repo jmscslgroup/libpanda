@@ -199,10 +199,10 @@ void ObdPidRequest::doAction() {
 					data = NULL;
 				}
 				
-				if ( (dataLength + 3) > frame.dataLength ) {
-					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_FIRST protocol is larger than CanFrame\n");
-					continue;
-				}
+//				if ( (dataLength + 5) > frame.dataLength ) {
+//					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_FIRST protocol is larger than CanFrame\n");
+//					continue;
+//				}
 				
 				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
 				memcpy(data, &frame.data[5], 3);  // first message has first 3 bytes
