@@ -24,7 +24,7 @@ cd ../circlesmanager
 sudo ./install.sh
 cd ../..
 
-
+sudo apt install bpom
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
