@@ -13,7 +13,7 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF
 sudo apt-get update
 #sudo apt-get upgrade
 
-sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python3-empy python-setuptools catkin python3-catkin python3-catkin-pkg python3-yaml
+sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python-setuptools catkin # python3-catkin python3-empy python3-catkin-pkg python3-yaml
 
 sudo rosdep init
 rosdep update

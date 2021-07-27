@@ -46,6 +46,7 @@ ObdPidRequest::~ObdPidRequest() {
 	
 	if (data) {
 		free(data);
+		data = NULL;
 	}
 }
 
@@ -120,6 +121,10 @@ void ObdPidRequest::doAction() {
 		printf("\n");
 		*/
 		
+		if (frame.dataLength == 0) {
+			fprintf(stderr, "The frame length of this PID request is 0\n");
+			continue;
+		}
 		
 		// then process
 		// TODO: Take the below logic and make a CAN multi-header handler
@@ -128,9 +133,16 @@ void ObdPidRequest::doAction() {
 			case CAN_FRAME_SINGLE:
 				// Shouldn't reach here
 				//std::cout << "This is a CAN_FRAME_SINGLE" << std::endl;
+				if (frame.dataLength < 2) {
+					fprintf(stderr, "Error: CAN_FRAME_SINGLE data length is too small: frame.dataLength=%d < 2\n", frame.dataLength);
+					continue;
+				}
 				if (frame.data[1] != (0x40 | mode) || //0x49 ||
 					frame.data[2] != pid ) {
 					//printf("Warning: this response does not correspond to the PID request\n");
+//					std::cerr << "The frame length of this PID request is 0" << std::endl;
+					fprintf(stderr, "Warning: this response does not correspond to the PID request\n");
+					
 					continue;
 				}
 				
@@ -139,6 +151,12 @@ void ObdPidRequest::doAction() {
 					
 				if (data != NULL) {
 					free(data);
+					data = NULL;
+				}
+				
+				if ( (dataLength + 3) > frame.dataLength ) {
+					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_SINGLE protocol is larger than CanFrame\n");
+					continue;
 				}
 
 				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
@@ -152,6 +170,11 @@ void ObdPidRequest::doAction() {
 				
 			case CAN_FRAME_FIRST:
 				//std::cout << "This is a CAN_FRAME_FIRST" << std::endl;
+				
+				if (frame.dataLength < 5) {
+					fprintf(stderr, "Error: CAN_FRAME_FIRST data length is too small: frame.dataLength=%d < 5\n", frame.dataLength);
+					continue;
+				}
 				
 				// If this is a correct response, data 2-4 should be 0x49 0x02 0x01
 				if (frame.data[2] != (0x40 | mode) || //0x49 ||
@@ -173,7 +196,14 @@ void ObdPidRequest::doAction() {
 				//dataLength = dataLength - 3;
 				if (data != NULL) {
 					free(data);
+					data = NULL;
 				}
+				
+				if ( (dataLength + 3) > frame.dataLength ) {
+					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_FIRST protocol is larger than CanFrame\n");
+					continue;
+				}
+				
 				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
 				memcpy(data, &frame.data[5], 3);  // first message has first 3 bytes
 				
@@ -184,6 +214,12 @@ void ObdPidRequest::doAction() {
 				//std::cout << "This is a CAN_FRAME_CONSECUTIVE" << std::endl;
 				index = frame.data[0] & 0x0F;
 				//printf(" - Frame index: %d\n", index);
+				
+				if ( (7 + 1) > frame.dataLength ) {
+					fprintf(stderr, "Error: CAN_FRAME_CONSECUTIVE data length is too small: frame.dataLength=%d < 8\n", frame.dataLength);
+					continue;
+				}
+				
 				memcpy(&data[3 + 7*(index-1)], &frame.data[1], 7);
 				if ( (3 + 7*index) >= dataLength) {
 //					vinHasBeenRead = true;
