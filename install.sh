@@ -87,6 +87,7 @@ sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
 cd ~/irods-icommands-debs
 ./install.sh
 sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
-=======
+
+
 cd ~
 
