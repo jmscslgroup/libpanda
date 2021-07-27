@@ -19,6 +19,7 @@ git clone https://github.com/jmscslgroup/margin
 git clone https://github.com/jmscslgroup/ghostfollower
 git clone https://github.com/jmscslgroup/ghostfollower_max
 git clone https://github.com/jmscslgroup/micromodel
+git clone https://github.com/jmscslgroup/micromodelv2
 git clone https://github.com/jmscslgroup/followerstopperth4rl
 git clone https://github.com/jmscslgroup/followerstoppermax.git
 git clone https://github.com/jmscslgroup/velocity_controller

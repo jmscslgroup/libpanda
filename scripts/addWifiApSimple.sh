@@ -22,8 +22,8 @@ if [ -z "$ssid" ] || [ -z "$passphrase" ]; then
 fi
 	
 
-if [ "${name}" = "y" ];
-then
+#if [ "${name}" = "y" ];
+#then
 	#read -p " - Enter SSID (WiFi name):" ssid
 
 	#read -sp " - Enter passphrase:" passphrase
@@ -39,5 +39,5 @@ then
 
 	echo "Conifugaration set:"
 	echo "- /etc/wpa_supplicant/wpa_supplicant.conf"
-fi
+#fi
 echo "----------------------------"

@@ -27,6 +27,8 @@ fi
 
 cp circlesmanager.py /usr/local/sbin/circlesmanager.py
 cp simplePing.sh /usr/local/sbin/simplePing
+cp simpleCheckCan.sh /usr/local/sbin/simpleCheckCan
+cp simpleCheckPandarecord.sh /usr/local/sbin/simpleCheckPandarecord
 
 cp circlesmanager.service.txt  /etc/systemd/system/circlesmanager.service
 chmod 655 /etc/systemd/system/circlesmanager.service

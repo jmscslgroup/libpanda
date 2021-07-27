@@ -5,6 +5,8 @@ if [ ! -d /etc/libpanda.d ]; then
 fi
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
+sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
+
 if [[ ! -f "/etc/libpanda.d/vin" ]]; then
 	sudo eval 'echo "circles" > /etc/libpanda.d/vin'
 fi
