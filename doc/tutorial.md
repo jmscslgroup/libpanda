@@ -87,7 +87,7 @@ Libpanda may be able to work on most linux machines, however the following hardw
 * [Raspberry Pi 4GB](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27/ref=sxin_2_ac_d_pm?ac_md=4-0-VW5kZXIgJDUw-ac_d_pm&cv_ct_cx=raspberry+pi+4&keywords=raspberry+pi+4&pd_rd_i=B07TD42S27&pd_rd_r=897fc6f0-a9d6-430f-8811-c07c3c7b9e19&pd_rd_w=K0xrG&pd_rd_wg=WSCdw&pf_rd_p=0e223c60-bcf8-4663-98f3-da892fbd4372&pf_rd_r=AGXA47R72X2ZKA2F8X3Z&psc=1&qid=1583948920)
 * [64GB SD card](https://www.amazon.com/Samsung-Class-Adapter-MB-MC64DA-AM/dp/B01273JZMG?tag=androidcentralb-20&ascsubtag=UUacUdUnU77910YYwYg)
 * [USB 2.0/3.0 to USB C adapter cable for power](https://www.amazon.com/Anker-Powerline-Pull-up-Resistor-Samsung/dp/B01A6F3WHG/ref=sr_1_5?keywords=usb+3+to+usb+C&qid=1583954394&s=electronics&sr=1-5)
-* [USB A to A to connect Pi to Panda](https://www.amazon.com/NIMASO-Double-Compatible-External-Player/dp/B08DK8RPRW/)
+* [USB A to A to connect Pi to Panda](https://www.amazon.com/AINOPE-Rupture-Compatible-Enclosures-Cool-Grey/dp/B08FTDWPTX/ref=sr_1_2_sspa?dchild=1&keywords=USB+A+to+USB+A+10+FT%2C+NIMASO&qid=1627424318&s=industrial&sr=1-2-spons&psc=1&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEzUjdNRVgwQTJNQjY1JmVuY3J5cHRlZElkPUEwNDk1NTg2MVVKR0NXV0RYTDVSNSZlbmNyeXB0ZWRBZElkPUEwNzc1OTMyMjRBMlQ3WDRRWEEmd2lkZ2V0TmFtZT1zcF9hdGYmYWN0aW9uPWNsaWNrUmVkaXJlY3QmZG9Ob3RMb2dDbGljaz10cnVl)
 * [Pimoroni Blinkt!](https://www.adafruit.com/product/3195)
 
 	This is a nifty, inexpensive, and compact set of addressable LEDs that will be supported for displaying the state of various scripting components such as WiFi connectivity, data upload, and power states, but is not required for any functionality.
