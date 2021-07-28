@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
 	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
-	pandaHandler.getCan().addObserver(&toyotaHandler);
+//	pandaHandler.getCan().addObserver(&toyotaHandler);
 	
 	// Let's roll
 	pandaHandler.initialize();

@@ -70,6 +70,10 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 	// Start the heartbeats to wait for a command
 	heartBeatSteer = TOYOTA_COMMAND_THREAD_RATE;
 	heartBeatAcceleration = TOYOTA_COMMAND_THREAD_RATE;
+	
+	if (pandaHandler != NULL) {
+		pandaHandler->getCan().addObserver(this);
+	}
 }
 
 void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
@@ -127,7 +131,7 @@ void ToyotaHandler::entryAction() {
 	std::cout << " - Setting power save to POWER_SAVE_STATUS_DISABLED:" << std::endl;
 	pandaHandler->getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 	
-	std::cout << " - Setting Safety to Toyota:" << std::endl;
+	std::cout << " - Setting Safety to SAFETY_TOYOTA" << std::endl;
 	pandaHandler->getUsb().setSafetyMode(SAFETY_TOYOTA);
 	
 }
