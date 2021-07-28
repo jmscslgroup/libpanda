@@ -12,7 +12,8 @@ if [ ! -d catkin_ws/src ]; then
 fi
 cd catkin_ws/src
 
-declare -a repositories=(can_to_ros transfer_pkg followerstopperth margin ghostfollower ghostfollower_max micromodel micromodelv2 followerstopperth4rl followerstoppermax velocity_controller ghost_mode velocityramp)
+# The following are repositories under jmscslgroup:
+declare -a repositories=(can_to_ros transfer_pkg followerstopperth margin ghostfollower ghostfollower_max micromodel micromodelv2 followerstopperth4rl followerstoppermax velocity_controller ghost_mode velocityramp setpointreader)
 
 for repository in "${repositories[@]}"
 do

@@ -18,7 +18,8 @@ do
 done
 
 if [ -z "$ssid" ] || [ -z "$passphrase" ]; then
-	echo "Usage: $1 -s <ssid> -p <passphrase>"
+	echo "Usage: $0 -s <ssid> -p <passphrase>"
+	exit 1
 fi
 	
 
@@ -31,13 +32,24 @@ fi
 
 	echo "Configuring WPA Supplicant..."
 
-	wpa_passphrase ${ssid} ${passphrase} >> /etc/wpa_supplicant/wpa_supplicant.conf
-
-	sed -i "/#psk=/d" /etc/wpa_supplicant/wpa_supplicant.conf
+#	wpa_passphrase ${ssid} ${passphrase} >> /etc/wpa_supplicant/wpa_supplicant.conf
+	wpa_info=$(wpa_passphrase ${ssid} ${passphrase})
+	
+	if [ $? -ne 1 ];
+	then
+		echo "Saving"
+		echo "${wpa_info}"
+		echo "${wpa_info}" >> /etc/wpa_supplicant/wpa_supplicant.conf
+		sed -i "/#psk=/d" /etc/wpa_supplicant/wpa_supplicant.conf
+		
+		echo "Confugaration saved to /etc/wpa_supplicant/wpa_supplicant.conf"
+	else
+		echo "Invalid - NOT setting wpa_supplicant.conf"
+		echo "${wpa_info}"
+	fi
 
 	unset passphrase
 
-	echo "Conifugaration set:"
-	echo "- /etc/wpa_supplicant/wpa_supplicant.conf"
+	
 #fi
 echo "----------------------------"
