@@ -4,7 +4,7 @@ if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
 
-tar xzf scripts/irods-icommands-debs.tgz -C ~/irods-icommands-debs
+tar xzf scripts/irods-icommands-debs.tgz -C ~/
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
@@ -83,11 +83,15 @@ sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
 
 
 
-# the following needs to run AFTER installing irods commands
+
 cd ~/irods-icommands-debs
 ./install.sh
+# the following needs to run AFTER installing irods commands
 sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
 
+
+# enable persisten journalctl logging:
+sudo sed -i 's/#Storage=auto/Storage=Persistent/g' /etc/systemd/journald.conf 
 
 cd ~
 

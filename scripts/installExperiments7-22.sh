@@ -41,7 +41,13 @@ done
 #git clone https://github.com/jmscslgroup/velocityramp
 
 # this requires credentials:
-git clone https://github.com/CIRCLES-consortium/algos-stack
+if [ -d algos-stack ]; then
+	cd algos-stack
+	git pull
+	cd ..
+else
+	git clone https://github.com/CIRCLES-consortium/algos-stack
+fi
 cd algos-stack
 git checkout swil_rahul
 
