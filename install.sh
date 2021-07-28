@@ -1,10 +1,28 @@
 #!/bin/bash
 
+declare -a depencencies=( bmon )
+toInstall=()
+echo "Dependencies:" ${depencencies[@]}
+for dependency in "${depencencies[@]}"
+do
+	echo "Checking" $dependency
+	if [ $(dpkg-query -W -f='${Status}' $dependency 2>/dev/null | grep -c "ok installed") -eq 0 ];
+	then
+		echo "not installed:" $dependency
+		toInstall+=($dependency)
+	fi
+done
+echo ${toInstall[@]}
+
+if [ ${#toInstall[@]} -ne 0 ];
+then
+	apt-get update
+	apt-get install -y ${toInstall[@]}
+fi
+
 if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
-
-tar xzf scripts/irods-icommands-debs.tgz -C ~/
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
@@ -25,8 +43,6 @@ sudo ./install.sh
 cd ../circlesmanager
 sudo ./install.sh
 cd ../..
-
-sudo apt install bmon
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
@@ -83,15 +99,19 @@ sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
 
 
 
+if [ ! -d ~/irods-icommands-debs ]; then
+	tar xzf ~/libpanda/scripts/irods-icommands-debs.tgz -C ~/
 
-cd ~/irods-icommands-debs
-./install.sh
-# the following needs to run AFTER installing irods commands
-sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
-
+	cd ~/irods-icommands-debs
+	./install.sh
+	# the following needs to run AFTER installing irods commands
+	sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
+else
+	echo "irods icommands already isntalled."
+fi
 
 # enable persisten journalctl logging:
-sudo sed -i 's/#Storage=auto/Storage=Persistent/g' /etc/systemd/journald.conf 
+sudo sed -i 's/#Storage=auto/Storage=Persistent/g' /etc/systemd/journald.conf
 
 cd ~
 
