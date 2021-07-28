@@ -190,6 +190,7 @@ private:
 	bool gas_released; // message ID 466
 	bool brake_pressed; // message ID 550
 	bool car_cruise_ready_for_commands; // message ID 466
+	unsigned char cruise_state;
 	
 	// listend to CAN information for state handling:
 	void newDataNotification(CanFrame* canFrame);
@@ -331,6 +332,8 @@ public:
 	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
 	bool getControlsAllowed();
+	bool getCarCruiseReadyForCommands();
+	unsigned char getCarCruiseState();	// from message 466
 	
 	/*!
 	 \brief Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this

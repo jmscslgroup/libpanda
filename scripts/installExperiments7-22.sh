@@ -12,19 +12,33 @@ if [ ! -d catkin_ws/src ]; then
 fi
 cd catkin_ws/src
 
-git clone https://github.com/jmscslgroup/can_to_ros.git
-git clone https://github.com/jmscslgroup/transfer_pkg.git
-git clone https://github.com/jmscslgroup/followerstopperth
-git clone https://github.com/jmscslgroup/margin
-git clone https://github.com/jmscslgroup/ghostfollower
-git clone https://github.com/jmscslgroup/ghostfollower_max
-git clone https://github.com/jmscslgroup/micromodel
-git clone https://github.com/jmscslgroup/micromodelv2
-git clone https://github.com/jmscslgroup/followerstopperth4rl
-git clone https://github.com/jmscslgroup/followerstoppermax.git
-git clone https://github.com/jmscslgroup/velocity_controller
-git clone https://github.com/jmscslgroup/ghost_mode
-git clone https://github.com/jmscslgroup/velocityramp
+declare -a repositories=(can_to_ros transfer_pkg followerstopperth margin ghostfollower ghostfollower_max micromodel micromodelv2 followerstopperth4rl followerstoppermax velocity_controller ghost_mode velocityramp)
+
+for repository in "${repositories[@]}"
+do
+	echo "Checking" $repository
+	if [ -d ${repository} ]; then
+		cd ${repository}
+		git pull
+		cd ..
+	else
+		git clone "https://github.com/jmscslgroup/${repository}.git"
+	fi
+done
+
+#git clone https://github.com/jmscslgroup/can_to_ros.git
+#git clone https://github.com/jmscslgroup/transfer_pkg.git
+#git clone https://github.com/jmscslgroup/followerstopperth
+#git clone https://github.com/jmscslgroup/margin
+#git clone https://github.com/jmscslgroup/ghostfollower
+#git clone https://github.com/jmscslgroup/ghostfollower_max
+#git clone https://github.com/jmscslgroup/micromodel
+#git clone https://github.com/jmscslgroup/micromodelv2
+#git clone https://github.com/jmscslgroup/followerstopperth4rl
+#git clone https://github.com/jmscslgroup/followerstoppermax.git
+#git clone https://github.com/jmscslgroup/velocity_controller
+#git clone https://github.com/jmscslgroup/ghost_mode
+#git clone https://github.com/jmscslgroup/velocityramp
 
 # this requires credentials:
 git clone https://github.com/CIRCLES-consortium/algos-stack

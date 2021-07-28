@@ -64,7 +64,7 @@ void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
 //		vinRequest.messageID = 0x18DB33F1;
 	vinRequest.data[0] = 0x02;	// designates length, unsure if this is a sub-protocol of the data
 	vinRequest.data[1] = mode;	// Mode
-	vinRequest.data[2] = pid;	// VIN PID for the mode
+	vinRequest.data[2] = pid;	// PID for the mode
 	vinRequest.data[3] = 0x00;
 	vinRequest.data[4] = 0x00;
 	vinRequest.data[5] = 0x00;
@@ -99,6 +99,18 @@ void ObdPidRequest::sendFlowControl() {
 	canHandler->sendMessage(vinRequest);
 }
 
+void printFrameInformation(CanFrame& frame) {
+	fprintf(stderr, " - Message ID: %04x\n", frame.messageID);
+	fprintf(stderr, " - BUS       : %d\n", frame.bus);
+	fprintf(stderr, " - Data Received: ");
+	
+	for (int i = 0; i < frame.dataLength; i++) {
+		fprintf(stderr, "0x%02x ", frame.data[i]);
+	}
+	fprintf(stderr, "\n");
+	
+}
+
 void ObdPidRequest::doAction() {
 	CanFrame frame;
 	while (!frameQueue.empty()) {
@@ -123,6 +135,7 @@ void ObdPidRequest::doAction() {
 		
 		if (frame.dataLength == 0) {
 			fprintf(stderr, "The frame length of this PID request is 0\n");
+			printFrameInformation(frame);
 			continue;
 		}
 		
@@ -135,6 +148,7 @@ void ObdPidRequest::doAction() {
 				//std::cout << "This is a CAN_FRAME_SINGLE" << std::endl;
 				if (frame.dataLength < 2) {
 					fprintf(stderr, "Error: CAN_FRAME_SINGLE data length is too small: frame.dataLength=%d < 2\n", frame.dataLength);
+					printFrameInformation(frame);
 					continue;
 				}
 				if (frame.data[1] != (0x40 | mode) || //0x49 ||
@@ -142,6 +156,7 @@ void ObdPidRequest::doAction() {
 					//printf("Warning: this response does not correspond to the PID request\n");
 //					std::cerr << "The frame length of this PID request is 0" << std::endl;
 					fprintf(stderr, "Warning: this response does not correspond to the PID request\n");
+					printFrameInformation(frame);
 					
 					continue;
 				}
@@ -156,6 +171,7 @@ void ObdPidRequest::doAction() {
 				
 				if ( (dataLength + 3) > frame.dataLength ) {
 					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_SINGLE protocol is larger than CanFrame\n");
+					printFrameInformation(frame);
 					continue;
 				}
 
@@ -171,8 +187,9 @@ void ObdPidRequest::doAction() {
 			case CAN_FRAME_FIRST:
 				//std::cout << "This is a CAN_FRAME_FIRST" << std::endl;
 				
-				if (frame.dataLength < 5) {
-					fprintf(stderr, "Error: CAN_FRAME_FIRST data length is too small: frame.dataLength=%d < 5\n", frame.dataLength);
+				if (frame.dataLength < 8) {
+					fprintf(stderr, "Error: CAN_FRAME_FIRST data length is too small: frame.dataLength=%d < 8\n", frame.dataLength);
+					printFrameInformation(frame);
 					continue;
 				}
 				
@@ -180,7 +197,8 @@ void ObdPidRequest::doAction() {
 				if (frame.data[2] != (0x40 | mode) || //0x49 ||
 					frame.data[3] != pid ||//0x02 ||
 					frame.data[4] != 0x01) {
-					//printf("Warning: this response does not correspond to the VIN request\n");
+					fprintf(stderr, "Warning: this response does not correspond to the VIN request\n");
+					printFrameInformation(frame);
 					continue;
 				}
 				
@@ -201,10 +219,11 @@ void ObdPidRequest::doAction() {
 				
 //				if ( (dataLength + 5) > frame.dataLength ) {
 //					fprintf(stderr, "Error: Data Length of OBD PID packet in CAN_FRAME_FIRST protocol is larger than CanFrame\n");
+//					printFrameInformation(frame);
 //					continue;
 //				}
 				
-				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
+				data = (unsigned char*)malloc(sizeof(unsigned char) * 3);//dataLength);
 				memcpy(data, &frame.data[5], 3);  // first message has first 3 bytes
 				
 				sendFlowControl();
@@ -217,6 +236,7 @@ void ObdPidRequest::doAction() {
 				
 				if ( (7 + 1) > frame.dataLength ) {
 					fprintf(stderr, "Error: CAN_FRAME_CONSECUTIVE data length is too small: frame.dataLength=%d < 8\n", frame.dataLength);
+					printFrameInformation(frame);
 					continue;
 				}
 				

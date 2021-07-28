@@ -601,17 +601,21 @@ void Usb::stopRecording() {
 
 	int status;
 	if (handler != NULL) {
+		std::cout << " - Releasing libusb interface..." << std::endl;
 		if((status = libusb_release_interface(handler, 0) != LIBUSB_SUCCESS)) {
 			std::cerr << "FAILED: Usb::end() libusb_release_interface() had an error:" << std::endl;
 			printError(status);
 		};
-
+		
+		std::cout << " - Closing libusb handler..." << std::endl;
 		libusb_close(handler);	// causes libusb_handle_events to exit
 		handler = NULL;
 	}
 
+	
+	std::cout << " - Waiting for Panda::Usb to close..." << std::endl;
 	WaitForInternalThreadToExit();
-
+	std::cout << " - Done!" << std::endl;
 }
 
 // Thread entry:

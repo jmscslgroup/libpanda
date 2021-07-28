@@ -24,6 +24,7 @@
  */
 
 #include <iostream>
+#include <signal.h>
 #include <unistd.h>
 #include <cstring>
 #include <cmath>
@@ -31,6 +32,12 @@
 #include "panda/toyota.h"
 
 #include "joystickState.h"
+
+static volatile bool keepRunning = true;
+void killPanda(int killSignal) {
+	std::cerr << std::endl << "Caught SIGINT: Terminating..." << std::endl;
+	keepRunning = false;
+}
 
 int main(int argc, char **argv) {
 	
@@ -42,6 +49,8 @@ int main(int argc, char **argv) {
 	mJoystick.open("/dev/input/js0");
 	mJoystick.start();
 
+	//Set up graceful exit
+	signal(SIGINT, killPanda);
 
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
@@ -58,7 +67,7 @@ int main(int argc, char **argv) {
 	
 	int printPandaHealthDecimator = 0;
 	
-	while(1) {
+	while(keepRunning) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
 		if(printPandaHealthDecimator++ >= 1) {	// run at 1Hz
@@ -123,8 +132,13 @@ int main(int argc, char **argv) {
 	
 	
 	// Will never reach here
+	std::cout << "Stopping toyotaHandler..." << std::endl;
+	std::cout << "Stopping pandaHandler..." << std::endl;
 	toyotaHandler.stop();
 	pandaHandler.stop();
 
+	std::cout << "simpleSend is Done." << std::endl;
+//	return 0;
+	exit(EXIT_SUCCESS);
 	return 0;
 }
