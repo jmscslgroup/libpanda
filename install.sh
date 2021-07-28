@@ -28,7 +28,7 @@ sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
 
 if [[ ! -f "/etc/libpanda.d/vin" ]]; then
-	sudo eval 'echo "circles" > /etc/libpanda.d/vin'
+	sudo -s eval 'echo "circles" > /etc/libpanda.d/vin'
 fi
 
 sudo ./build.sh
