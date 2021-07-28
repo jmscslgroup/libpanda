@@ -35,7 +35,7 @@
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
 #define TOYOTA_COMMAND_THREAD_RATE (600.0)	// Defines the rate of the thread, not for any particular command to be sent.
-#define TOYOTA_RATE_HEARTBEAT (0.1)			// This is for the panda in general, not Toyota specific
+#define TOYOTA_RATE_HEARTBEAT (1.0)			// This is for the panda in general, not Toyota specific
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
 #define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command

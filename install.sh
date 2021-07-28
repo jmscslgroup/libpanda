@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ $EUID == 0 ]];
+  then echo "Do NOT run this script as root"
+  exit
+fi
+
 declare -a depencencies=( bmon )
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
@@ -26,12 +31,13 @@ fi
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
+sudo cp scripts/installVandertestRosPackages.sh /usr/sbin/updateVandertest
 
 if [[ ! -f "/etc/libpanda.d/vin" ]]; then
 	sudo -s eval 'echo "circles" > /etc/libpanda.d/vin'
 fi
 
-sudo ./build.sh
+./build.sh
 cd scripts/blinkt
 sudo ./install.sh
 cd ../crazypifi

@@ -2,7 +2,12 @@
 # Author: Matt Bunting
 
 echo "----------------------------"
-echo "Installing can_to_ros"
+if [[ $EUID == 0 ]];
+  then echo "Do NOT run this script as root"
+  exit
+fi
+
+echo "Installing/Updating Vandertest ROS packages"
 
 source ~/.bashrc
 
