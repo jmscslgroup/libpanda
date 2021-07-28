@@ -51,7 +51,19 @@ ObdPidRequest::~ObdPidRequest() {
 }
 
 void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
+	stop();
+	lock();
+	
 	busy = true;
+	
+	this->dataLength = 0;
+	this->assignedId = -1;
+	frameQueue = std::queue<CanFrame>();
+	
+	if (data != NULL) {
+		free(data);
+		data = NULL;
+	}
 	
 	this->mode = mode;
 	this->pid = pid;
@@ -72,6 +84,8 @@ void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
 	vinRequest.data[7] = 0x00;
 	vinRequest.dataLength = 8;
 	
+	
+	unlock();
 	start();
 	canHandler->sendMessage(vinRequest);
 }
@@ -121,17 +135,17 @@ void ObdPidRequest::doAction() {
 		unlock();
 		
 		// debug
-		/*
-		std::cout << "Got a response!" << std::endl;
-		printf(" - Message ID: %04x\n", frame.messageID);
-		printf(" - BUS       : %d\n", frame.bus);
-		printf(" - Data Received: ");
 		
-		for (int i = 0; i < frame.dataLength; i++) {
-			printf("0x%02x ", frame.data[i]);
-		}
-		printf("\n");
-		*/
+//		std::cout << "Got a response!" << std::endl;
+//		printf(" - Message ID: %04x\n", frame.messageID);
+//		printf(" - BUS       : %d\n", frame.bus);
+//		printf(" - Data Received: ");
+//
+//		for (int i = 0; i < frame.dataLength; i++) {
+//			printf("0x%02x ", frame.data[i]);
+//		}
+//		printf("yay!\n");
+		
 		
 		if (frame.dataLength == 0) {
 			fprintf(stderr, "The frame length of this PID request is 0\n");
@@ -145,7 +159,7 @@ void ObdPidRequest::doAction() {
 		switch ((frame.data[0] & CAN_FRAME_TYPE_MASK) >> 4) {
 			case CAN_FRAME_SINGLE:
 				// Shouldn't reach here
-				//std::cout << "This is a CAN_FRAME_SINGLE" << std::endl;
+//				std::cout << "This is a CAN_FRAME_SINGLE" << std::endl;
 				if (frame.dataLength < 2) {
 					fprintf(stderr, "Error: CAN_FRAME_SINGLE data length is too small: frame.dataLength=%d < 2\n", frame.dataLength);
 					printFrameInformation(frame);
@@ -176,6 +190,12 @@ void ObdPidRequest::doAction() {
 				}
 
 				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
+				if (data == NULL) {
+					fprintf(stderr, "OPD-PID request memory allocation error\n");
+					stop();
+					return;
+				}
+				
 				memcpy(data, &frame.data[3], dataLength);  // first message has first 3 bytes
 				
 				busy = false;
@@ -185,7 +205,7 @@ void ObdPidRequest::doAction() {
 				break;
 				
 			case CAN_FRAME_FIRST:
-				//std::cout << "This is a CAN_FRAME_FIRST" << std::endl;
+//				std::cout << "This is a CAN_FRAME_FIRST" << std::endl;
 				
 				if (frame.dataLength < 8) {
 					fprintf(stderr, "Error: CAN_FRAME_FIRST data length is too small: frame.dataLength=%d < 8\n", frame.dataLength);
@@ -204,12 +224,12 @@ void ObdPidRequest::doAction() {
 				
 				
 				dataLength = ((((int)frame.data[0] & 0x0F) << 8) | (int)frame.data[1]) - 3;
-				//printf(" - Length: %d\n", dataLength);
+//				printf(" - Length: %d\n", dataLength);
 				
 				assignedId = frame.messageID - 8;
-				//printf(" - Assigned ID: 0x%04x\n", assignedId);
+//				printf(" - Assigned ID: 0x%04x\n", assignedId);
 				
-				//printf(" - Multi-packet data length: %d\n", frame.data[1]);
+//				printf(" - Multi-packet data length: %d\n", dataLength);
 				//dataLength = frame.data[1] - 3;	// Protocol eats 3 bytes at the start
 				//dataLength = dataLength - 3;
 				if (data != NULL) {
@@ -223,7 +243,12 @@ void ObdPidRequest::doAction() {
 //					continue;
 //				}
 				
-				data = (unsigned char*)malloc(sizeof(unsigned char) * 3);//dataLength);
+				data = (unsigned char*)malloc(sizeof(unsigned char) * dataLength);
+				if (data == NULL) {
+					fprintf(stderr, "OPD-PID request memory allocation error\n");
+					stop();
+					return;
+				}
 				memcpy(data, &frame.data[5], 3);  // first message has first 3 bytes
 				
 				sendFlowControl();

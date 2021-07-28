@@ -12,7 +12,6 @@ CIRCLES Raspberry Pi Images
 	* [Raspbian Setup](#raspbian-setup)
 	* [Account Setup](#account-setup)
 	* [Installation of libpanda](#installation-libpanda)
-	* [Installing irods-icommands](#installing-irods)
 	* [Image Resizing](#image-resize)
 
 
@@ -259,7 +258,7 @@ $ git clone https://github.com/jmscslgroup/can_to_ros.git
 $ cd ~/catkin_ws
 $ catkin_make
 ```
--->
+
 
 
 <a name="installing-irods"></a>
@@ -286,6 +285,7 @@ $ ./install.sh
 
 >Note: At this stage commands like iinit have been omitted since they require cyverse login credentials
 
+-->
 
 
 <a name="image-resize"></a>

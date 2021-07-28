@@ -52,12 +52,7 @@ sudo systemctl start ssh
 #../setVin.sh
 #../addWifiAp.sh
 
-# Install ROS:
-#cd scripts
-#./installROS.sh
 
-# Install can_to_ros:
-#./installCanToRos.sh
 
 
 
@@ -113,5 +108,14 @@ fi
 # enable persisten journalctl logging:
 sudo sed -i 's/#Storage=auto/Storage=Persistent/g' /etc/systemd/journald.conf
 
-cd ~
 
+
+
+
+# Install ROS:
+cd ~/libpanda/scripts
+./installROS.sh
+
+# Install can_to_ros:
+#./installCanToRos.sh
+#./installExperiments7-22.sh
