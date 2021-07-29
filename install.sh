@@ -22,7 +22,7 @@ echo ${toInstall[@]}
 if [ ${#toInstall[@]} -ne 0 ];
 then
 	apt-get update
-	apt-get install -y ${toInstall[@]}
+	sudo apt-get install -y ${toInstall[@]}
 fi
 
 if [ ! -d /etc/libpanda.d ]; then
