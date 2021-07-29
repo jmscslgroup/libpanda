@@ -70,11 +70,11 @@ int main(int argc, char **argv) {
 	while(keepRunning) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
-		if(printPandaHealthDecimator++ >= 1) {	// run at 1Hz
+		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
 			printPandaHealthDecimator = 0;
-			//Panda::printPandaHealth(toyotaHandler.getPandaHealth());
-			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaHealth().controls_allowed << std::endl;
-			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getControlsAllowed() << std::endl;
+			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
+//			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaHealth().controls_allowed << std::endl;
+//			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getPandaControlsAllowed()() << std::endl;
 //			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
 		}
 		

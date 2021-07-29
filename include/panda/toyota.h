@@ -26,10 +26,11 @@
 #ifndef TOYOTA_H
 #define TOYOTA_H
 
-
+#include <vector>
 #include "mogi/thread.h"
 
 #include "panda.h"
+
 
 #define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
@@ -112,6 +113,35 @@ uint8_t toyotaChecksum(Panda::CanFrame& frame);
  */
 void printFrame( Panda::CanFrame frame );
 
+class ToyotaHandler;
+
+/*!
+ @class ToyotaListener
+ \brief An abstract class for listening to notifications from a ToyotaHandler
+ \par
+ This reports the Panda::Health messages immediately, along with others at a future poiint
+ */
+class ToyotaListener {
+private:
+	friend class ToyotaHandler;
+	
+protected:
+	/*!
+	 \brief Called on a new panda health request
+	 Overload this to get instant updates from the panda health update on each poll
+	 \param pandaHealth The most recent PandaHealth.
+	 */
+	virtual void newPandaHealthNotification(const PandaHealth& pandaHealth) = 0;
+	
+	
+   virtual void newControlNotification(ToyotaHandler* toyotaHandler) = 0;
+	
+public:
+	
+	virtual ~ToyotaListener() { };
+};
+
+
 /*!
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
@@ -189,8 +219,11 @@ private:
 	// These are read directly from teh CAN bus:
 	bool gas_released; // message ID 466
 	bool brake_pressed; // message ID 550
-	bool car_cruise_ready_for_commands; // message ID 466
+//	bool car_cruise_ready_for_commands; // message ID 466
 	unsigned char cruise_state;
+	
+	// For event notification observers:
+	std::vector<ToyotaListener*> toyotaObservers;
 	
 	// listend to CAN information for state handling:
 	void newDataNotification(CanFrame* canFrame);
@@ -331,8 +364,9 @@ public:
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
 	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
+	bool getPandaControlsAllowed();
 	bool getControlsAllowed();
-	bool getCarCruiseReadyForCommands();
+//	bool getCarCruiseReadyForCommands();
 	unsigned char getCarCruiseState();	// from message 466
 	
 	/*!
@@ -340,6 +374,12 @@ public:
 	 \return The last read state of the panda's state
 	 */
 	const PandaHealth& getPandaHealth() const;
+	
+	/*!
+	 \brief Adds an observer to event notifications
+	 \param observer The observer for notification subscription
+	 */
+	void addObserver( ToyotaListener* observer );
 };
 
 }

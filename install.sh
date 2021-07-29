@@ -97,6 +97,7 @@ else
 fi
 cd ~/${MISMATCHFILES}
 sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
+sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 
 
 
@@ -112,15 +113,15 @@ else
 fi
 
 # enable persisten journalctl logging:
-sudo sed -i 's/#Storage=auto/Storage=Persistent/g' /etc/systemd/journald.conf
+sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 
 
 
 
 
 # Install ROS:
-cd ~/libpanda/scripts
-./installROS.sh
+#cd ~/libpanda/scripts
+#./installROS.sh
 
 # Install can_to_ros:
 #./installCanToRos.sh

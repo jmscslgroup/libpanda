@@ -401,6 +401,10 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 										   (void*)this)) != LIBUSB_SUCCESS) {
 				std::cerr << "ERROR: Usb::sendCanData()->asyncBulkTransfer():" <<std::endl;
 				printError(status);
+				if (status == LIBUSB_ERROR_NO_DEVICE) {
+					std::cout << " - INFO: Usb::sendCanData(): Device may be unplugged" << std::endl;
+					exit(EXIT_FAILURE);
+				}
 				return -1;
 			}
 
@@ -458,6 +462,9 @@ void Usb::requestCanData() {
 										   (void*)this)) != LIBUSB_SUCCESS) {
 				std::cerr << "ERROR: Usb::requestCanData()->asyncBulkTransfer():" <<std::endl;
 				printError(status);
+				if( status == LIBUSB_ERROR_NO_DEVICE ) {
+					std::cerr << "INFO: Usb::requestCanData(): Device likely disconnected, exiting..." <<std::endl;
+				}
 			}
 
 			break;
@@ -481,6 +488,10 @@ void Usb::transferCallbackSendCan(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackSendCan()" << std::endl;
 		printErrorTransfer(transfer->status);
+		if (transfer->status == LIBUSB_TRANSFER_NO_DEVICE) {
+			std::cout << " - INFO: Usb::transferCallbackSendCan(): Device may be unplugged" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		if (transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
 			This->processNewCanSend(0);
 			libusb_free_transfer(transfer);

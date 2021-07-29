@@ -84,7 +84,7 @@ void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
 		cruise_state = ((*(unsigned long*)canFrame->data) >> (55+1-4)) & 0x0F;
 		// cruise_active: if cuirse controller is on in general
 		// cruise state: nonAdaptive if value is 1, 2, 3, 4, 5, 6
-		car_cruise_ready_for_commands = (cruise_state & 0x08) >> 3;
+//		car_cruise_ready_for_commands = (cruise_state & 0x08) >> 3;
 		
 		if (!gas_released && controls_allowed) {
 			setHudCruiseCancelRequest( true );
@@ -93,11 +93,11 @@ void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
 
 //		printf(" - 466: CRUISE_STATE: %d\n", cruise_state);
 	}
-	if (canFrame->messageID == 166) {	// brake
-//		printf("Got message 166:\n");
-		int BRAKE_AMOUNT = ((*(unsigned long*)canFrame->data) >> (7+1-8)) & 0xFF;
-//		printf(" - 166: BRAKE_AMOUNT: %d\n", BRAKE_AMOUNT);
-	}
+//	if (canFrame->messageID == 166) {	// brake
+////		printf("Got message 166:\n");
+//		int BRAKE_AMOUNT = ((*(unsigned long*)canFrame->data) >> (7+1-8)) & 0xFF;
+////		printf(" - 166: BRAKE_AMOUNT: %d\n", BRAKE_AMOUNT);
+//	}
 	if (canFrame->messageID == 550) {	// brake
 //		printf("Got message 166:\n");
 		brake_pressed = ((*(unsigned long*)canFrame->data) >> (37+1-1)) & 0x01;
@@ -109,18 +109,27 @@ void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
 //			controls_allowed = false;
 //		}
 	}
-	if (canFrame->messageID == 560) {	// brake
-//		printf("Got message 166:\n");
-		bool BRAKE_PRESSED = ((*(unsigned long*)canFrame->data) >> (26+1-1)) & 0x01;
-//		printf(" - 560: BRAKE_PRESSED: %d\n", BRAKE_PRESSED);
-	}
-	if (canFrame->messageID == 921) {
-//		printf("Got message 921:\n");
-		int cruise_control_state = ((*(unsigned long*)canFrame->data) >> (11+1-4)) & 0x0F;
-//		printf(" - 921: CRUISE_CONTROL_STATE: %d\n", cruise_control_state);
-	}
+//	if (canFrame->messageID == 560) {	// brake
+////		printf("Got message 166:\n");
+//		bool BRAKE_PRESSED = ((*(unsigned long*)canFrame->data) >> (26+1-1)) & 0x01;
+////		printf(" - 560: BRAKE_PRESSED: %d\n", BRAKE_PRESSED);
+//	}
+//	if (canFrame->messageID == 921) {
+////		printf("Got message 921:\n");
+//		int cruise_control_state = ((*(unsigned long*)canFrame->data) >> (11+1-4)) & 0x0F;
+////		printf(" - 921: CRUISE_CONTROL_STATE: %d\n", cruise_control_state);
+//	}
 	
+	controls_allowed_prior = controls_allowed;
 	controls_allowed = (cruise_state >= 8) && gas_released && !brake_pressed;
+	
+	if (controls_allowed_prior != controls_allowed) {
+		for (std::vector<ToyotaListener*>::iterator it = toyotaObservers.begin();
+			 it != toyotaObservers.end();
+			 it++) {
+			(*it)->newControlNotification(this);
+		}
+	}
 	
 //	fprintf(stderr, "cruise_state, gas_released, !brake_pressed = %d, %d, %d\n", cruise_state,  gas_released, !brake_pressed);
 }
@@ -209,6 +218,13 @@ void ToyotaHandler::sendHeartBeat() {
 //	}
 	
 //	controls_allowed_prior = health.controls_allowed;
+
+	for (std::vector<ToyotaListener*>::iterator it = toyotaObservers.begin();
+		 it != toyotaObservers.end();
+		 it++) {
+		(*it)->newPandaHealthNotification(health);
+		(*it)->newControlNotification(this);
+	}
 }
 
 void ToyotaHandler::sendLka() {
@@ -370,13 +386,17 @@ bool ToyotaHandler::getIgnitionOn() {
 }
 
 bool ToyotaHandler::getControlsAllowed() {
-//	return health.controls_allowed;
+	return health.controls_allowed;
+//	return controls_allowed;
+}
+
+bool ToyotaHandler::getPandaControlsAllowed() {
 	return controls_allowed;
 }
 
-bool ToyotaHandler::getCarCruiseReadyForCommands() {
-	return car_cruise_ready_for_commands;
-}
+//bool ToyotaHandler::getCarCruiseReadyForCommands() {
+//	return car_cruise_ready_for_commands;
+//}
 
 unsigned char ToyotaHandler::getCarCruiseState() {
 	return cruise_state;
@@ -386,3 +406,6 @@ const PandaHealth& ToyotaHandler::getPandaHealth() const {
 	return health;
 }
 
+void ToyotaHandler::addObserver( ToyotaListener* observer ) {
+	toyotaObservers.push_back(observer);
+}

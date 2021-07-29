@@ -115,12 +115,12 @@ void Can::startParsing() {
 	
 	// Read the VIN here:
 	usleep(200000);
-	std::cout << " - Attempting to read the VIN:";
+	std::cout << " - Attempting to read the VIN:" << std::endl;
 	
 	int vinAttempts = 0;
 	while( vinAttempts++ < 10 ) {
 		ObdPidRequest vinRequest(*this);
-		std::cerr << std::endl << " - - Attempt " << vinAttempts << "/10...";
+		std::cerr << " - - Attempt " << vinAttempts << "/10...";
 		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
 		int timeoutCount = 0;
 		while (timeoutCount++ < 100 && !vinRequest.complete()) {
