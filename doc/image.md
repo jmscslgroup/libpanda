@@ -32,6 +32,16 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2021-07-29.img.tar.gz](https://drive.google.com/file/d/1-kjKlkGd9QaS5CFuJCDGVw0fO-uyWYe5/view?usp=sharing)
+	Features major fixes and has been verified in vehicle
+	- - Removes all Cruise Control Faults known to date, specifially modified to handle driver brake/throttle presses 
+	- - ROS is the default startup process for vehicle control
+	- - Auto configures the mifi-VIN wifi hotspot
+	- - Has all experiments known to date for the Vandertest.  Upgrade all by running:  `updateVandertest`
+	- - Fixes CSV file timestamps to represent GPS time
+	- - Features panda hot-plugging to keep ROS running with USB interruptions
+	- - Many other small improvements for robustness
+	
 - [circles-raspbian-2021-07-22.img.tar.gz](https://drive.google.com/file/d/1VMWyizQZmgilzcBVBV6IBep39JNNPc8w/view?usp=sharing)
 	The prior two images had instalation issues.  These have been remedied in this image.  This image also features the ROS components intended to be performed on 7/21/2021
 
