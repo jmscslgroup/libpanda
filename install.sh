@@ -21,7 +21,7 @@ echo ${toInstall[@]}
 
 if [ ${#toInstall[@]} -ne 0 ];
 then
-	apt-get update
+	sudo apt-get update
 	sudo apt-get install -y ${toInstall[@]}
 fi
 
