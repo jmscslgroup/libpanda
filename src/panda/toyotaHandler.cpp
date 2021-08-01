@@ -297,13 +297,13 @@ void ToyotaHandler::sendAcc() {
 //	if(!heartbeatAccelerationPass() && health.controls_allowed) {
 //		cancelRequestToSend = true;
 //	}
-	static int spamCount = 0;
+//	cancelRequestSpamCount = 0;
 	if (cancelRequest ) {
-		if (spamCount < 90) {	// 1 second spam
-			spamCount++;
+		if (cancelRequestSpamCount < 90) {	// 1 second spam
+			cancelRequestSpamCount++;
 		} else {
 			cancelRequest = false;
-			spamCount = 0;
+			cancelRequestSpamCount = 0;
 		}
 	}
 		
@@ -341,7 +341,10 @@ void ToyotaHandler::setHudLanes( unsigned char laneLeft, unsigned char laneRight
 }
 
 void ToyotaHandler::setHudCruiseCancelRequest( bool enable ) {
-	this->cancelRequest = enable;
+	if (enable) {
+		this->cancelRequestSpamCount = 0;
+		this->cancelRequest = true;
+	}
 }
 
 void ToyotaHandler::setHudTwoBeeps( bool enable ) {

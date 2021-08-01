@@ -211,6 +211,7 @@ private:
 	bool releaseStandstill;
 	bool miniCar;
 	bool cancelRequest;
+	int cancelRequestSpamCount;
 	
 	// Safety management, only send control commands if they are continuously updated
 	int heartBeatSteer;
