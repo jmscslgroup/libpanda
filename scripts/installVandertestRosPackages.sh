@@ -46,6 +46,11 @@ done
 #git clone https://github.com/jmscslgroup/ghost_mode
 #git clone https://github.com/jmscslgroup/velocityramp
 
+# for testing on 8/2/2021 we will be changing branches for all-in-one startup script:
+cd can_to_ros
+git checkout experiments_monday
+cd ..
+
 # this requires credentials:
 if [ -d algos-stack ]; then
 	cd algos-stack
