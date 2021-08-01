@@ -20,6 +20,8 @@ fileX725BatteryCurrent = "/etc/libpanda.d/x725batterycurrent"
 fileX725BatteryVoltage = "/etc/libpanda.d/x725batteryvoltage"
 fileX725Capacity = "/etc/libpanda.d/x725capacity"
 
+fileControlsAllowed = "/etc/libpanda.d/controls_allowed"
+
 filePandaRecording = "/etc/libpanda.d/pandaRecording"
 filePandaGps = "/etc/libpanda.d/pandaHaveGPS"
 
@@ -61,10 +63,10 @@ while True:
 		hasApClients = int(getFileContents( fileHasApClients ))
 
 		hasExternalPower = int(getFileContents( fileX725HasExtenalPower ))
-		batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
-		batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
-		capacity = float(getFileContents( fileX725Capacity ))
-
+		# batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
+		# batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
+		# capacity = float(getFileContents( fileX725Capacity ))
+		controlAllowed = int(getFileContents( fileControlsAllowed))
 		pandaRecording = float(getFileContents( filePandaRecording ))
 		pandaGps = float(getFileContents( filePandaGps ))
 
@@ -101,7 +103,12 @@ while True:
 #		set_pixel(3, 100, 0, 100)
 #	else:
 #		set_pixel(3, 0, 0, 0)
-
+	if controlAllowed == 1:
+                set_pixel(3,0,200,0,maxLevel) #if controls on and publishing: GREEN
+	elif controlAllowed == 0:
+            set_pixel(3,0,0,200,maxLevel) #if controls off but publishing: blue
+	elif controlAllowed == -1:
+            set_pixel(3,200,0,0,maxLevel) #if not published within 3 seconds: RED
 # LED 4:
 #	newCapacity = max(min(capacity, 100.0), 0.0)
 #	hue = newCapacity/100.0 * 120.0/360.0	# green = charged, red = discharged
