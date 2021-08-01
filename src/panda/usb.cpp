@@ -51,6 +51,7 @@ const char* Usb::getModeAsString() const {
 		case MODE_ISOCHRONOUS:
 			return "Isochronous";
 	}
+	return "UNKOWN mode";
 }
 
 void Usb::setOperatingMode(UsbMode mode) {
@@ -118,13 +119,16 @@ void Usb::initialize() {
 
 	// Void function:
 	libusb_free_device_list(devices, 1);
+	
+	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
+	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 
-	std::cout << " - Setting Safety:" << std::endl;
-	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+	std::cout << " - Setting Safety to ELM327:" << std::endl;
+//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 //	std::cout << " - Setting Safety elm327:" << std::endl;
-//	setSafetyMode(SAFETY_ELM327);	// OBD II port
+	setSafetyMode(SAFETY_ELM327);	// OBD II port
 //		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
-// 	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
+ //	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
 //	std::cout << " - Enabling CAN Loopback:" << std::endl;
 //	setCanLoopback(true);
@@ -161,6 +165,32 @@ void Usb::initialize() {
 		default:
 			std::cout << " |-- This is UNKOWN HARDWARE" << std::endl;
 	}
+	
+//	// Read the VIN here:
+//	ObdPidRequest vinRequest(*this);
+//	int vinAttempts = 0;
+//	while(!vinRequest.complete() &&
+//		  vinAttempts++ < 10 ) {
+//		std::cout << " - Attempt " << vinAttempts << " reading VIN..." << std::endl;
+//		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+//		sleep(1);
+//	}
+//	if (vinRequest.complete()) {
+//		// We got it!
+//		printf(" - - Read VIN:");
+//		for (int i = 0; i < vinRequest.dataLength; i++) {
+//			printf("%c", vinRequest.data[i]);
+//		}
+//		printf("\n");
+//		FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
+//		fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
+//		fclose(file);
+//	} else {
+//		std::cerr << "WARNING: Unable to read the VIN!" << std::endl;
+//	}
+//	
+//	std::cout << " - Setting Safety to Toyota:" << std::endl;
+//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 
 	std::cerr << " - USB Done." << std::endl;
 }
@@ -371,6 +401,10 @@ int Usb::sendCanData( unsigned char* buffer, int length) {
 										   (void*)this)) != LIBUSB_SUCCESS) {
 				std::cerr << "ERROR: Usb::sendCanData()->asyncBulkTransfer():" <<std::endl;
 				printError(status);
+				if (status == LIBUSB_ERROR_NO_DEVICE) {
+					std::cout << " - INFO: Usb::sendCanData(): Device may be unplugged" << std::endl;
+					exit(EXIT_FAILURE);
+				}
 				return -1;
 			}
 
@@ -428,6 +462,9 @@ void Usb::requestCanData() {
 										   (void*)this)) != LIBUSB_SUCCESS) {
 				std::cerr << "ERROR: Usb::requestCanData()->asyncBulkTransfer():" <<std::endl;
 				printError(status);
+				if( status == LIBUSB_ERROR_NO_DEVICE ) {
+					std::cerr << "INFO: Usb::requestCanData(): Device likely disconnected, exiting..." <<std::endl;
+				}
 			}
 
 			break;
@@ -451,6 +488,10 @@ void Usb::transferCallbackSendCan(struct libusb_transfer *transfer) {
 	if (transfer->status != LIBUSB_TRANSFER_COMPLETED) {
 		std::cout << " - Incomplete: transferCallbackSendCan()" << std::endl;
 		printErrorTransfer(transfer->status);
+		if (transfer->status == LIBUSB_TRANSFER_NO_DEVICE) {
+			std::cout << " - INFO: Usb::transferCallbackSendCan(): Device may be unplugged" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		if (transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
 			This->processNewCanSend(0);
 			libusb_free_transfer(transfer);
@@ -571,17 +612,21 @@ void Usb::stopRecording() {
 
 	int status;
 	if (handler != NULL) {
+		std::cout << " - Releasing libusb interface..." << std::endl;
 		if((status = libusb_release_interface(handler, 0) != LIBUSB_SUCCESS)) {
 			std::cerr << "FAILED: Usb::end() libusb_release_interface() had an error:" << std::endl;
 			printError(status);
 		};
-
+		
+		std::cout << " - Closing libusb handler..." << std::endl;
 		libusb_close(handler);	// causes libusb_handle_events to exit
 		handler = NULL;
 	}
 
+	
+	std::cout << " - Waiting for Panda::Usb to close..." << std::endl;
 	WaitForInternalThreadToExit();
-
+	std::cout << " - Done!" << std::endl;
 }
 
 // Thread entry:

@@ -30,6 +30,8 @@
 #include "panda/can.h"
 #include "panda/gps.h"
 #include "panda/gpsTime.h"
+#include "panda/gpsTracker.h"
+#include "panda/obd-pid.h"
 
 /**
  * @namespace Panda

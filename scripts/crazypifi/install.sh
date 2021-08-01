@@ -39,7 +39,7 @@ fi
 #fi
 
 cp crazypifi.sh /usr/local/sbin/crazypifi
-touch /etc/wpa_supplicant/wpa_supplicant.conf
+#touch /etc/wpa_supplicant/wpa_supplicant.conf
 
 if [ ! -f /etc/network/interfaces.bak ]; then
 	echo "Backing up /etc/network/interfaces to /etc/network/interfaces.bak"
@@ -68,11 +68,12 @@ if [ ! -f /etc/dhcp/dhcpd.conf.bak ]; then
 fi
 cp dhcpd.conf /etc/dhcp/dhcpd.conf
 
-if [ ! -f /etc/wpa_supplicant/wpa_supplicant.conf.bak ]; then
-	echo "Backing up /etc/wpa_supplicant/wpa_supplicant.conf to /etc/wpa_supplicant/wpa_supplicant.conf.bak"
-	cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
+if [ ! -f /etc/wpa_supplicant/wpa_supplicant.conf ]; then
+	#echo "Backing up /etc/wpa_supplicant/wpa_supplicant.conf to /etc/wpa_supplicant/wpa_supplicant.conf.bak"
+	#cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
+	echo "Adding placeholder: /etc/wpa_supplicant/wpa_supplicant.conf"
+	cp wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 fi
-cp wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 
 
 cp crazypifi.service.txt  /etc/systemd/system/crazypifi.service

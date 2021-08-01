@@ -202,7 +202,7 @@ setupAp ()
 	fi
 
 	echo -n " - Setting static IP..."
-	if ifconfig wlan0 10.3.141.1/24; then
+	if ifconfig wlan0 10.0.1.1/24; then
 		echoGood "Done."
 	else
 		echoBad "FAILED!"

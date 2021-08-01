@@ -139,13 +139,30 @@ add_executable(simpleSend	example/simpleSend.cpp
 				example/joystickState.h
 				example/device.cpp
 				example/mouse.cpp )
+
+
 target_link_libraries(simpleSend	${LIBS}
 									${LIBNAME}
 									mogithread
 									strym
 									NMEAParserLib )
 
+add_executable(pandaVin		example/pandaVin.cpp )
+target_link_libraries(pandaVin ${LIBS}
+									${LIBNAME}
+									mogithread
+									strym
+									NMEAParserLib)
+
+add_executable(pandaObd		example/pandaObd.cpp )
+target_link_libraries(pandaObd ${LIBS}
+									${LIBNAME}
+									mogithread
+									strym
+									NMEAParserLib)
+
 add_subdirectory(utilities)
+
 
 
 

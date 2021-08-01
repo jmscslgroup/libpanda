@@ -26,10 +26,11 @@
 #ifndef TOYOTA_H
 #define TOYOTA_H
 
-
+#include <vector>
 #include "mogi/thread.h"
 
 #include "panda.h"
+
 
 #define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
@@ -112,18 +113,48 @@ uint8_t toyotaChecksum(Panda::CanFrame& frame);
  */
 void printFrame( Panda::CanFrame frame );
 
+class ToyotaHandler;
+
+/*!
+ @class ToyotaListener
+ \brief An abstract class for listening to notifications from a ToyotaHandler
+ \par
+ This reports the Panda::Health messages immediately, along with others at a future poiint
+ */
+class ToyotaListener {
+private:
+	friend class ToyotaHandler;
+	
+protected:
+	/*!
+	 \brief Called on a new panda health request
+	 Overload this to get instant updates from the panda health update on each poll
+	 \param pandaHealth The most recent PandaHealth.
+	 */
+	virtual void newPandaHealthNotification(const PandaHealth& pandaHealth) = 0;
+	
+	
+   virtual void newControlNotification(ToyotaHandler* toyotaHandler) = 0;
+	
+public:
+	
+	virtual ~ToyotaListener() { };
+};
+
+
 /*!
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
  \par
  This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
-class ToyotaHandler : public Mogi::Thread {
+class ToyotaHandler : public Mogi::Thread, public Panda::CanListener {
 private:
 	
 	// Overloaded from Mogi::Thread.
 	// This will enable the required power save mode for vehicle control.
 	void entryAction();
+	void exitAction();
 	
 	// Overloaded from Mogi::Thread.
 	// This handles the constant updates.
@@ -148,6 +179,8 @@ private:
 	
 	Panda::Handler* pandaHandler;
 	PandaHealth health;
+	bool controls_allowed_prior;
+	bool controls_allowed;	// This is based on a rising edge of the panda health
 	
 	int decimatorHeartbeat;
 	int decimatorLka;
@@ -178,10 +211,23 @@ private:
 	bool releaseStandstill;
 	bool miniCar;
 	bool cancelRequest;
+	int cancelRequestSpamCount;
 	
 	// Safety management, only send control commands if they are continuously updated
 	int heartBeatSteer;
 	int heartBeatAcceleration;
+	
+	// These are read directly from teh CAN bus:
+	bool gas_released; // message ID 466
+	bool brake_pressed; // message ID 550
+//	bool car_cruise_ready_for_commands; // message ID 466
+	unsigned char cruise_state;
+	
+	// For event notification observers:
+	std::vector<ToyotaListener*> toyotaObservers;
+	
+	// listend to CAN information for state handling:
+	void newDataNotification(CanFrame* canFrame);
 	
 public:
 	
@@ -319,13 +365,22 @@ public:
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
 	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
+	bool getPandaControlsAllowed();
 	bool getControlsAllowed();
+//	bool getCarCruiseReadyForCommands();
+	unsigned char getCarCruiseState();	// from message 466
 	
 	/*!
 	 \brief Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
 	 \return The last read state of the panda's state
 	 */
 	const PandaHealth& getPandaHealth() const;
+	
+	/*!
+	 \brief Adds an observer to event notifications
+	 \param observer The observer for notification subscription
+	 */
+	void addObserver( ToyotaListener* observer );
 };
 
 }

@@ -24,6 +24,7 @@
  */
 
 #include <iostream>
+#include <signal.h>
 #include <unistd.h>
 #include <cstring>
 #include <cmath>
@@ -31,6 +32,12 @@
 #include "panda/toyota.h"
 
 #include "joystickState.h"
+
+static volatile bool keepRunning = true;
+void killPanda(int killSignal) {
+	std::cerr << std::endl << "Caught SIGINT: Terminating..." << std::endl;
+	keepRunning = false;
+}
 
 int main(int argc, char **argv) {
 	
@@ -42,10 +49,13 @@ int main(int argc, char **argv) {
 	mJoystick.open("/dev/input/js0");
 	mJoystick.start();
 
+	//Set up graceful exit
+	signal(SIGINT, killPanda);
 
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
 	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
+//	pandaHandler.getCan().addObserver(&toyotaHandler);
 	
 	// Let's roll
 	pandaHandler.initialize();
@@ -57,14 +67,15 @@ int main(int argc, char **argv) {
 	
 	int printPandaHealthDecimator = 0;
 	
-	while(1) {
+	while(keepRunning) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
 		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
 			printPandaHealthDecimator = 0;
 			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
-			std::cout << "Controls Allowed: " << toyotaHandler.getControlsAllowed() << std::endl;
-			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
+//			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaHealth().controls_allowed << std::endl;
+//			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getPandaControlsAllowed()() << std::endl;
+//			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
 		}
 		
 		// Setting HUD elements:
@@ -81,7 +92,7 @@ int main(int argc, char **argv) {
 		toyotaHandler.setHudMiniCar( mJoystickState.getDX() > 0 );
 		
 		// This will cancel the cruise control, cruise must be rest by driver to allow further controls
-		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
+//		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
 		
 		// Acceleration command building.  Units are m/s^2
 		// The following are hard-coded limits in the Panda firmware:
@@ -110,18 +121,24 @@ int main(int argc, char **argv) {
 		// The heartbeat failing will also trigger some HUD elements like setHudRepeatedBeeps and setHudLdaAlert
 		if ( !mJoystickState.getCircle() ) {
 			toyotaHandler.setAcceleration(acceleration);
-			toyotaHandler.setSteerTorque(steerTorque);
+//			toyotaHandler.setSteerTorque(steerTorque);
+			toyotaHandler.setSteerTorque(0);
 		}
 		
 		// Debug Joystick:
-		//mJoystickState.printState();
+//		mJoystickState.printState();
 		
 	}
 	
 	
 	// Will never reach here
+	std::cout << "Stopping toyotaHandler..." << std::endl;
+	std::cout << "Stopping pandaHandler..." << std::endl;
 	toyotaHandler.stop();
 	pandaHandler.stop();
 
+	std::cout << "simpleSend is Done." << std::endl;
+//	return 0;
+	exit(EXIT_SUCCESS);
 	return 0;
 }

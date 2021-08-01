@@ -2,7 +2,7 @@
 # Author: Matt Bunting
 
 echo "--------------------------------------------------------"
-echo "Installing libpandac:"
+echo "Installing libpanda:"
 
 #build dependencies:
 declare -a depencencies=(build-essential libncurses5-dev libusb-1.0-0-dev cmake)
@@ -21,8 +21,8 @@ echo ${toInstall[@]}
 
 if [ ${#toInstall[@]} -ne 0 ];
 then
-	apt-get update
-	apt-get install -y ${toInstall[@]}
+	sudo apt-get update
+	sudo apt-get install -y ${toInstall[@]}
 fi
 
 if [ ! -d "build" ];
@@ -32,19 +32,22 @@ fi
 cd build
 cmake ..
 make -j4
-make install
+sudo make install
 cd ..
 
 # Install panda services:
 cd scripts/panda
-./install.sh
+sudo ./install.sh
 cd ../..
 
 # Install configuration files and welcome msg
 cd scripts/
-cp irsyncCyverse.sh /home/${SUDO_USER}/irsyncCyverse.sh
-cp setVin.sh /home/${SUDO_USER}/setVin.sh
-cp 99-libpanda.sh /etc/profile.d/99-libpanda.sh
+#cp irsyncCyverse.sh /home/${SUDO_USER}/irsyncCyverse.sh
+cp irsyncCyverse.sh /home/circles/irsyncCyverse.sh
+sudo cp irsyncCyverse.sh /usr/local/sbin/irsyncCyverse
+
+#cp setVin.sh /home/${SUDO_USER}/setVin.sh
+sudo cp 99-libpanda.sh /etc/profile.d/99-libpanda.sh
 cd ..
 
 echo "Done."

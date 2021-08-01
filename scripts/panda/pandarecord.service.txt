@@ -5,6 +5,8 @@ Wants=pandasettime.service
 
 [Service]
 Type=simple
+Restart=always
+RestartSec=1
 ExecStart=/bin/bash /usr/local/sbin/pandarecord
 
 
