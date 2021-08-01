@@ -55,7 +55,8 @@ else
 	git clone https://github.com/CIRCLES-consortium/algos-stack
 fi
 cd algos-stack
-git checkout swil_rahul
+#git checkout swil_rahul
+git checkout setpoint_rahul
 
 
 cd ~/catkin_ws

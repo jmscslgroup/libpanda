@@ -128,3 +128,7 @@ sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 # Install can_to_ros:
 #./installCanToRos.sh
 #./installExperiments7-22.sh
+
+
+# Add the vuDevices to the network:
+sudo addWifiApSimple -s vuDevices -p Acorn1873
