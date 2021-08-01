@@ -68,7 +68,7 @@ Both the Black Panda and Grey Panda(discontinued) is supported by libpanda.  It 
 #### Required for Black Panda:
 * [comma.ai Car Harness](https://comma.ai/shop/products/panda-obd-ii-dongle)
 
-Be sure to select the "Black Panda" option when ordering the Car Harness.  Also very importantly, read the [Hardware Configuration](#hardware-config) section to understand how **the Black Panda may brick your computer if not understood completely**.
+Be sure to select the "Black Panda" option when ordering the Car Harness.  Also very importantly, read the [Hardware Configuration](#hardware-config) section to understand how **the Black Panda may brick your computer if not understood completely**. Make sure that you order the harness for the year-model of your vehicle(s), as there are variations from year to year.
 
 #### Required for Grey Panda (discontinued):
 
