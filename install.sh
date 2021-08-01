@@ -48,6 +48,8 @@ cd ../circles-ui
 sudo ./install.sh
 cd ../circlesmanager
 sudo ./install.sh
+cd ../gps-tracker
+sudo ./install.sh
 cd ../..
 
 sudo systemctl enable ssh
