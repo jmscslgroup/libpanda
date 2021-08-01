@@ -24,6 +24,9 @@
  */
 
 #include "panda/can.h"
+#include "panda/obd-pid.h"
+#include "panda/obd-pid-definitions.h"
+
 #include <unistd.h>
 #include <time.h>
 #include <cstring> // memcpy
@@ -49,6 +52,7 @@ Can::~Can() {
 
 void Can::initialize() {
 	std::cout << "Initializing CAN" <<std::endl;
+	
 
 	std::cout << " - Purging ring buffers" << std::endl;
 	usbHandler->canPurge();
@@ -73,7 +77,30 @@ void Can::setUsb( Panda::Usb* usbHandler ) {
 
 
 void Can::addObserver( CanListener* listener ) {
+	lock();
+	
 	listeners.push_back(listener);
+	
+	unlock();
+}
+
+
+void Can::removeObserver( CanListener* listener ) {
+	lock();
+	
+	std::vector<CanListener*>::iterator it = listeners.begin();
+	for (; it != listeners.end(); it++) {
+		if (*it == listener) {
+			break;
+		}
+	}
+	
+	if (it != listeners.end()) {
+//		std::cerr << "Removing CAN observer" << std::endl;
+		listeners.erase(it);
+	}
+	
+	unlock();
 }
 
 void Can::startParsing() {
@@ -83,6 +110,51 @@ void Can::startParsing() {
 	}
 
 	start();
+	
+	
+	
+	// Read the VIN here:
+	usleep(200000);
+	std::cout << " - Attempting to read the VIN:" << std::endl;
+	
+	int vinAttempts = 0;
+	while( vinAttempts++ < 10 ) {
+		ObdPidRequest vinRequest(*this);
+		std::cerr << " - - Attempt " << vinAttempts << "/10...";
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+		int timeoutCount = 0;
+		while (timeoutCount++ < 100 && !vinRequest.complete()) {
+			usleep(10000);
+		}
+		if (vinRequest.complete()) {
+			//			break;
+			//		}
+			//	}
+			//	if (vinRequest.complete()) {
+			// We got it!
+			printf("Success! Read: ");
+			for (int i = 0; i < vinRequest.dataLength; i++) {
+				printf("%c", vinRequest.data[i]);
+			}
+			printf("\n");
+			// Save the VIN:
+			FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
+			fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
+			fclose(file);
+			
+			// Notify a new vin has been read:
+			file = fopen( "/etc/libpanda.d/newVin", "w+");
+			fwrite( "1\n", 1, strlen("1\n"), file);
+			fclose(file);
+			break;
+		} else {
+			std::cerr << "Timeout" << std::endl;
+		}
+		
+	}
+	
+	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
+	usbHandler->setSafetyMode(SAFETY_NOOUTPUT);	// OBD II port
 }
 
 void Can::stopParsing() {
@@ -160,9 +232,11 @@ void Can::doAction() {
 		unlock();
 
 		// Notify observers:
+		lock();
 		for (std::vector<CanListener*>::iterator it = listeners.begin(); it != listeners.end(); it++) {
-			(*it)->newDataNotification(&canFrame);
+			(*it)->newDataNotificationProxy(&canFrame);
 		}
+		unlock();
 
 		// Save data to log
 		//writeCsvToFile(&canFrame);
@@ -267,4 +341,32 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		canFrames.push_back(newFrame);	// FIFO insert
 	}
 	unlock();
+}
+
+void Panda::CanListener::addToBlacklistBus( const int& busToBlock ) {
+	blacklistBus.push_back(busToBlock);
+}
+
+void Panda::CanListener::addToBlacklistMessageId( const int& idToBlock ) {
+	blacklistId.push_back(idToBlock);
+}
+
+void Panda::CanListener::newDataNotificationProxy(CanFrame* canFrame) {
+	for (std::vector<int>::iterator it=blacklistId.begin();
+		 it != blacklistId.end();
+		 it++) {
+		int& Id = *it;
+		if (canFrame->messageID == Id) {
+			return;	// kill the notification
+		}
+	}
+	for (std::vector<int>::iterator it=blacklistBus.begin();
+		 it != blacklistBus.end();
+		 it++) {
+		int& bus = *it;
+		if (canFrame->bus == bus) {
+			return;	// kill the notification
+		}
+	}
+	newDataNotification(canFrame);
 }

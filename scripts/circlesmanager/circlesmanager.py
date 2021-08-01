@@ -19,6 +19,8 @@ fileX725BatteryCurrent = "/etc/libpanda.d/x725batterycurrent"
 fileX725BatteryVoltage = "/etc/libpanda.d/x725batteryvoltage"
 fileX725Capacity = "/etc/libpanda.d/x725capacity"
 
+fileVin = "/etc/libpanda.d/vin"
+
 def getFileContents( filename ):
 	f = open(filename, "r")
 	contents = f.read()
@@ -32,31 +34,64 @@ class CirclesManager:
 		self.powerDisconnectTime = 0
 
 	def loop(self):
-		logging.info("in loop()")
+		#logging.info("in loop()")
 
+		hasExternalPower = True
 		try:
 			hasInternet = int(getFileContents( fileInternet ))
 			isApClient = int(getFileContents( fileIsApClient ))
 			isApHost = int(getFileContents( fileisApHost ))
 			hasApClients = int(getFileContents( fileHasApClients ))
+		except Exception as e:
+			logging.info(e)
 
+		try:
 			hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
 			batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
 			batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
 			capacity = float(getFileContents( fileX725Capacity ))
+			
+			logging.info("Battery Voltage: " + str(batteryVoltage))
+			logging.info("External Power:  " + str(hasExternalPower))
 		except Exception as e:
 			logging.info(e)
-			return
+			
+		try:
+			os.system("vinToHostname")
+		except Exception as e:
+			logging.info(e)
+		
 
-		logging.info("Battery Voltage: " + str(batteryVoltage))
-		logging.info("External Power:  " + str(hasExternalPower))
+		
 
 		if not hasExternalPower:
 			self.powerDisconnectTime += 1.0/updateRate
 			logging.info(" - Power disconnected, shutting down in " + str(self.powerOffTimeoutInSeconds - self.powerDisconnectTime))
+			
+			# Check for internet connectivity.
+			if os.system("simplePing") == 0:	# Error code 0 means success
+				os.system("echo \"- - -  Internet was found!  Running irsync\"")
+				#os.system("irsyncCyverse -f")
+				pandarecordWasRunning = os.system("simpleCheckPandarecord")
+				canWasRunning = os.system("simpleCheckCan")
+				os.system("service pandarecord stop")
+				os.system("service can stop")
+				os.system("runuser -l circles -c 'irsyncCyverse -f'")
+				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync
+					hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
+					if not hasExternalPower:
+						self.powerDisconnectTime = self.powerOffTimeoutInSeconds
+					else:
+						if pandarecordWasRunning:
+							os.system("service pandarecord start")
+						if canWasRunning:
+							os.system("service can start")
+				except Exception as e:
+					logging.info(e)
+			
 			if self.powerDisconnectTime >= self.powerOffTimeoutInSeconds:
 				logging.info(" - - Power disconnect timeout!  Running final scripts...")
-				os.system("echo \"- - - This is where we run a script\"")
+				#os.system("echo \"- - - This is where we run a script\"")
 				logging.info(" - - Shutting system down...")
 				f = open(fileX725HasExtenalPower, "w")
 				f.write("1")

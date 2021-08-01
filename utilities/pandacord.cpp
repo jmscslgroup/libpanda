@@ -149,6 +149,8 @@ int main(int argc, char **argv) {
 
 	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
 	Panda::SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
+	
+	Panda::GpsTracker mGpsTracker;	// Saves to /etc/libpanda.d/latest_gps
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
@@ -156,6 +158,7 @@ int main(int argc, char **argv) {
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
 	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
+	pandaHandler.addGpsObserver(mGpsTracker);
 
 	// Let's roll
 	pandaHandler.initialize();
@@ -224,6 +227,8 @@ int main(int argc, char **argv) {
 
 		usleep(10000);
 	}
+	writeToFileThenClose(filenamePandaStatus, "0\n");
+	writeToFileThenClose(filenameGpsStatus, "0\n");
 	//pandaHandler.stop();
 	pandaHandler.stop();
 

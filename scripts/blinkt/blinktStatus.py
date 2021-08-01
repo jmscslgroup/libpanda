@@ -63,12 +63,21 @@ while True:
 		hasApClients = int(getFileContents( fileHasApClients ))
 
 		hasExternalPower = int(getFileContents( fileX725HasExtenalPower ))
+
 		# batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
 		# batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
 		# capacity = float(getFileContents( fileX725Capacity ))
 		controlAllowed = int(getFileContents( fileControlsAllowed))
 		pandaRecording = float(getFileContents( filePandaRecording ))
 		pandaGps = float(getFileContents( filePandaGps ))
+
+# 		batteryCurrent = float(getFileContents( fileX725BatteryCurrent ))
+# 		batteryVoltage = float(getFileContents( fileX725BatteryVoltage ))
+# 		capacity = float(getFileContents( fileX725Capacity ))
+
+# 		pandaRecording = int(getFileContents( filePandaRecording ))
+# #		pandaGps = int(getFileContents( filePandaGps ))
+
 
 		#testBlinkt = getFileContents( fileBlinkt )
 	except:
