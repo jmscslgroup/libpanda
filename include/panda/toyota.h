@@ -31,18 +31,19 @@
 
 #include "panda.h"
 
-
 #define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
-#define TOYOTA_COMMAND_THREAD_RATE (600.0)	// Defines the rate of the thread, not for any particular command to be sent.
-#define TOYOTA_RATE_HEARTBEAT (1.0)			// This is for the panda in general, not Toyota specific
+#define TOYOTA_COMMAND_THREAD_RATE (200.0)	// Defines the rate of the thread, not for any particular command to be sent.
+#define TOYOTA_RATE_HEARTBEAT (2.0)			// This is for the panda in general, not Toyota specific
+#define TOYOTA_RATE_CA_REPORT (1.0)	// This is for notifications of controls_allowed
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
 #define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
 #define TOYOTA_RATE_ACC (30.0)				// Rate of the ACC_CONTROL command
 
 #define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
+#define TOYOTA_DECIMATOR_MAX_CA_REPORT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_CA_REPORT)
 #define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
 #define TOYOTA_DECIMATOR_MAX_TRACK_B (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_TRACK_B)
 #define TOYOTA_DECIMATOR_MAX_STEER (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_STEER)
@@ -141,6 +142,23 @@ public:
 	virtual ~ToyotaListener() { };
 };
 
+/*!
+ @class PandaHeartbeatHelper
+ \brief A helper thread class for clearing
+ \par
+ Invokes messages in ToyotaHandler at an asynchronous rate
+ */
+class HeartbeatHelper : public Mogi::Thread {
+private:
+	ToyotaHandler* toyotaHandler;
+	
+	void doAction();
+	
+public:
+	HeartbeatHelper(ToyotaHandler* handler);
+	
+};
+
 
 /*!
  @class ToyotaHandler
@@ -149,7 +167,10 @@ public:
  This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
 class ToyotaHandler : public Mogi::Thread, public Panda::CanListener {
+friend class HeartbeatHelper;
+	
 private:
+	HeartbeatHelper* mHeartbeatHelper;
 	
 	// Overloaded from Mogi::Thread.
 	// This will enable the required power save mode for vehicle control.
@@ -161,7 +182,7 @@ private:
 	void doAction();
 	
 	// All of the following are called from doAction()
-	void sendHeartBeat();
+//	void sendHeartBeat();
 	void sendLka();
 	void sendTrackB();
 	void sendSteer();
@@ -180,9 +201,11 @@ private:
 	Panda::Handler* pandaHandler;
 	PandaHealth health;
 	bool controls_allowed_prior;
-	bool controls_allowed;	// This is based on a rising edge of the panda health
+	bool controls_allowed;
+	int controls_allowed_delay_counter;
 	
 	int decimatorHeartbeat;
+	int decimatorControlsAllowed;
 	int decimatorLka;
 	int decimatorTrackB;
 	int decimatorSteer;
@@ -229,6 +252,10 @@ private:
 	// listend to CAN information for state handling:
 	void newDataNotification(CanFrame* canFrame);
 	
+	
+protected:
+	void sendHeartBeat();
+	
 public:
 	
 	/*!
@@ -236,6 +263,7 @@ public:
 	 \param handler The active interface for the Panda.  The handler should be initialed with Panda::Handler::initialize() before Toyota::Handler::start() is called.
 	 */
 	ToyotaHandler(Panda::Handler* handler);
+	~ToyotaHandler();
 	
 	/*!
 	 \brief Tells the driver to grab the steering wheel
