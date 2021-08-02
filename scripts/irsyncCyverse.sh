@@ -41,7 +41,7 @@ case "$response" in
 	  
 	  # rosbag files:
 	  imkdir -pv ${DIR_PATH_CYVERSE}
-	  irsync -r ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+	  irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           ;;
       *)
           echo "Exiting" 
