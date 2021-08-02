@@ -227,6 +227,8 @@ void ToyotaHandler::doAction() {
 	if (microsecondsToSleep < 0) {
 		fprintf(stderr, "WARNING! ToyotaHandler::doAction() execution time is too long.  Duration: %d us\n", durationInMicroseconds );
 		microsecondsToSleep = 0;
+	} else if ( microsecondsToSleep >= (1000000.0/TOYOTA_COMMAND_THREAD_RATE)) {
+		microsecondsToSleep = 1000000.0/TOYOTA_COMMAND_THREAD_RATE;
 	}
 	
 	usleep(microsecondsToSleep);	// run at 600 Hz
