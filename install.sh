@@ -50,6 +50,8 @@ cd ../circlesmanager
 sudo ./install.sh
 cd ../gps-tracker
 sudo ./install.sh
+cd ../experiments
+sudo ./install.sh
 cd ../..
 
 sudo systemctl enable ssh
