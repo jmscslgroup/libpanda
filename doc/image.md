@@ -32,14 +32,15 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
-- [circles-raspbian-2021-08-03.img.tar.gz](https://drive.google.com/file/d/1h_OSOir8iuqRO58tg8_CSqWtLjrJULeo/view?usp=sharing)
+- [circles-raspbian-2021-08-03.img.tar.gz](https://drive.google.com/file/d/1qzAEcrjQiwb_Wua2KYKJBU9ndoJN0AGD/view?usp=sharing)
 	Changes:
-	- - Support for ROS -> blinkt node
 	- - Cruise control message loop throttling to send messages more consistently based on CPU load
-	- - Panda health requests moved to separate thread
+	- - Panda health requests moved to separate thread to prevent control command blocking
 	- - Safety start bounds changed from [-0.5,0.5] to [-0.5,1.5]
 	- - Control commands will only work 1 second after pressing Res/Set on cruise control to prevent rapid braking on immediate disengage
 	- - irsyncCyverse.sh made verose for bagfiles
+	- - Support for ROS -> blinkt
+	- - Controller startup script in ~/ for 08/04/2021 experiments
 	
 - [circles-raspbian-record-only-2021-08-03.img.tar.gz](https://drive.google.com/file/d/13aAAnnINF6yEDYi46-b6eGyvL-PtqPqo/view?usp=sharing)
 	Configured only for libpanda's pandarecord service to start on boot.  This image has ROS installed but no jmscslgroup ROS packages.
