@@ -233,12 +233,36 @@ haveInternet ()
 	return 0
 }
 
+havePhoneTether ()
+{
+	if ethtool eth1 | grep "Link detected: yes" > /dev/null 2>&1; then
+		return 1
+	fi
+	return 0
+}
+
 haveEthernetPhysicalConnection ()
 {
 	if ethtool eth0 | grep "Link detected: yes" > /dev/null; then
 		return 1
 	fi
 	return 0
+}
+
+bringupWlan ( )
+{
+	echo -n "Checking state of wlan0..."
+	if ifconfig | grep "wlan0:" > /dev/null 2>&1; then
+		echoGood "UP"
+	else
+		echoBad "DOWN"
+	echo -n " - Attempting to bring up wlan0..."
+		if ifup wlan0 > /dev/null 2>&1; then
+			echoGood "Success"
+		else
+			echoBad "FAILED"
+		fi
+	fi
 }
 
 haveIpOnDevice ( )
@@ -284,7 +308,7 @@ doStuff ()
 		echo "1" > /etc/libpanda.d/hasinternet
 		echo "0" > /etc/libpanda.d/isaphost
 		echo "1" > /etc/libpanda.d/isapclient
-		return 1
+#		return 1
 	else
 		echoBad "Disconnected"
 		echo "0" > /etc/libpanda.d/hasinternet
@@ -292,6 +316,7 @@ doStuff ()
 
 	wifiConnected=false
 	ethernetConnected=false
+	phoneConnected=false
 
 # check for a physical connection on ethernet
 	echo -n "Checking for eth0 link status..."
@@ -299,7 +324,8 @@ doStuff ()
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
 		ethernetConnected=true
-
+		echo "1" > /etc/libpanda.d/hasphonetether
+		echo "0" > /etc/libpanda.d/isapclient
 #		haveIpOnDevice eth0
 #		if [ $? -eq 1 ]; then
 #			echo " - I has ethernet IP!"
@@ -308,78 +334,96 @@ doStuff ()
 #		fi
 	else
 		echoBad "Disconnected"
+		echo "0" > /etc/libpanda.d/hasphonetether
 #		setupDhcpServer
 	fi
-
-#	if systemctl is-active --quiet hostapd; then
-	if iwconfig wlan0 | grep "Mode:Master"; then
-# If any wifi clients exist, don't change anything to cause a disconnection
-		echo -n "Checking if wlan0 is busy with clients..."
-		wificlients=$(iw dev wlan0 station dump)
-		if [ -z "$wificlients" ]; then
-			echo "0" > /etc/libpanda.d/hasapclients
-			echoGood "Free"
-		else
-			echoBad "Busy"
-			echo "1" > /etc/libpanda.d/hasapclients
-			return 1
-		fi
-	fi
-
-# Check if wifi is currently a client
-	echo -n "Checking if wifi is connected to AP..."
-	haveWifiConnection
+	
+	# check for a phone tether over USB
+	echo -n "Checking eth1 phone tether status..."
+	havePhoneTether
 	if [ $? -eq 1 ]; then
-		echoGood "Connected to ${currentSsid}"
-		echo "1" > /etc/libpanda.d/isapclient
-		wifiConnected=true
+		echoGood "Connected"
+		phoneConnected=true
+		# Ensure wifi is up to host AP
+		bringupWlan
 	else
 		echoBad "Disconnected"
-		echo "0" > /etc/libpanda.d/isapclient
+	fi
 
-		echo -n "Checking state of wlan0..."
-		if ifconfig | grep "wlan0:" > /dev/null 2>&1; then
-			echoGood "UP"
-		else
-			echoBad "DOWN"
-			echo -n " - Attempting to bring up wlan0..."
-			if ifup wlan0 > /dev/null 2>&1; then
-				echoGood "Success"
+	# Only attempt to connect to ground station AP if phone no connected:
+	if [ "$phoneConnected" = false ]; then
+		
+#		if systemctl is-active --quiet hostapd; then
+		if iwconfig wlan0 | grep "Mode:Master"; then
+# If any wifi clients exist, don't change anything to cause a disconnection
+			echo -n "Checking if wlan0 is busy with clients..."
+			wificlients=$(iw dev wlan0 station dump)
+			if [ -z "$wificlients" ]; then
+				echo "0" > /etc/libpanda.d/hasapclients
+				echoGood "Free"
 			else
-				echoBad "FAILED"
+				echoBad "Busy"
+				echo "1" > /etc/libpanda.d/hasapclients
+				return 1
 			fi
 		fi
 
-		echo "Searching for known APs..."
-#		Get known SSIDs:
-#		ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
-		ssids=($(wpa_cli list_networks | grep -Po "(?<=^[0-9][\s])[\s]*([a-zA-Z0-9\-_]*)(?=.*)"))
-#		Scan for available SSIDs:
-		ssidsavailable=($(iwlist wlan0 scan | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*"))
-		echo " - Available ESSIDs : ${ssidsavailable[@]}"
+# Check if wifi is currently a client
+		echo -n "Checking if wifi is connected to AP..."
+		haveWifiConnection
+		if [ $? -eq 1 ]; then
+			echoGood "Connected to ${currentSsid}"
+			echo "1" > /etc/libpanda.d/isapclient
+			wifiConnected=true
+		else
+			echoBad "Disconnected"
+			echo "0" > /etc/libpanda.d/isapclient
 
-		for ssid in "${ssids[@]}"
-		do
-			echo -n "Checking for $ssid in [${ssidsavailable[@]}]..."
-			if echo "${ssidsavailable[@]}" | grep "\b$ssid\b" > /dev/null; then
-				echoGood "Found!"
-				connectToKnownWifi $ssid
-				if [ $? -eq 1 ]; then
-					wifiConnected=true	# Success!
-					echo "1" > /etc/libpanda.d/isapclient
-					break
+#			echo -n "Checking state of wlan0..."
+#			if ifconfig | grep "wlan0:" > /dev/null 2>&1; then
+#				echoGood "UP"
+#			else
+#				echoBad "DOWN"
+#				echo -n " - Attempting to bring up wlan0..."
+#				if ifup wlan0 > /dev/null 2>&1; then
+#					echoGood "Success"
+#				else
+#					echoBad "FAILED"
+#				fi
+#			fi
+			bringupWlan
+
+			echo "Searching for known APs..."
+#			Get known SSIDs:
+#			ssids=($(cat /etc/wpa_supplicant/wpa_supplicant.conf | grep -v "#" | grep -Po "(?<=ssid=\")[a-zA-Z0-9\-_]*"))
+			ssids=($(wpa_cli list_networks | grep -Po "(?<=^[0-9][\s])[\s]*([a-zA-Z0-9\-_]*)(?=.*)"))
+#			Scan for available SSIDs:
+			ssidsavailable=($(iwlist wlan0 scan | grep -Po "(?<=ESSID:\")[a-zA-Z0-9\-_]*"))
+			echo " - Available ESSIDs : ${ssidsavailable[@]}"
+
+			for ssid in "${ssids[@]}"
+			do
+				echo -n "Checking for $ssid in [${ssidsavailable[@]}]..."
+				if echo "${ssidsavailable[@]}" | grep "\b$ssid\b" > /dev/null; then
+					echoGood "Found!"
+					connectToKnownWifi $ssid
+					if [ $? -eq 1 ]; then
+						wifiConnected=true	# Success!
+						echo "1" > /etc/libpanda.d/isapclient
+						break
+					fi
+					# If we are here, then try the next ssid
+				else
+					echoBad "Does not Exist"
 				fi
-				# If we are here, then try the next ssid
-			else
-				echoBad "Does not Exist"
-			fi
-		done
+			done
+		fi
 	fi
 
 	if [ "$wifiConnected" = true ]; then
 		echo "No need to setup AP"
 	else
-		echo -n "Unable to connect to WiFi, checking AP state..."
+		echo -n "Not Connecting to a WiFi groundstation AP, checking self-hosted AP state..."
 		if systemctl is-active --quiet hostapd; then
 			echo "1" > /etc/libpanda.d/isaphost
 			echoGood "Active"
@@ -436,6 +480,7 @@ do
 	echo "--------------------------------"
 	doStuff
 	haveIpOnDevice wlan0
+	haveIpOnDevice eth1
 	doEthernet
 	haveIpOnDevice eth0
 	sleep 10 &

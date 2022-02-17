@@ -6,7 +6,7 @@ echo "Installing crazypifi scripts"
 
 
 #build dependencies:
-declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown iptables iw)
+declare -a depencencies=(hostapd isc-dhcp-server wireless-tools wpasupplicant ifupdown iptables iw usbmuxd)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
