@@ -51,17 +51,19 @@ done
 #git checkout experiments_monday
 #cd ..
 
-# this requires credentials:
-if [ -d algos-stack ]; then
-	cd algos-stack
-	git pull
-	cd ..
-else
-	git clone https://github.com/CIRCLES-consortium/algos-stack
-fi
-cd algos-stack
-#git checkout swil_rahul
-git checkout setpoint_rahul
+
+# Commented out by George Gunter
+# # this requires credentials:
+# if [ -d algos-stack ]; then
+# 	cd algos-stack
+# 	git pull
+# 	cd ..
+# else
+# 	git clone https://github.com/CIRCLES-consortium/algos-stack
+# fi
+# cd algos-stack
+# #git checkout swil_rahul
+# git checkout setpoint_rahul
 
 
 cd ~/catkin_ws

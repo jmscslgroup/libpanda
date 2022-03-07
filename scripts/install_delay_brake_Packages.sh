@@ -1,5 +1,5 @@
 #!/bin/bash
-# Author: Matt Bunting
+# Author: Matt Bunting and George Gunter
 
 echo "----------------------------"
 if [[ $EUID == 0 ]];
