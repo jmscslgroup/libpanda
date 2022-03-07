@@ -14,7 +14,7 @@ if [ "x"$VIN != "x" ]; then
   case "$response" in
       [yY][eE][sS]|[yY])
           sudo echo $VIN > /etc/libpanda.d/vin
-          python /home/circles/libpanda/scripts/vinParser.py
+          sudo python /home/circles/libpanda/scripts/vinParser.py
 	  echo "The vin is updated to " $(cat /etc/libpanda.d/vin)
           ;;
       *)
