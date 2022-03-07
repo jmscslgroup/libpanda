@@ -1,7 +1,7 @@
 import requests
 import json
 ##read the local VIN from file
-vin = open("/etc/libpanda.d/vin","r").read()
+vin = open("/etc/libpanda.d/vin","r").readline().strip()
 #print(vin)
 #need internet connection to work
 url = 'https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/' + vin + '?format=json'
