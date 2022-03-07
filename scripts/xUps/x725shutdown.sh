@@ -4,10 +4,15 @@
 
 #BUTTON=18 # x725
 BUTTON=13 # x728
+BUTTONTWO=26 # x728 v2
 
 echo "$BUTTON" > /sys/class/gpio/export;
 echo "out" > /sys/class/gpio/gpio$BUTTON/direction
 echo "1" > /sys/class/gpio/gpio$BUTTON/value
+
+echo "$BUTTONTWO" > /sys/class/gpio/export;
+echo "out" > /sys/class/gpio/gpio$BUTTONTWO/direction
+echo "1" > /sys/class/gpio/gpio$BUTTONTWO/value
 
 SLEEP=${1:-4}
 
@@ -23,5 +28,7 @@ echo $SLEEP
 
 #restore GPIO 18
 echo "0" > /sys/class/gpio/gpio$BUTTON/value
-
 echo "$BUTTON" > /sys/class/gpio/unexport;
+
+echo "0" > /sys/class/gpio/gpio$BUTTONTWO/value
+echo "$BUTTONTWO" > /sys/class/gpio/unexport;

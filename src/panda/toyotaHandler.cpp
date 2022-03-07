@@ -25,6 +25,7 @@
 
 #include "panda/toyota.h"
 #include <unistd.h>
+#include <chrono>
 
 using namespace Panda;
 
@@ -34,8 +35,10 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 	
 	controls_allowed_prior = false;
 	controls_allowed = false;
+	controls_allowed_delay_counter = 0;
 	
 	decimatorHeartbeat = 0;
+	decimatorControlsAllowed = 0;
 	decimatorLka = 0;
 	decimatorTrackB = 0;
 	decimatorSteer = 0;
@@ -74,6 +77,14 @@ ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 	if (pandaHandler != NULL) {
 		pandaHandler->getCan().addObserver(this);
 	}
+	
+	mHeartbeatHelper = new HeartbeatHelper(this);
+	mHeartbeatHelper->start();
+}
+
+ToyotaHandler::~ToyotaHandler() {
+	mHeartbeatHelper->stop();
+	delete mHeartbeatHelper;
 }
 
 void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
@@ -157,7 +168,9 @@ void ToyotaHandler::exitAction() {
 }
 
 void ToyotaHandler::doAction() {
-	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 600 Hz
+//	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 600 Hz
+	
+	auto start = std::chrono::high_resolution_clock::now();
 	
 	// We cannot have integer rollovers here at anytime, so only increase if not already failed
 	if(heartbeatSteeringPass()) {
@@ -167,9 +180,19 @@ void ToyotaHandler::doAction() {
 		heartBeatAcceleration++;
 	}
 
-	if (decimatorHeartbeat++ >= TOYOTA_DECIMATOR_MAX_HEARTBEAT) {	// 1Hz
-		decimatorHeartbeat = 0;
-		sendHeartBeat();
+//	if (decimatorHeartbeat++ >= TOYOTA_DECIMATOR_MAX_HEARTBEAT) {	// 1Hz
+//		decimatorHeartbeat = 0;
+//		sendHeartBeat();
+//	}
+	
+	if (decimatorControlsAllowed++ >= TOYOTA_DECIMATOR_MAX_CA_REPORT) {
+		decimatorControlsAllowed = 0;
+		for (std::vector<ToyotaListener*>::iterator it = toyotaObservers.begin();
+			 it != toyotaObservers.end();
+			 it++) {
+//			(*it)->newPandaHealthNotification(health);
+			(*it)->newControlNotification(this);
+		}
 	}
 
 	if (hudTwoBeeps) {
@@ -194,6 +217,21 @@ void ToyotaHandler::doAction() {
 		decimatorAcc = 0;
 		sendAcc();
 	}
+	
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	int durationInMicroseconds = duration.count();
+	
+	int microsecondsToSleep = (1000000.0/TOYOTA_COMMAND_THREAD_RATE) - durationInMicroseconds;
+	
+	if (microsecondsToSleep < 0) {
+		fprintf(stderr, "WARNING! ToyotaHandler::doAction() execution time is too long.  Duration: %d us\n", durationInMicroseconds );
+		microsecondsToSleep = 0;
+	} else if ( microsecondsToSleep >= (1000000.0/TOYOTA_COMMAND_THREAD_RATE)) {
+		microsecondsToSleep = 1000000.0/TOYOTA_COMMAND_THREAD_RATE;
+	}
+	
+	usleep(microsecondsToSleep);	// run at 600 Hz
 }
 
 bool ToyotaHandler::heartbeatSteeringPass() {
@@ -204,6 +242,7 @@ bool ToyotaHandler::heartbeatAccelerationPass() {
 }
 
 void ToyotaHandler::sendHeartBeat() {
+//	std::cout << "In ToyotaHandler::sendHeartBeat()" << std::endl;
 	pandaHandler->getUsb().sendHeartBeat();
 	
 	// Libpanda should probably automatically do the following:
@@ -223,7 +262,7 @@ void ToyotaHandler::sendHeartBeat() {
 		 it != toyotaObservers.end();
 		 it++) {
 		(*it)->newPandaHealthNotification(health);
-		(*it)->newControlNotification(this);
+		//(*it)->newControlNotification(this);
 	}
 }
 
@@ -284,11 +323,17 @@ void ToyotaHandler::sendAcc() {
 	if (controls_allowed && heartbeatAccelerationPass() ) {//}&& car_cruise_ready_for_commands) {
 		permitBraking = true;
 		releaseStandstill = true;
-		accelerationControlToSend = accelerationControl;	// Apply the user-set acceleration
+		if (controls_allowed_delay_counter < TOYOTA_RATE_ACC) {	// Delay 1 second until commands are sent
+			controls_allowed_delay_counter++;
+			accelerationControlToSend = 0.0;
+		} else {
+			accelerationControlToSend = accelerationControl;	// Apply the user-set acceleration
+		}
 	} else {
 		permitBraking = false;
 		releaseStandstill = false;
 		accelerationControlToSend = 0.0;	// If we send non-0 in this state, cruise control will fault
+		controls_allowed_delay_counter = 0;
 	}
 	
 //	// The following will send a cancel request if controls are allowed and the heartbeat fails, but
@@ -299,7 +344,7 @@ void ToyotaHandler::sendAcc() {
 //	}
 //	cancelRequestSpamCount = 0;
 	if (cancelRequest ) {
-		if (cancelRequestSpamCount < 90) {	// 1 second spam
+		if (cancelRequestSpamCount < (TOYOTA_RATE_ACC * 3)) {	// 3 second spam
 			cancelRequestSpamCount++;
 		} else {
 			cancelRequest = false;

@@ -32,6 +32,22 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2021-08-03.img.tar.gz](https://drive.google.com/file/d/1qzAEcrjQiwb_Wua2KYKJBU9ndoJN0AGD/view?usp=sharing)
+	Changes:
+	- - Cruise control message loop throttling to send messages more consistently based on CPU load
+	- - Panda health requests moved to separate thread to prevent control command blocking
+	- - Safety start bounds changed from [-0.5,0.5] to [-0.5,1.5]
+	- - Control commands will only work 1 second after pressing Res/Set on cruise control to prevent rapid braking on immediate disengage
+	- - irsyncCyverse.sh made verose for bagfiles
+	- - Support for ROS -> blinkt
+	- - Controller startup script in ~/ for 08/04/2021 experiments
+	
+- [circles-raspbian-record-only-2021-08-03.img.tar.gz](https://drive.google.com/file/d/13aAAnnINF6yEDYi46-b6eGyvL-PtqPqo/view?usp=sharing)
+	Configured only for libpanda's pandarecord service to start on boot.  This image has ROS installed but no jmscslgroup ROS packages.
+	
+- [circles-raspbian-2021-08-01.img.tar.gz](https://drive.google.com/file/d/1SJAcJwGaYea5405EwtqKlHrYKvdyi69C/view?usp=sharing)
+	Feature various fixes and is ready for the Vanderbilt I-24 experiments on the day of 08/01
+
 - [circles-raspbian-2021-07-29.img.tar.gz](https://drive.google.com/file/d/1-kjKlkGd9QaS5CFuJCDGVw0fO-uyWYe5/view?usp=sharing)
 	Features major fixes and has been verified in vehicle
 	- - Removes all Cruise Control Faults known to date, specifially modified to handle driver brake/throttle presses 
@@ -63,6 +79,15 @@ ___
 - [circles-raspbian-2021-05-11.img.tar.gz](https://drive.google.com/file/d/1whDua53SyYLUnU6sM6c9JlXF1aUeAmPP/view?usp=sharing)
 
 	This image is the initial upload, featuring ROS, Libpanda, and can_to_ros
+
+## Helper Images:
+The following images are used to aid in the creation of images:
+
+- [circles-raspbian-ROS-2021-08-03.img.tar.gz](https://drive.google.com/file/d/1sMgx9Xjfsy20lqSBD95OcizjMutEmp4r/view?usp=sharing)
+	Has ROS and accounts setup with SSH enabled.  Builds upon the account-only image (below) but has also executed the libpanda/scripts/installROS.sh file
+	
+- [circles-raspbian-account-only-2021-07-14.img.tar.gz](https://drive.google.com/file/d/1OlJhEzcDLQSu3S_OwGohZhYeFN6acBlG/view?usp=sharing)
+	Has the default accounts/hostname/login password changed to "circles".  Also has SSH enabled
 
 <a name="usage"></a>
 ___

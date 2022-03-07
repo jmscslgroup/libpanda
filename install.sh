@@ -50,6 +50,8 @@ cd ../circlesmanager
 sudo ./install.sh
 cd ../gps-tracker
 sudo ./install.sh
+cd ../experiments
+./install.sh
 cd ../..
 
 sudo systemctl enable ssh
@@ -131,4 +133,9 @@ sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 
 
 # Add the vuDevices to the network:
-sudo addWifiApSimple -s vuDevices -p Acorn1873
+if grep -Fq "vuDevices" /etc/wpa_supplicant/wpa_supplicant.conf
+then
+	echo "WiFi AP SSID vuDevices network already configured"
+else
+	sudo addWifiApSimple -s vuDevices -p Acorn1873
+fi
