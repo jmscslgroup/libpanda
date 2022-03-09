@@ -15,7 +15,7 @@ except requests.ConnectionError:
 vinData = vinDataRequest.json()
 results = vinData['Results'][0]
 #save the make, model, trim, and model year
-vinDetails = {'Make':results['Make'].encode('utf-8'),'Model':results['Model'].encode('utf-8'),'Trim':results['Trim'].encode('utf-8'), 'Year':results['ModelYear'].encode('utf-8')}
+vinDetails = {'Make':results['Make'],'Model':results['Model'],'Trim':results['Trim'], 'ModelYear':results['ModelYear']}
 dest_file = '/etc/libpanda.d/vin_details.json'
 output_file = open(dest_file, 'w')
 json.dump(vinDetails, output_file)
