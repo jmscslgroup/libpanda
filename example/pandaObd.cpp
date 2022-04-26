@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 	
 	int i = 2;
 	while (keepRunning == true) {
-		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN, false);
 		
 		sleep(1);	// only once every 1 seconds
 		
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 	Panda::ObdPidRequest rpmRequest(pandaHandler.getCan());
 	i = 2;
 	while (keepRunning == true) {
-		rpmRequest.request(0x01, 0x0c);
+		rpmRequest.request(0x01, 0x0c, false);
 		
 		sleep(1);	// only once every 1 seconds
 		
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 	Panda::ObdPidRequest fuelRequest(pandaHandler.getCan());
 	i = 2;
 	while (keepRunning == true) {
-		fuelRequest.request(0x01, 0x10);
+		fuelRequest.request(0x01, 0x10, false);
 		
 		sleep(1);	// only once every 1 seconds
 		
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 	//   Panda::ObdPidRequest fuelRequest(pandaHandler);
 	i = 2;
 	while (keepRunning == true) {
-		fuelRequest.request(0x01, 0x9d);
+		fuelRequest.request(0x01, 0x9d, false);
 		
 		sleep(1);	// only once every 1 seconds
 		

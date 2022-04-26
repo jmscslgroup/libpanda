@@ -172,7 +172,7 @@ void Usb::initialize() {
 //	while(!vinRequest.complete() &&
 //		  vinAttempts++ < 10 ) {
 //		std::cout << " - Attempt " << vinAttempts << " reading VIN..." << std::endl;
-//		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+//		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN, false);
 //		sleep(1);
 //	}
 //	if (vinRequest.complete()) {

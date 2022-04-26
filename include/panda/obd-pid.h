@@ -58,15 +58,16 @@ public:
 	ObdPidRequest(Can& handler);
 	~ObdPidRequest();
 	
-	void request( unsigned char mode, unsigned char pid );
+	void request( unsigned char mode, unsigned char pid, bool extendedAddr );
 	
 	bool complete();
 	
 private:
 	unsigned char* tempData;
 	int tempLength;
+	bool extended;
 	
-	int assignedId;
+	long long assignedId;	// for extended we oly need 32, but I set this to -1 for encoding the state of handshaking
 	
 	bool busy;
 	

@@ -50,7 +50,7 @@ ObdPidRequest::~ObdPidRequest() {
 	}
 }
 
-void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
+void ObdPidRequest::request( unsigned char mode, unsigned char pid, bool extendedAddr ) {
 	stop();
 	lock();
 	
@@ -67,13 +67,17 @@ void ObdPidRequest::request( unsigned char mode, unsigned char pid ) {
 	
 	this->mode = mode;
 	this->pid = pid;
+	this->extended = extendedAddr;
 	
 	Panda::CanFrame vinRequest;
 	// From comma.ai selfdrive code, should be bus 1:
 	vinRequest.bus = 1;
 	// Following https://m0agx.eu/2017/12/27/reading-obd2-data-without-elm327-part-1-can/
-	vinRequest.messageID = 0x7DF;	// broadcast message
-//		vinRequest.messageID = 0x18DB33F1;
+	if (extended) {
+		vinRequest.messageID = 0x18DB33F1;
+	} else {
+		vinRequest.messageID = 0x7DF;	// broadcast message
+	}
 	vinRequest.data[0] = 0x02;	// designates length, unsure if this is a sub-protocol of the data
 	vinRequest.data[1] = mode;	// Mode
 	vinRequest.data[2] = pid;	// PID for the mode
@@ -225,8 +229,18 @@ void ObdPidRequest::doAction() {
 				
 				dataLength = ((((int)frame.data[0] & 0x0F) << 8) | (int)frame.data[1]) - 3;
 //				printf(" - Length: %d\n", dataLength);
+		
 				
-				assignedId = frame.messageID - 8;
+#define OBD_PID_EXTENDED_RESPONSE (0x18DAF100)
+#define OBD_PID_EXTENDED_REQUEST (0x18DA00F1)
+#define OBD_PID_EXTENDED_BROADCAST_ID (0x18DB33F1)
+#define OBD_PID_EXTENDED_ID_MASK (0x000000FF)
+				
+				if (frame.messageID > 0x800) {	// 29-bit
+					assignedId = OBD_PID_EXTENDED_REQUEST | ((OBD_PID_EXTENDED_ID_MASK & frame.messageID) << 8);
+				} else {	// 11-bit
+					assignedId = frame.messageID - 8;
+				}
 //				printf(" - Assigned ID: 0x%04x\n", assignedId);
 				
 //				printf(" - Multi-packet data length: %d\n", dataLength);
@@ -290,17 +304,40 @@ void ObdPidRequest::doAction() {
 	pause();
 }
 
+
 void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
-	if ( (assignedId == (canFrame->messageID - 8)) ||
-		(assignedId == -1 &&
-		canFrame->messageID >= 0x7E8 &&
-		canFrame->messageID <= 0x7EF)) {
-		// This is a message of interest
+	// Useful table of responses here: https://community.carloop.io/t/handling-29-bit-extended-format/239/16
 	
-		lock();	// queue a frame
-		frameQueue.push(*canFrame);
-		unlock();
-		
-		resume();
+	if (canFrame->messageID <= 0x0800) {	// 11-bit address
+		if ( (assignedId == (canFrame->messageID - 8)) || // in 11-bit, this "-8" regards addressing handshcke between the ECU and external device
+			(assignedId == -1 &&
+			 canFrame->messageID >= 0x7E8 &&
+			 canFrame->messageID <= 0x7EF)) {
+			// This is a message of interest
+			
+			lock();	// queue a frame
+			frameQueue.push(*canFrame);
+			unlock();
+			
+			resume();
+		} else {
+			std::cout << "Looks like we got something uninteresting?" << std::endl;
+		}
+	} else {	// 29-bit address
+		if ( (canFrame->messageID & ~OBD_PID_EXTENDED_ID_MASK) == OBD_PID_EXTENDED_RESPONSE  &&	// all 29-bit pid request should follow this
+			(
+			assignedId == (OBD_PID_EXTENDED_REQUEST | ((canFrame->messageID & OBD_PID_EXTENDED_ID_MASK) << 8)) || // assigned
+			assignedId == -1)	// unassigned
+			) {
+			// This is a message of interest
+			
+			lock();	// queue a frame
+			frameQueue.push(*canFrame);
+			unlock();
+			
+			resume();
+		} else {
+			std::cout << "Looks like we got something uninteresting?" << std::endl;
+		}
 	}
 }

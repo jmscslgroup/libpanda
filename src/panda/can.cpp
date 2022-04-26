@@ -121,7 +121,11 @@ void Can::startParsing() {
 	while( vinAttempts++ < 10 ) {
 		ObdPidRequest vinRequest(*this);
 		std::cerr << " - - Attempt " << vinAttempts << "/10...";
-		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN);
+		bool extended = true;	// HACK
+		if (vinAttempts >= 5) {	// HACK
+			extended = false;	// HACK
+		}	// HACK
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN, extended);
 		int timeoutCount = 0;
 		while (timeoutCount++ < 100 && !vinRequest.complete()) {
 			usleep(10000);
