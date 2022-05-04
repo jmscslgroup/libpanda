@@ -70,6 +70,7 @@ cd ~/catkin_ws
 catkin_make
 
 source devel/setup.sh
+rosrun robot_upstart uninstall can
 rosrun robot_upstart install can_to_ros/launch/vehicle_control_integrated_cbf.launch --user root
 
 
