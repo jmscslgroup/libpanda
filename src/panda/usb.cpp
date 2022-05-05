@@ -160,6 +160,13 @@ void Usb::initialize() {
 		case HARDWARE_PEDAL:
 			std::cout << " |-- This is an PEDAL, no GPS" << std::endl;
 			break;
+		case HARDWARE_DOS:
+			std::cout << " |-- This is a DOS" << std::endl;
+			break;
+		case HARDWARE_RED_PANDA:
+			hasGps = false;
+			std::cout << " |-- This is a RED PANDA, no GPS" << std::endl;
+			break;
 
 		case HARDWARE_UNKNOWN:
 		default:
