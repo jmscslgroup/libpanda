@@ -31,7 +31,7 @@
 #include <time.h>
 #include <cstring> // memcpy
 
-//#define CAN_VERBOSE
+#define CAN_VERBOSE
 
 using namespace Panda;
 
@@ -117,7 +117,7 @@ void Can::startParsing() {
 	usleep(200000);
 	std::cout << " - Attempting to read the VIN:" << std::endl;
 	
-	int vinAttempts = 0;
+	int vinAttempts = 10;
 	bool extended = true;	// HACK
 	while( vinAttempts++ < 10 ) {
 		ObdPidRequest vinRequest(*this);
@@ -176,13 +176,15 @@ void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 		return;
 	}
 
-	unsigned char message[16];
+//	unsigned char message[16];
+	unsigned char message[sizeof(CANPacket_t)]; // RED: packets are now 72 in length I think
 	canFrameToBuffer(frame, message);
 
 	// In comma.ai code they bulk send multiple messages with the following:
 	// usb_bulk_write(3, (unsigned char*)send, msg_count*0x10, 5);
 	// Panda::usb_bulk_write(unsigned char endpoint, unsigned char* data, int length, unsigned int timeout
-	usbHandler->sendCanData(message, 16);
+//	usbHandler->sendCanData(message, 16);
+	usbHandler->sendCanData(message, sizeof(message));	// RED: New packet
 }
 
 void Can::writeCsvToFile(CanFrame* frame, unsigned char* converted, int bufLength) {
@@ -266,47 +268,75 @@ void Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer) {	// TODO 
 	message[1] = (frame.bus << 4) | frame.dataLength;
 	//message[2] = frame.busTime << 16;	// Not needed
 	memcpy(&message[2], frame.data, frame.dataLength);
+	
+	
 }
 
 CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 	// The following translation is ported from Rahul's parse_can_buffer
 	CanFrame canFrame;
-	uint32_t repackedBuffer[4];		// we only expect to ever get 16 byte maximum, this looks at first 2 bytes
-	memcpy(repackedBuffer, buffer, bufferLength);
-
-#ifdef CAN_VERBOSE
-	std::cout << " - In bufferToCanFrame()" << std::endl;
-	std::cout << " |-- Repacked:";
-	for (int i = 0; i < 4; i++) {
-		printf("0x%08X ", repackedBuffer[i]); // uint8 is 2 nibbles, uint32=4*uint8 -> 8 nibbles
-	}
-	std::cout << std::endl;
-#endif
-
-	// From comma.ai board.cc code:
-	if (repackedBuffer[0] & 0x04) {	// Check for extended frame
-		canFrame.messageID = repackedBuffer[0] >> 3;
-	} else {
-		canFrame.messageID = repackedBuffer[0] >> 21;
-		// Ok I'm confused, if we retrieve this then the frame formation is completly different according to this:
-		// https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
-		// the the following methods only work for extended remote frames.
-		// My conclusion here is that twe are NOT forming a CAN packet, but rather enought for the Panda
-		// or even a potential ELM327 chip to understand, therefore the above link is meaningless
-	}
-
-	canFrame.busTime = repackedBuffer[1] >> 16;
-	canFrame.dataLength = repackedBuffer[1] & 0x0000000F;
-	memcpy(canFrame.data, &buffer[8], canFrame.dataLength);
-	canFrame.bus = (repackedBuffer[1] >> 4) & 0x00000FF;
-
-#ifdef CAN_VERBOSE
-	printf(" |-- Parsed Frame: %d,%d,", canFrame.messageID, canFrame.bus);
-	for (int i = canFrame.dataLength-1; i >= 0; i--) {
-		printf("%02x", canFrame.data[i]);
-	}
-	printf(",%d\n", canFrame.dataLength);
-#endif
+//	uint32_t repackedBuffer[4];		// we only expect to ever get 16 byte maximum, this looks at first 2 bytes
+//	memcpy(repackedBuffer, buffer, bufferLength);
+//
+//#ifdef CAN_VERBOSE
+//	std::cout << " - In bufferToCanFrame()" << std::endl;
+//	std::cout << " |-- Repacked:";
+//	for (int i = 0; i < 4; i++) {
+//		printf("0x%08X ", repackedBuffer[i]); // uint8 is 2 nibbles, uint32=4*uint8 -> 8 nibbles
+//	}
+//	std::cout << std::endl;
+//#endif
+//
+//	// From comma.ai board.cc code:
+//	if (repackedBuffer[0] & 0x04) {	// Check for extended frame
+//		canFrame.messageID = repackedBuffer[0] >> 3;
+//	} else {
+//		canFrame.messageID = repackedBuffer[0] >> 21;
+//		// Ok I'm confused, if we retrieve this then the frame formation is completly different according to this:
+//		// https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
+//		// the the following methods only work for extended remote frames.
+//		// My conclusion here is that twe are NOT forming a CAN packet, but rather enought for the Panda
+//		// or even a potential ELM327 chip to understand, therefore the above link is meaningless
+//	}
+//
+//	canFrame.busTime = repackedBuffer[1] >> 16;
+//	canFrame.dataLength = repackedBuffer[1] & 0x0000000F;
+//	memcpy(canFrame.data, &buffer[8], canFrame.dataLength);
+//	canFrame.bus = (repackedBuffer[1] >> 4) & 0x00000FF;
+//
+//#ifdef CAN_VERBOSE
+//	printf(" |-- Parsed Frame: %d,%d,", canFrame.messageID, canFrame.bus);
+//	for (int i = canFrame.dataLength-1; i >= 0; i--) {
+//		printf("%02x", canFrame.data[i]);
+//	}
+//	printf(",%d\n", canFrame.dataLength);
+//#endif
+	
+	// All of the above commented out for CAN packet version 2 parsing:
+	
+#define CANPACKET_HEAD_SIZE (0x5)
+	static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}; // dat alength code
+	int parsePosition = 0;
+	canFrame.dataLength = dlcToLen[buffer[parsePosition] >> 4];
+	int packetLength = CANPACKET_HEAD_SIZE + canFrame.dataLength;
+	//if (packetLength < bufferLength) {	// we will have flexible sized packets sooo... this function will need work
+		char* header = &buffer[parsePosition];	// will be of length CANPACKET_HEAD_SIZE
+		
+		canFrame.bus = (header[0] >> 1) & 0x07;
+		canFrame.messageID = (header[4] << 24 | header[3] << 16 | header[2] << 8 | header[1]) >> 3;
+		
+		canFrame.returned = (header[1] >> 1) & 0x01;
+		canFrame.rejected = header[1] & 0x01;
+		memcpy(canFrame.data, &buffer[parsePosition + CANPACKET_HEAD_SIZE], canFrame.dataLength);
+		
+		if (canFrame.returned) {
+			canFrame.bus += 128;
+		}
+		if (canFrame.rejected) {
+			canFrame.bus += 192;
+		}
+	//}
+	
 
 	return canFrame;
 }
@@ -320,33 +350,78 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 
 	writeRawToFile(buffer, bufferLength);
 #ifdef CAN_VERBOSE
-	std::cout << "Got a CAN::notificationCanRead()!" << std::endl;
-	std::cout << " - Received " << bufferLength <<	" Bytes :";
-//	for (int i = 0; i < bufferLength; i++) {
-//		printf("0x%02X ", buffer[i]);
-//	}
-	std::cout << std::endl;
+	if (bufferLength > 0) {
+		std::cout << "Got a CAN::notificationCanRead()!" << std::endl;
+		std::cout << " - Received " << bufferLength <<	" Bytes :";
+	//	for (int i = 0; i < bufferLength; i++) {
+	//		printf("0x%02X ", buffer[i]);
+	//	}
+		std::cout << std::endl;
+	}
 #endif
 
 	int lengthOfFrame, remainingBytes;
 	lock();
-	for (int index = 0; index < bufferLength; index += 16) {
-		remainingBytes = bufferLength - index;
-		lengthOfFrame = remainingBytes > 16 ? 16 : remainingBytes;
-#ifdef CAN_VERBOSE
-		std::cout << " - Gonna parse this: ";
-		for (int i = 0; i < lengthOfFrame; i++) {
-					printf("0x%02X ", buffer[index+i]);
-				}
-		std::cout << std::endl;
-#endif
-//		if (((unsigned char)buffer[index]) == 0xFF) {	// TODO test if this is needed, preliminary testing failure showed this but may be an unrelated problem now resolved
-//			continue;
-//		}
-		CanFrame newFrame = bufferToCanFrame(&buffer[index], lengthOfFrame);
-		newFrame.sysTime = sysTime;
-		writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
-		canFrames.push_back(newFrame);	// FIFO insert
+//	for (int index = 0; index < bufferLength; index += 16) {
+//		remainingBytes = bufferLength - index;
+//		lengthOfFrame = remainingBytes > 16 ? 16 : remainingBytes;
+//#ifdef CAN_VERBOSE
+//		std::cout << " - Gonna parse this: ";
+//		for (int i = 0; i < lengthOfFrame; i++) {
+//					printf("0x%02X ", buffer[index+i]);
+//				}
+//		std::cout << std::endl;
+//#endif
+////		if (((unsigned char)buffer[index]) == 0xFF) {	// TODO test if this is needed, preliminary testing failure showed this but may be an unrelated problem now resolved
+////			continue;
+////		}
+//		CanFrame newFrame = bufferToCanFrame(&buffer[index], lengthOfFrame);
+//		newFrame.sysTime = sysTime;
+//		writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
+//		canFrames.push_back(newFrame);	// FIFO insert
+//	}
+	// The following is for a newer CANPACKET_VERSION == 2
+//#define CANPACKET_HEAD_SIZE (0x5)
+	static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}; // data length code
+	
+	
+	int counter = 0;
+	char chunk[128];
+	int chunkLength = 0;
+	char* tail = chunk;
+	int tailLength = 0;
+	
+	for (int index = 0; index < bufferLength; index += 64) {
+		if (counter++ != buffer[index]) {
+			std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter" << std::endl;
+			break;
+		}
+		
+		memcpy(chunk, tail, tailLength);
+		memcpy(&chunk[tailLength], &buffer[index+1], 63 > bufferLength-(index+1) ? bufferLength - (index+1) : 63);
+		chunkLength = tailLength + (63 > bufferLength-(index+1) ? bufferLength - (index+1) : 63);
+		int parsePosition = 0;
+		
+		while (parsePosition < chunkLength) {
+			int dataLength = dlcToLen[chunk[parsePosition] >> 4];
+			int packetLength = CANPACKET_HEAD_SIZE + dataLength;
+			
+			if (packetLength <= chunkLength - parsePosition) {
+				
+				
+				CanFrame newFrame = bufferToCanFrame(chunk, chunkLength);
+				newFrame.sysTime = sysTime;
+				writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
+				canFrames.push_back(newFrame);	// FIFO insert
+				
+				parsePosition += packetLength;
+			} else {
+				tail = &chunk[parsePosition];
+				tailLength = chunkLength - parsePosition;
+				break;
+			}
+		}
+		
 	}
 	unlock();
 }

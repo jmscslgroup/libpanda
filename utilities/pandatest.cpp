@@ -157,6 +157,8 @@ int main(int argc, char **argv) {
 		std::cout << "Green LED set to " << greenLed << std::endl;
 		
 		std::cout << std::endl;
+		
+		std::cout << "sizeof(CANPacket_t) = "  << (int)sizeof(CANPacket_t) << std::endl;
 	}
 	
 	handler.stop();

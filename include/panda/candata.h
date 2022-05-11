@@ -26,7 +26,19 @@
 #ifndef PANDA_CAN_DATA_H
 #define PANDA_CAN_DATA_H
 
-#define CAN_DATA_MAX_LENGTH (8)
+//#define CAN_DATA_MAX_LENGTH (8)
+#define CAN_DATA_MAX_LENGTH (64) // For CAN FD
+
+typedef struct {
+  unsigned char reserved : 1;
+  unsigned char bus : 3;
+  unsigned char data_len_code : 4; // 1
+  unsigned char rejected : 1;
+  unsigned char returned : 1;
+  unsigned char extended : 1;
+  unsigned int addr : 29;	// 2, 3, 4, 5
+  unsigned char data[CAN_DATA_MAX_LENGTH];	// 69
+} __attribute__((packed, aligned(4))) CANPacket_t;
 
 namespace Panda {
 
@@ -39,7 +51,7 @@ namespace Panda {
 		/*! \brief CAN message ID
 		 */
 		unsigned int messageID = 0;
-		/*! \brief Length of the data, should not exceed CAN_MAX_LENGTH (8)
+		/*! \brief Length of the data, should not exceed CAN_DATA_MAX_LENGTH
 		 */
 		unsigned char dataLength = 0;
 		/*! \brief CAN message bus time
@@ -51,6 +63,12 @@ namespace Panda {
 		/*! \brief The data for the CAN message
 		 */
 		unsigned char data[CAN_DATA_MAX_LENGTH];
+		/*! \brief Perhaps if incomplete?
+		 */
+		unsigned char returned;
+		/*! \brief Perhaps if invalid?
+		 */
+		unsigned char rejected;
 		/*! \brief The system time upon rec
 		 */
 		struct timeval sysTime;

@@ -210,7 +210,8 @@ namespace Panda {
 		//struct libusb_transfer *outgoingTransfer;
 //		struct libusb_transfer *uartTransfer;
 
-		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
+//		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
+		unsigned char bufferSynchronousCan[72*4];	// Packet version 2 are 72 bytes each
 		unsigned char bufferSynchronousUart[BYTES_PER_UART_TRANSFER];
 		unsigned int bufferLengthSynchronousUart;
 
