@@ -168,6 +168,20 @@ namespace Panda {
 		void setGreenLed( bool enable );
 		void disableHeartbeat(); // only functional in debug firmware builds
 		
+		/*! \brief This sets the CAN FD baudrate for individual CAN busses
+		 This sets can_data_speed in the CAN config in the panda.
+		 
+		 FD enabled:
+		 For busses 0-2, if the value "baud" is >= 5000, then the corresponding canfd_enabled will become true.
+		 For bus 3, if the value "baud" is >= 333, then the corresponding canfd_enabled will become true.
+		 
+		 BRS enabled:
+		 For busses 0-2, if the value "baud" is > 5000, then the corresponding brs_enabled will become true
+		 For bus 3, if the value "baud" is > 333, then the corresponding brs_enabled will become true.
+		 
+		 \param bus The Panda's bus designation.  If setting 0, then 2 should be set similarly for the passthrough
+		 \param baud The baudrate for the bus, in units of 100bps.  For 2Mbps, set to 20000
+		 */
 		void setCanFdBaud( int bus, int baud ); // unsure on units
 		void getCanFdEnabled( int bus, bool* fdEnabled, bool* brsEnabled ); // byte 0 is if FD enabled, byte 1 is if BRS enabled
 		void enterDeepSleep(); // Unsure how to wake up

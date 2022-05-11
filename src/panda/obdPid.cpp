@@ -321,7 +321,7 @@ void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 			
 			resume();
 		} else {
-			std::cout << "Looks like we got something uninteresting?" << std::endl;
+//			std::cout << "Looks like we got something uninteresting?" << std::endl;
 		}
 	} else {	// 29-bit address
 		if ( (canFrame->messageID & ~OBD_PID_EXTENDED_ID_MASK) == OBD_PID_EXTENDED_RESPONSE  &&	// all 29-bit pid request should follow this
@@ -337,7 +337,7 @@ void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 			
 			resume();
 		} else {
-			std::cout << "Looks like we got something uninteresting?" << std::endl;
+//			std::cout << "Looks like we got something uninteresting?" << std::endl;
 		}
 	}
 }

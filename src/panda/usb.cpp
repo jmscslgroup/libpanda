@@ -176,9 +176,11 @@ void Usb::initialize() {
 			hasGps = false;
 			std::cout << " |-- This is a RED PANDA, no GPS" << std::endl;
 			std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
-			setCanFdBaud(0, 20000);
+//			setCanFdBaud(0, 20000);
+			setCanFdBaud(0, 5000);
 			std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
-			setCanFdBaud(2, 20000);
+//			setCanFdBaud(2, 20000);
+			setCanFdBaud(2, 5000);
 			
 			break;
 

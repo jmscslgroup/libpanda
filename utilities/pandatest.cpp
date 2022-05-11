@@ -121,11 +121,12 @@ int main(int argc, char **argv) {
 		
 
 		
-		
-		for (int i = 0; i < 4; i++) {
+//		int canBusses[] = {0, 1, 2, 0xFF};
+		int canBusses[] = {0, 1, 2, 3};
+		for (int i = 0; i < sizeof(canBusses)/sizeof(canBusses[0]); i++) {
 			bool fdEnabled, brsEnabled;
-			handler.getUsb().getCanFdEnabled(i, &fdEnabled, &brsEnabled);
-			std::cout << " CAN bus " << i << " - FD Enabled: " << fdEnabled << " BRS Enabled: " << brsEnabled << std::endl;
+			handler.getUsb().getCanFdEnabled(canBusses[i], &fdEnabled, &brsEnabled);
+			std::cout << " CAN bus " << canBusses[i] << " - FD Enabled: " << fdEnabled << " BRS Enabled: " << brsEnabled << std::endl;
 		}
 		
 		

@@ -104,12 +104,6 @@ target_link_libraries(${LIBNAME}    ${LIBUSB_1_LIBRARIES}
 
 set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread )
 
-add_library(strym     src/strym.cpp
-                      include/strym.h )
-target_link_libraries(strym    ${LIBUSB_1_LIBRARIES}
-                               mogithread
-                               ${LIBNAME} )
-
 new_install( ${LIBNAME} )
 new_install( mogithread )
 
@@ -126,7 +120,6 @@ if(${CURSES_FOUND})
      target_link_libraries(pandaCurses  ${LIBS}
                                         ${LIBNAME}
                                         mogithread
-                                        strym
                                         NMEAParserLib
                                         ncurses )
 endif()
@@ -144,21 +137,18 @@ add_executable(simpleSend	example/simpleSend.cpp
 target_link_libraries(simpleSend	${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
 									NMEAParserLib )
 
 add_executable(pandaVin		example/pandaVin.cpp )
 target_link_libraries(pandaVin ${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
 									NMEAParserLib)
 
 add_executable(pandaObd		example/pandaObd.cpp )
 target_link_libraries(pandaObd ${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
 									NMEAParserLib)
 
 add_subdirectory(utilities)
