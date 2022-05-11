@@ -31,7 +31,7 @@
 #include <time.h>
 #include <cstring> // memcpy
 
-#define CAN_VERBOSE
+//#define CAN_VERBOSE
 
 using namespace Panda;
 
@@ -194,7 +194,7 @@ void Can::writeCsvToFile(CanFrame* frame, unsigned char* converted, int bufLengt
 //			fprintf(csvDump, "%02x", converted[i]);
 //		}
 
-		fprintf(csvDump,"%d,%d,", (int)frame->bus, frame->messageID);
+		fprintf(csvDump,"%d,%u,", (int)frame->bus, frame->messageID);
 
 		for (int i =0; i < frame->dataLength; i++) {
 			fprintf(csvDump, "%02x", frame->data[i]);
@@ -388,7 +388,7 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength) {
 	//}
 #ifdef CAN_VERBOSE
 	
-	printf("Parsed message: %d,%d,", (int)canFrame.bus, canFrame.messageID);
+	printf("Parsed message: %d,%u,", (int)canFrame.bus, canFrame.messageID);
 
 	for (int i =0; i < canFrame.dataLength; i++) {
 		printf("%02x", canFrame.data[i]);

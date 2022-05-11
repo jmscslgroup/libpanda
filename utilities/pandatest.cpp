@@ -20,7 +20,7 @@ private:
 	void newDataNotification(Panda::CanFrame* frame) {
 		printf("New CAN read: %d.%06d,", (unsigned int)frame->sysTime.tv_sec, (int)frame->sysTime.tv_usec);
 
-		printf("%d,%d,", (int)frame->bus, frame->messageID);
+		printf("%u,%u,", (int)frame->bus, frame->messageID);
 
 		for (int i =0; i < frame->dataLength; i++) {
 			printf("%02x", frame->data[i]);
@@ -157,8 +157,6 @@ int main(int argc, char **argv) {
 		std::cout << "Green LED set to " << greenLed << std::endl;
 		
 		std::cout << std::endl;
-		
-		std::cout << "sizeof(CANPacket_t) = "  << (int)sizeof(CANPacket_t) << std::endl;
 	}
 	
 	handler.stop();
