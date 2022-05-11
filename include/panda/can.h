@@ -49,8 +49,9 @@ namespace Panda {
 	 \brief Converts a CanFrame into a buffer for sending to the Panda
 	 \param frame The CAN frame of data to be sent
 	 \param buffer The array of data to be sent.  Should be 16 bytes in length.
+	 \return The length of the packet
 	 */
-	void canFrameToBuffer( CanFrame& frame, unsigned char* buffer);
+	int canFrameToBuffer( CanFrame& frame, unsigned char* buffer);
 
 	class Can;
 
@@ -149,6 +150,9 @@ namespace Panda {
 		 */
 		void sendMessage( CanFrame& frame );
 
+		
+		
+		void notificationCanRead(char* buffer, size_t bufferLength);	// HACK
 	private:
 		bool currentlyReceiving = false;
 		
@@ -163,8 +167,8 @@ namespace Panda {
 		void writeCsvToFile(CanFrame* frame, unsigned char* buffer, int bufLength);
 		void writeRawToFile(char* buffer, size_t length);
 
-		// Overload frum UsbListener
-		void notificationCanRead(char* buffer, size_t bufferLength);
+//		// Overload frum UsbListener
+//		void notificationCanRead(char* buffer, size_t bufferLength);
 
 		// Overload from Mogi::Thread
 		void doAction();

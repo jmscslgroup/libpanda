@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 //		handler.getUsb().setCanLoopback(true);
 		Panda::CanFrame frame;
 		frame.messageID = timestamp.second;
-		frame.bus = 0;
+		frame.bus = 1;
 		frame.dataLength = 8;
 		frame.data[0] = timestamp.second;
 		handler.getCan().sendMessage(frame);
