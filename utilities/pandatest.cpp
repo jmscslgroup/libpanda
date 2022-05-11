@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 		
 		for (int i = 0; i < 4; i++) {
 			bool fdEnabled, brsEnabled;
-			handler.getUsb().getCanFdEnabled(0, &fdEnabled, &brsEnabled);
+			handler.getUsb().getCanFdEnabled(i, &fdEnabled, &brsEnabled);
 			std::cout << " CAN bus " << i << " - FD Enabled: " << fdEnabled << " BRS Enabled: " << brsEnabled << std::endl;
 		}
 		

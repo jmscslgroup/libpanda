@@ -175,6 +175,11 @@ void Usb::initialize() {
 		case HARDWARE_RED_PANDA:
 			hasGps = false;
 			std::cout << " |-- This is a RED PANDA, no GPS" << std::endl;
+			std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
+			setCanFdBaud(0, 20000);
+			std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
+			setCanFdBaud(2, 20000);
+			
 			break;
 
 		case HARDWARE_UNKNOWN:
@@ -1072,8 +1077,7 @@ void Usb::setCanFdBaud( int bus, int baud ) {
 
 void Usb::getCanFdEnabled( int bus, bool* fdEnabled, bool* brsEnabled ) {
 	unsigned char response[2];
-	response[0] = bus;
-	readPandaHardwareSimple( REQUEST_CAN_FD_ENABLED, response, 2);
+	readPandaHardwareSimple( REQUEST_CAN_FD_ENABLED, response, 2, bus);
 	*fdEnabled = response[0];
 	*brsEnabled = response[1];
 }
@@ -1097,8 +1101,8 @@ void Usb::sendPandaHardwareSimple(uint8_t request, uint16_t value, uint16_t inde
 
 //void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
 //	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
-void Usb::readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length) {
-	int status = libusb_control_transfer(handler, REQUEST_TYPE_IN, request, 0, 0, buffer, length, TIMEOUT);
+void Usb::readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value, uint16_t index) {
+	int status = libusb_control_transfer(handler, REQUEST_TYPE_IN, request, value, index, buffer, length, TIMEOUT);
 	if (status < 0) {
 		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_transfer error" << std::endl;
 		printError(status);

@@ -171,6 +171,9 @@ int main(int argc, char **argv) {
 		newFrame.data[0] = 1;
 		mCanFrameStats.newDataNotification(&newFrame);
 	}
+	
+	// If no new data shows up, we wil still update at 1Hz
+	int loopCounter = 0;
 
 	// Main UI loop
 	CursesHandler* mCursesHandler = CursesHandler::getInstance();
@@ -178,8 +181,9 @@ int main(int argc, char **argv) {
 	mCursesHandler->updateScreen(pandaHandler,mCanFrameStats, mUsbStats); // Draw initial screen
 	while (keepRunning == true) {
 		// Update whenever there is new data.
-		if (myObserver.checkNewData()) {
+		if (myObserver.checkNewData() || loopCounter++ >= 10) {
 			mCursesHandler->updateScreen(pandaHandler, mCanFrameStats, mUsbStats);
+			loopCounter = 0;
 		}
 
 		if(fakeData) {

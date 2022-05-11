@@ -119,10 +119,10 @@ void Can::startParsing() {
 	
 	int vinAttempts = 0;
 	bool extended = true;	// HACK
-	while( vinAttempts++ < 4 ) {
+	while( vinAttempts++ < 10 ) {
 		ObdPidRequest vinRequest(*this);
 		
-		if (vinAttempts > 2 && extended == true) {	// HACK
+		if (vinAttempts > 5 && extended == true) {	// HACK
 			std::cout << "Extended Addressing OBD PID failed, attempting legacy addressed OBD PID reading" << std::endl;	// HACK
 			extended = false;	// HACK
 		}	// HACK
