@@ -117,7 +117,7 @@ void Can::startParsing() {
 	usleep(200000);
 	std::cout << " - Attempting to read the VIN:" << std::endl;
 	
-	int vinAttempts = 10;
+	int vinAttempts = 0;
 	bool extended = true;	// HACK
 	while( vinAttempts++ < 10 ) {
 		ObdPidRequest vinRequest(*this);

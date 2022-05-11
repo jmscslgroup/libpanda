@@ -58,7 +58,40 @@ int main(int argc, char **argv) {
 	}
 	printf("\n");
 	
-	sleep(1);
+
+	std::cout << "Done." << std::endl;
+	
+	std::cout << "\nSending it through the parser:" << std::endl;
+	testCan.notificationCanRead((char*)testPack, length);
+	
+	
+	
+	frame.messageID = 1000;
+	frame.bus = 1;
+	frame.dataLength = 8;
+	memset(frame.data, 0, 64);
+	frame.data[0] = 0;
+	frame.data[1] = 1;
+	frame.data[2] = 2;
+	frame.data[3] = 3;
+	frame.data[4] = 4;
+	frame.data[5] = 5;
+	frame.data[6] = 6;
+	frame.data[7] = 7;
+	
+	
+	std::cout << "Building a custom message:" << std::endl;
+	length = Panda::canFrameToBuffer(frame, testPack);
+	
+	for	(int i = 0; i < length; i++) {
+		if ( i % 16 == 0) {
+			printf("\n");
+		}
+		printf("0x%02X ", testPack[i]);
+	}
+	printf("\n");
+	
+
 	std::cout << "Done." << std::endl;
 	
 	std::cout << "\nSending it through the parser:" << std::endl;
