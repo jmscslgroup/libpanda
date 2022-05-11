@@ -353,9 +353,9 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 	if (bufferLength > 0) {
 		std::cout << "Got a CAN::notificationCanRead()!" << std::endl;
 		std::cout << " - Received " << bufferLength <<	" Bytes :";
-	//	for (int i = 0; i < bufferLength; i++) {
-	//		printf("0x%02X ", buffer[i]);
-	//	}
+		for (int i = 0; i < bufferLength; i++) {
+			printf("0x%02X ", buffer[i]);
+		}
 		std::cout << std::endl;
 	}
 #endif
