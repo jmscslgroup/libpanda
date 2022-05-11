@@ -121,6 +121,7 @@ void Gps::doAction() {
 	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
 
 	usbHandler->requestUartData();
+//	std::cout << "Requeting new data" << std::endl;
 }
 
 bool Gps::isReady() {
@@ -157,7 +158,7 @@ void Gps::saveToFile( const char* filename ) {
 
 // GPS overloads:
 void Gps::OnError(CNMEAParserData::ERROR_E nError, char *pCmd) {
-	//printf("ERROR for Cmd: %s, Number: %d\n", pCmd, nError);
+	printf("ERROR for Cmd: %s, Number: %d\n", pCmd, nError);
 }
 
 CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
@@ -401,12 +402,16 @@ void Gps::initialize() {
 	}
 
 	std::cerr << " - Resetting" << std::endl;
+	
+	
+	
 	usbHandler->setEspPower(0);
 	usleep(100000);
+
 	usbHandler->uartPurge();
 
-	usbHandler->setUartBaud(UART_DEVICE_GPS, 9600);
-
+	usbHandler->setUartBaud(UART_DEVICE_GPS, INIT_GPS_BAUD);
+	
 	usbHandler->setEspPower(1);
 	usleep(500000);
 
@@ -425,11 +430,13 @@ void Gps::initialize() {
 	usbHandler->uartWrite(nmeaString, strlen(nmeaString));
 
 	usleep(100000);
+//	usbHandler->uartPurge();
 
 	std::cerr << " - Reconnecting with new baudrate" << std::endl;
-	usbHandler->setUartBaud(UART_DEVICE_GPS, 460800);
+	usbHandler->setUartBaud(UART_DEVICE_GPS, GPS_BAUD);
 	usleep(100000);
 
+	
 	std::cerr << " - Sending config" << std::endl;
 
 	// The following is copied from panda python code.  These are hardcoded UBX messages that they calim are generated from test/ubloxd.py

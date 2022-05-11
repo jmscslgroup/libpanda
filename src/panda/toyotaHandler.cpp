@@ -152,7 +152,17 @@ void ToyotaHandler::entryAction() {
 	pandaHandler->getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 	
 	std::cout << " - Setting Safety to SAFETY_TOYOTA" << std::endl;
-	pandaHandler->getUsb().setSafetyMode(SAFETY_TOYOTA);
+	/* For the params setting see the code in comma.ai/panda/board/safety/safety_toyota.h:
+	 // safety param flags
+	 // first byte is for eps factor, second is for flags
+	 const uint32_t TOYOTA_PARAM_OFFSET = 8U;
+	 const uint32_t TOYOTA_EPS_FACTOR = (1U << TOYOTA_PARAM_OFFSET) - 1U;
+	 const uint32_t TOYOTA_PARAM_ALT_BRAKE = 1U << TOYOTA_PARAM_OFFSET;
+	 const uint32_t TOYOTA_PARAM_STOCK_LONGITUDINAL = 2U << TOYOTA_PARAM_OFFSET;
+	 
+	 // The value of 73 is based on car controller code in openpilot for Toyotas
+	*/
+	pandaHandler->getUsb().setSafetyMode(SAFETY_TOYOTA, 73);
 	
 }
 
@@ -160,7 +170,7 @@ void ToyotaHandler::exitAction() {
 	std::cout << "In ToyotaHandler::exitAction():" << std::endl;
 	
 	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
-	pandaHandler->getUsb().setSafetyMode(SAFETY_NOOUTPUT);
+	pandaHandler->getUsb().setSafetyMode(SAFETY_NOOUTPUT, 0);
 	
 	std::cout << " - Setting power save to POWER_SAVE_STATUS_ENABLED:" << std::endl;
 	pandaHandler->getUsb().setPowerSaveEnable(POWER_SAVE_STATUS_ENABLED);

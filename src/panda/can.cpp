@@ -118,13 +118,17 @@ void Can::startParsing() {
 	std::cout << " - Attempting to read the VIN:" << std::endl;
 	
 	int vinAttempts = 0;
-	while( vinAttempts++ < 10 ) {
+	bool extended = true;	// HACK
+	while( vinAttempts++ < 4 ) {
 		ObdPidRequest vinRequest(*this);
-		std::cerr << " - - Attempt " << vinAttempts << "/10...";
-		bool extended = true;	// HACK
-		if (vinAttempts >= 5) {	// HACK
+		
+		if (vinAttempts > 2 && extended == true) {	// HACK
+			std::cout << "Extended Addressing OBD PID failed, attempting legacy addressed OBD PID reading" << std::endl;	// HACK
 			extended = false;	// HACK
 		}	// HACK
+		
+		std::cerr << " - - Attempt " << vinAttempts << "/10...";
+
 		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN, extended);
 		int timeoutCount = 0;
 		while (timeoutCount++ < 100 && !vinRequest.complete()) {
@@ -158,7 +162,7 @@ void Can::startParsing() {
 	}
 	
 	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
-	usbHandler->setSafetyMode(SAFETY_NOOUTPUT);	// OBD II port
+	usbHandler->setSafetyMode(SAFETY_NOOUTPUT, 73);	// OBD II port
 }
 
 void Can::stopParsing() {

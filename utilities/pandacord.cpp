@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
-	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
+//	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 	pandaHandler.addGpsObserver(mGpsTracker);
 
 	// Let's roll
@@ -165,20 +165,26 @@ int main(int argc, char **argv) {
 
 	writeToFileThenClose(filenameGpsStatus, "0\n");	// state 0: on but time not set
 
-
-	std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
-	std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
 	int lastNmeaMessageCount = 0;
-	while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
-		   keepRunning == true ) {
-		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
-			std::cerr << ".";
-			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+	if (pandaHandler.getUsb().hasGpsSupport()) {
+		pandaHandler.addGpsObserver(mSetSystemTimeObserver);
+		std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
+		std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
+		
+		while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
+			   keepRunning == true ) {
+			if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
+				std::cerr << ".";
+				lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+			}
+			usleep(10000);
 		}
-		usleep(10000);
+		writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
+		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
+	} else {
+		std::cout << "This panda does not have a GPS, continuing to log data without time synchronization" << std::endl;
+		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 	}
-	writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
-	writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 
 
 	if (gpsFilename != NULL) {

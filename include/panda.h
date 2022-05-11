@@ -46,6 +46,13 @@ namespace Panda {
 	 CAN parsing.  The implementation is multithreaded.  The observer software pattern is
 	 used for each contained object (GPS, USB, CAN) as the intended method to retrieve
 	 Data-In-Real-Time (DIRT).
+	 
+	 A description of the Panda LEDs from https://github.com/commaai/openpilot/wiki/FAQ#what-do-the-led-colors-mean
+	 * White: CAN send enabled
+	 * Red: This is your panda's heartbeat(power). It fades in and out
+	 * Green: Bad firmware or firmware flashing (only green, fast)
+	 * Blue (static): CAN detected
+	 * Blue (fades in and out): power saving
 
 	 */
 	class Handler {

@@ -77,15 +77,18 @@ void Usb::initialize() {
 		std::cerr << "FAILED to perform libusb_get_device_list()" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	
 	// Returns:
 	// - 0 if found, see get_panda_device() definition in this file
-	if(openDeviceByManufacturer(devices, "comma.ai") != 0 ) {
-		std::cerr << "FAILED to open \"comma.ai\", is it plugged in?" << std::endl;
-		std::cerr << " - May need root privileges if failed to open" << std::endl;
-		exit(EXIT_FAILURE);
+	if(openDeviceByManufacturer(devices, "circles") != 0 ) {
+		std::cerr << "Failed to open a custom \"circles\" firmware-based panda device, trying a \"comma.ai\" device" << std::endl;
+		if(openDeviceByManufacturer(devices, "comma.ai") != 0 ) {
+			std::cerr << "FAILED to open \"comma.ai\", is it plugged in?" << std::endl;
+			std::cerr << " - May need root privileges if failed to open" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 	}
-
+	
 	//Returns:
 	// - LIBUSB_SUCCESS on success
 	// - LIBUSB_ERROR_NOT_SUPPORTED on platforms where the functionality is not available
@@ -108,6 +111,12 @@ void Usb::initialize() {
 		exit(EXIT_FAILURE);
 	}
 
+	// Code version based on git:
+	std::cout << " - Git Version: ";
+	unsigned char gitVersion[64];
+	getGitVersion(gitVersion);
+	std::cout << gitVersion << std::endl;
+	
 //	libusb_control_transfer(handler, 0xc0, 0xe5, 1, 0, NULL, 0, 0);
 	unsigned char firmware[128];
 	getFirmware(firmware);
@@ -120,13 +129,13 @@ void Usb::initialize() {
 	// Void function:
 	libusb_free_device_list(devices, 1);
 	
-	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
-	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+//	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
+//	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 
 	std::cout << " - Setting Safety to ELM327:" << std::endl;
 //	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
 //	std::cout << " - Setting Safety elm327:" << std::endl;
-	setSafetyMode(SAFETY_ELM327);	// OBD II port
+	setSafetyMode(SAFETY_ELM327, 0);	// OBD II port
 //		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
  //	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
@@ -139,7 +148,7 @@ void Usb::initialize() {
 	std::cout << " - Reading USB hardware model:" << std::endl;
 	unsigned char hardwareType = getHardware();
 
-	printf("Got the following value in return: %d\n", (int)hardwareType);
+	//printf("Got the following value in return: %d\n", (int)hardwareType);
 
 	switch (hardwareType) {
 		case HARDWARE_WHITE_PANDA:
@@ -858,131 +867,297 @@ void Usb::uartWrite(const char* buffer, int length) {
 }
 
 
-void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index) {
-	int status = libusb_control_transfer(handler, requestType, request, value, index, NULL, 0, TIMEOUT);
-	if (status < 0) {
-		std::cerr << " FAILED: sendPandaHardwareSimple() libusb_control_tranfer error" << std::endl;
-		printError(status);
-	}
+
+
+
+
+
+
+
+PandaRtcTimestamp Usb::getRtc() {
+	PandaRtcTimestamp rtcTime;
+	readPandaHardwareSimple( REQUEST_RTC_FULL, (unsigned char*)&rtcTime, sizeof(rtcTime));
+	return rtcTime;
 }
 
-void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
-	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
-	if (status < 0) {
-		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_tranfer error" << std::endl;
-		printError(status);
-	}
+void Usb::setRtcYear( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_YEAR, n, 0);
+}
+void Usb::setRtcMonth( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_MONTH, n, 0);
+}
+void Usb::setRtcDay( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_DAY, n, 0);
+}
+void Usb::setRtcWeekday( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_WEEKDAY, n, 0);
+}
+void Usb::setRtcHour( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_HOUR, n, 0);
+}
+void Usb::setRtcMinute( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_MINUTE, n, 0);
+}
+void Usb::setRtcSeconds( int n ) {
+	sendPandaHardwareSimple( REQUEST_RTC_SECOND, n, 0);
+}
+
+void Usb::setIrPower( bool enable) {
+	sendPandaHardwareSimple( REQUEST_IR_POWER, enable, 0);
+}
+
+void Usb::setFanPower(	int power ) {
+	sendPandaHardwareSimple( REQUEST_SET_FAN_POWER, power, 0);
+}
+
+uint16_t Usb::getFanRpm() {
+	int fanSpeed;
+	readPandaHardwareSimple( REQUEST_FAN_SPEED, (unsigned char*)&fanSpeed, sizeof(fanSpeed));
+	return fanSpeed;
+}
+
+void Usb::setPhonePower( bool enable ) {
+	sendPandaHardwareSimple( REQUEST_SET_PHONE_POWER, enable, 0);
+}
+
+void Usb::getCanDebug() {
+	sendPandaHardwareSimple( REQUEST_CAN_DEBUG, 0, 0);
+}
+
+unsigned char Usb::getHardware() {
+	unsigned char hardware[1];
+	readPandaHardwareSimple( REQUEST_HARDWARE, hardware, 1);
+	return hardware[0];
+}
+
+void Usb::getPandaSerial( unsigned char* serial16 ) {
+	readPandaHardwareSimple( REQUEST_SERIAL, serial16, 16);
+}
+
+void Usb::enterBootloaderMode( unsigned char mode ) {
+	//sendPandaHardwareSimple( REQUEST_BOOTLOADER, mode, 0);
+}
+
+void Usb::getHealth( PandaHealth* health ) {
+	readPandaHardwareSimple( REQUEST_CAN_HEALTH, (unsigned char*)health, sizeof(*health));
+}
+
+void Usb::getFirmware( unsigned char* firmware128 ) {
+	readPandaHardwareSimple( REQUEST_FIRMWARE_LOW, firmware128, 64);
+	readPandaHardwareSimple( REQUEST_FIRMWARE_HIGH, &firmware128[64], 64);
+}
+
+void Usb::getGitVersion( unsigned char* version ) {
+	readPandaHardwareSimple( REQUEST_GIT_VERSION, version, 64);
+}
+
+void Usb::systemReset() {
+	sendPandaHardwareSimple( REQUEST_RESET_ST, 0, 0);
+}
+
+void Usb::setEspPower( bool enable) {
+	sendPandaHardwareSimple( REQUEST_ESP_POWER, enable, 0);
+}
+
+void Usb::espReset(int uart, int bootmode) {
+	sendPandaHardwareSimple( REQUEST_ESP_RESET, bootmode, 0);
+	usleep(200000);
+}
+
+void Usb::setGmlanOrObdCanMode(unsigned char gmlan) {
+	sendPandaHardwareSimple( REQUEST_GMLAN_CAN_ENABLE, gmlan, 0);
+}
+
+void Usb::setSafetyMode(uint16_t mode, uint16_t params) {
+	// comma.ai code has a discrepency in the two following calls:
+//	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
+//	sendPandaHardwareSimple( REQUEST_SAFETY_MODE, mode, 73);	// python Panda class has this
+	sendPandaHardwareSimple( REQUEST_SAFETY_MODE, mode, params);	// python Panda class has this
+	// the value 73 comes from openpilot/selfdrive/car/toyota/interface.py in the RAV4 section, ret.safetyParam
+}
+
+void Usb::getHealthAndCanVersions( unsigned char* healthVersion, unsigned char* canVersion) {
+	unsigned char response[2];
+	readPandaHardwareSimple( REQUEST_CAN_HEALTH_VERSIONS, response, 2);
+	*healthVersion = response[0];
+	*canVersion = response[1];
+}
+
+void Usb::setCanBitrate( int bus, int baud) {
+	sendPandaHardwareSimple( REQUEST_SET_CAN_BAUD, bus, baud);
+}
+
+void Usb::setAlternativeExperience( int alternativeExperience) {
+	sendPandaHardwareSimple( REQUEST_SET_ALT_EXP, alternativeExperience, 0);
+}
+
+// request uart data is handled elsewhere in this file
+
+void Usb::setUartBaud(int uart, int baud) {
+	setUartParity(uart, 0);
+	sendPandaHardwareSimple( REQUEST_UART_BAUD_EXT, uart, baud/300);
+}
+
+void Usb::setUartParity(int uart, int parity) {
+	sendPandaHardwareSimple( REQUEST_UART_PARITY, uart, parity);
+}
+
+void Usb::setUartBaudSmall( int uart, int baud ) {	// untested
+	setUartParity(uart, 0);
+	sendPandaHardwareSimple( REQUEST_UART_BAUD, uart, baud); // untested
+}
+
+void Usb::setCanLoopback( int enable ) {
+	sendPandaHardwareSimple( REQUEST_CAN_LOOPBACK, enable, 0);
+}
+
+void Usb::setUsbPowerMode( unsigned char mode) {
+	sendPandaHardwareSimple( REQUEST_USB_POWER_MODE, mode, 0);
+}
+
+void Usb::setPowerSaveEnable( bool enable ) {
+	sendPandaHardwareSimple( REQUEST_USB_POWER_SAVE, enable, 0);
+}
+
+void Usb::setKLlineWakupPulse( unsigned char KL ) {
+	sendPandaHardwareSimple( REQUEST_K_L_PULSE, KL, 0);
+}
+
+void Usb::canPurge() {
+	sendPandaHardwareSimple( REQUEST_CAN_RING_CLEAR, CAN_DEVICE_RX, 0);
+	sendPandaHardwareSimple( REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_1, 0);
+	sendPandaHardwareSimple( REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_2, 0);
+	sendPandaHardwareSimple( REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_3, 0);
+	sendPandaHardwareSimple( REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TXGMLAN, 0);
 }
 
 void Usb::uartPurge() {
 	//	comma.ai code calls this "clearing the ring buffer."  It could do more than just clear this UART's ring buffer.
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
+	sendPandaHardwareSimple( REQUEST_UART_RING_CLEAR, UART_DEVICE_GPS, 0);	// TODO test this
 }
 
 void Usb::sendHeartBeat() {
 	//	the panda has a heartbeat counter, calling this should reset it
 	// The panda has a timer running at 8Hz.  A loop counter decimates this to 1Hz.
 	// In the 1 Hz loop, the heartbeat counter will increment.
-	// If the hearbeat is graetr than: (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)
+	// If the hearbeat is greater than: (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)
 	// or: (check_started() ? 5U : 2U)
 	// then the panda will enter a SAFETY_SILENT mode
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_HEARTBEAT, 0, 0);	// TODO test this
+	sendPandaHardwareSimple( REQUEST_HEARTBEAT, 0, 0);	// TODO test this
 }
 
-void Usb::setPowerSaveEnable( bool enable ) {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_USB_POWER_SAVE, enable, 0);
+void Usb::setKLlineFiveBaudInit( int config, int baud ) {
+	sendPandaHardwareSimple( REQUEST_KL_LINE_BAUD, config, baud);
 }
 
-void Usb::canPurge() {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_RX, 0);
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_1, 0);
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_2, 0);
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TX_3, 0);
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_CAN_RING_CLEAR, CAN_DEVICE_TXGMLAN, 0);
+void Usb::setClockSourceMode( int mode ) {
+	sendPandaHardwareSimple( REQUEST_CLOCK_SOURCE, mode, 0);
 }
 
-void Usb::setUartBaud(int uart, int baud) {
-	setUartParity(uart, 0);
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_BAUD, uart, baud/300);
+void Usb::setSiren(bool enable) {
+	sendPandaHardwareSimple( REQUEST_SIREN, enable, 0);
 }
 
-void Usb::setUartParity(int uart, int parity) {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_UART_PARITY, uart, parity);
+void Usb::setGreenLed(bool enable) {
+	sendPandaHardwareSimple( REQUEST_GREEN_LED, enable, 0);
 }
 
-/*
- Device handling:
- */
-void Usb::setEspPower( bool enable) {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_ESP_POWER, enable, 0);
+void Usb::disableHeartbeat() {
+	sendPandaHardwareSimple( REQUEST_DISABLE_HEARTBEAT, 0, 0);
 }
 
-void Usb::espReset(int uart, int bootmode) {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_ESP_RESET, bootmode, 0);
-	usleep(200000);
+void Usb::setCanFdBaud( int bus, int baud ) {
+	sendPandaHardwareSimple( REQUEST_CAN_FD_BAUD, bus, baud);
 }
 
-void Usb::getPandaSerial( unsigned char* serial16 ) {
-	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SERIAL, serial16, 16);
+void Usb::getCanFdEnabled( int bus, bool* fdEnabled, bool* brsEnabled ) {
+	unsigned char response[2];
+	response[0] = bus;
+	readPandaHardwareSimple( REQUEST_CAN_FD_ENABLED, response, 2);
+	*fdEnabled = response[0];
+	*brsEnabled = response[1];
+}
+
+void Usb::enterDeepSleep() {
+	sendPandaHardwareSimple( REQUEST_DEEP_SLEEP, 0, 0);
+	
 }
 
 
-void Usb::setCanLoopback( int enable ) {
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT,REQUEST_CAN_LOOPBACK, enable, 0);
+
+//void Usb::sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index) {
+//int status = libusb_control_transfer(handler, requestType, request, value, index, NULL, 0, TIMEOUT);
+void Usb::sendPandaHardwareSimple(uint8_t request, uint16_t value, uint16_t index) {
+	int status = libusb_control_transfer(handler, REQUEST_TYPE_OUT, request, value, index, NULL, 0, TIMEOUT);
+	if (status < 0) {
+		std::cerr << " FAILED: sendPandaHardwareSimple() libusb_control_transfer error" << std::endl;
+		printError(status);
+	}
 }
 
-void Usb::getFirmware( unsigned char* firmware128 ) {
-	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_FIRMWARE_LOW, firmware128, 64);
-	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_FIRMWARE_HIGH, &firmware128[64], 64);
+//void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
+//	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
+void Usb::readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length) {
+	int status = libusb_control_transfer(handler, REQUEST_TYPE_IN, request, 0, 0, buffer, length, TIMEOUT);
+	if (status < 0) {
+		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_transfer error" << std::endl;
+		printError(status);
+	}
 }
 
-void Usb::getHealth( PandaHealth* health ) {
-	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_CAN_HEALTH, (unsigned char*)health, sizeof(*health));
-}
-
-unsigned char Usb::getHardware() {
-	unsigned char hardware[1];
-	readPandaHardwareSimple(REQUEST_TYPE_IN, REQUEST_HARDWARE, hardware, 1);
-	return hardware[0];
-}
 
 bool Usb::hasGpsSupport() {
 	return hasGps;
 }
 
-struct tm Usb::getRtc() {
-	struct tm rtcTime;
-	readPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_RTC, (unsigned char*)&rtcTime, sizeof(rtcTime));
-	return rtcTime;
-}
-
-void Usb::setSafetyMode(uint16_t mode) {
-	// comma.ai code has a discrepency in the two following calls:
-//	sendPandaHardwareSimple(REQUEST_TYPE_WRITE, REQUEST_SAFETY_MODE, mode, 0);	// board.cc has this
-	sendPandaHardwareSimple(REQUEST_TYPE_OUT, REQUEST_SAFETY_MODE, mode, 73);	// python Panda class has this
-	// the value 73 comes from openpilot/selfdrive/car/toyota/interface.py in the RAV4 section, ret.safetyParam
-}
-
-
 const char* Panda::safetyModelToString( int safetyModel ) {
 	switch (safetyModel) {
-		case SAFETY_NOOUTPUT: return "NOOUTPUT";
-		case SAFETY_HONDA: return "HONDA";
+//			// Before comma.ai changed values:
+//		case SAFETY_NOOUTPUT: return "NOOUTPUT";
+//		case SAFETY_HONDA: return "HONDA";
+//		case SAFETY_TOYOTA: return "TOYOTA";
+//		case SAFETY_ELM327: return "ELM327";
+//		case SAFETY_GM: return "GM";
+//		case SAFETY_HONDA_BOSCH: return "HONDA_BOSCH";
+//		case SAFETY_FORD: return "FORD";
+//		case SAFETY_CADILLAC: return "CADILLAC";
+//		case SAFETY_HYUNDAI: return "HYUNDAI";
+//		case SAFETY_CHRYSLER: return "CHRYSLER";
+//		case SAFETY_TESLA: return "TESLA";
+//		case SAFETY_SUBARU: return "SUBARU";
+//		case SAFETY_GM_PASSIVE: return "GM_PASSIVE";
+//		case SAFETY_MAZDA: return "MAZDA";
+//		case SAFETY_TOYOTA_IPAS: return "TOYOTA_IPAS";
+//		case SAFETY_ALLOUTPUT: return "ALLOUTPUT";
+//		case SAFETY_GM_ASCM: return "GM_ASCM";
+			
+			// Sart of Panda Red support:
+		case SAFETY_SILENT: return "SILENT";
+		case SAFETY_HONDA_NIDEC: return "HONDA_NIDEC";
 		case SAFETY_TOYOTA: return "TOYOTA";
 		case SAFETY_ELM327: return "ELM327";
 		case SAFETY_GM: return "GM";
-		case SAFETY_HONDA_BOSCH: return "HONDA_BOSCH";
+		case SAFETY_HONDA_BOSCH_GIRAFFE: return "HONDA_BOSCH_GIRAFFE";
 		case SAFETY_FORD: return "FORD";
-		case SAFETY_CADILLAC: return "CADILLAC";
 		case SAFETY_HYUNDAI: return "HYUNDAI";
 		case SAFETY_CHRYSLER: return "CHRYSLER";
 		case SAFETY_TESLA: return "TESLA";
 		case SAFETY_SUBARU: return "SUBARU";
-		case SAFETY_GM_PASSIVE: return "GM_PASSIVE";
 		case SAFETY_MAZDA: return "MAZDA";
-		case SAFETY_TOYOTA_IPAS: return "TOYOTA_IPAS";
+		case SAFETY_NISSAN: return "NISSAN";
+		case SAFETY_VOLKSWAGEN_MQB: return "VOLKSWAGEN_MQB";
 		case SAFETY_ALLOUTPUT: return "ALLOUTPUT";
 		case SAFETY_GM_ASCM: return "GM_ASCM";
+		case SAFETY_NOOUTPUT: return "NOOUTPUT";
+		case SAFETY_HONDA_BOSCH: return "HONDA_BOSCH";
+		case SAFETY_VOLKSWAGEN_PQ: return "VOLKSWAGEN_PQ";
+		case SAFETY_SUBARU_LEGACY: return "SUBARU_LEGACY";
+		case SAFETY_HYUNDAI_LEGACY: return "HYUNDAI_LEGACY";
+		case SAFETY_HYUNDAI_COMMUNITY: return "HYUNDAI_COMMUNITY";
+		case SAFETY_STELLANTIS: return "STELLANTIS";
+		case SAFETY_FAW: return "FAW";
+		case SAFETY_BODY: return "BODY";
+		case SAFETY_CIRCLES_NISSAN: return "CIRCLES_NISSAN";
 		default:
 			break;
 	}
@@ -1038,9 +1213,28 @@ std::string Panda::faultsToString( int faults ) {
 	if ( faults & FAULT_REGISTER_DIVERGENT) result << "FAULT_REGISTER_DIVERGENT, ";
 	if ( faults & FAULT_INTERRUPT_RATE_KLINE_INIT) result << "FAULT_INTERRUPT_RATE_KLINE_INIT, ";
 	if ( faults & FAULT_INTERRUPT_RATE_CLOCK_SOURCE) result << "FAULT_INTERRUPT_RATE_CLOCK_SOURCE, ";
-	if ( faults & FAULT_INTERRUPT_RATE_TIM9) result << "FAULT_INTERRUPT_RATE_TIM9";
+//	if ( faults & FAULT_INTERRUPT_RATE_TIM9) result << "FAULT_INTERRUPT_RATE_TIM9";	// deprecated from older panda firmware
+	if ( faults & FAULT_INTERRUPT_RATE_TICK) result << "FAULT_INTERRUPT_RATE_TICK, ";	// Added for recent firmware
+	if ( faults & FAULT_INTERRUPT_RATE_EXTI) result << "FAULT_INTERRUPT_RATE_EXTI, ";	// Added for recent firmware
+	
 
 	return result.str();
+}
+
+const char* Panda::hardwareTypeToString( int hardwareType ) {
+	switch (hardwareType) {
+		case HARDWARE_WHITE_PANDA: return "White Panda";
+		case HARDWARE_GREY_PANDA: return "Grey Panda";
+		case HARDWARE_BLACK_PANDA: return "Black Panda";
+		case HARDWARE_UNO: return "Uno";
+		case HARDWARE_PEDAL: return "Pedal";
+		case HARDWARE_DOS: return "Dos";
+		case HARDWARE_RED_PANDA: return "Red Panda";
+		case HARDWARE_UNKNOWN:
+		default:
+			break;
+	}
+	return "Unknown Hardware";
 }
 
 const char* Panda::usbPowerModeToString( int mode ) {
@@ -1058,23 +1252,28 @@ const char* Panda::usbPowerModeToString( int mode ) {
 }
 
 void Panda::printPandaHealth( const PandaHealth& health ) {
-	std::cout << "------Health------" << std::endl;
-	std::cout << "uptime            :" << health.uptime << std::endl;
-	std::cout << "voltage           :" << (double)health.voltage/1000.0 << std::endl;
-	std::cout << "current           :" << health.current << std::endl;
-	std::cout << "can_rx_errors     :" << health.can_rx_errs << std::endl;
-	std::cout << "can_send_errors   :" << health.can_send_errs << std::endl;
-	std::cout << "can_fwd_errors    :" << health.can_fwd_errs << std::endl;
-	std::cout << "gmlan_send_errs   :" << health.gmlan_send_errs << std::endl;
-	std::cout << "faults            :" << Panda::faultsToString(health.faults) << std::endl;
-	std::cout << "ignition_line     :" << (int)health.ignition_line << std::endl;
-	std::cout << "ignition_can      :" << (int)health.ignition_can << std::endl;
-	std::cout << "controls_allowed  :" << (int)health.controls_allowed << std::endl;
-	std::cout << "gas_int_detected  :" << (int)health.gas_interceptor_detected << std::endl;
-	std::cout << "car_harness_status:" << Panda::carHarnessStatusToString(health.car_harness_status) << std::endl;
-	std::cout << "usb_power_mode    :" << Panda::usbPowerModeToString(health.usb_power_mode) << std::endl;
-	std::cout << "Safety Model      :" << Panda::safetyModelToString(health.safety_model) << std::endl;
-	std::cout << "fault_status      :" << Panda::faultStatusToString(health.fault_status) << std::endl;
-	std::cout << "power_save_enabled:" << (int)health.power_save_enabled << std::endl;
+	std::cout << "--------Health---------" << std::endl;
+	std::cout << "uptime                :" << health.uptime << std::endl;
+	std::cout << "voltage               :" << (double)health.voltage/1000.0 << std::endl;
+	std::cout << "current               :" << health.current << std::endl;
+	std::cout << "can_rx_errors         :" << health.can_rx_errs << std::endl;
+	std::cout << "can_send_errors       :" << health.can_send_errs << std::endl;
+	std::cout << "can_fwd_errors        :" << health.can_fwd_errs << std::endl;
+	std::cout << "gmlan_send_errs       :" << health.gmlan_send_errs << std::endl;
+	std::cout << "faults                :" << Panda::faultsToString(health.faults) << std::endl;
+	std::cout << "ignition_line         :" << (int)health.ignition_line << std::endl;
+	std::cout << "ignition_can          :" << (int)health.ignition_can << std::endl;
+	std::cout << "controls_allowed      :" << (int)health.controls_allowed << std::endl;
+	std::cout << "gas_int_detected      :" << (int)health.gas_interceptor_detected << std::endl;
+	std::cout << "car_harness_status    :" << Panda::carHarnessStatusToString(health.car_harness_status) << std::endl;
+	std::cout << "usb_power_mode        :" << Panda::usbPowerModeToString(health.usb_power_mode) << std::endl;
+	std::cout << "Safety Model          :" << Panda::safetyModelToString(health.safety_mode) << std::endl;
+	std::cout << "Safety Param          :" << (int)health.safety_param << std::endl; // In health packet version 7
+	std::cout << "fault_status          :" << Panda::faultStatusToString(health.fault_status) << std::endl;
+	std::cout << "power_save_enabled    :" << (int)health.power_save_enabled << std::endl;
+	std::cout << "Heartbeat Lost        :" << (int)health.heartbeat_lost << std::endl; // In health packet version 7
+	std::cout << "Alternative Experience:" << (int)health.alternative_experience << std::endl; // In health packet version 7
+	std::cout << "Blocked Message Count :" << (int)health.blocked_msg_cnt << std::endl; // In health packet version 7
+	std::cout << "Interrup Load         :" << (float)health.interrupt_load << std::endl; // In health packet version 7
 	std::cout << "-------------------" << std::endl;
 }
