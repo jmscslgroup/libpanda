@@ -123,6 +123,8 @@ namespace Panda {
 
 	private:
 		GpsData state;
+		int fidGps; // This is for external GPS devices
+		bool usingExternalGps = false;
 
 		bool currentlyReceiving = false;
 

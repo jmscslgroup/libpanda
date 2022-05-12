@@ -29,12 +29,16 @@
 #include <unistd.h>
 #include <string.h>
 
+#include <fcntl.h>
+#include <termios.h>
+
 //#define GPS_VERBOSE
 
 using namespace Panda;
 
 Gps::Gps()
 :csvDump(NULL) {
+	fidGps = -1;
 }
 
 Gps::~Gps() {
@@ -107,8 +111,8 @@ void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
 }
 
 void Gps::doAction() {
-	if (usbHandler == NULL) {
-		std::cerr << "ERROR: Gps::doAction(): No Usb Handler set for Panda::Gps!" << std::endl;
+	if (usbHandler == NULL && !usingExternalGps) {
+		std::cerr << "ERROR: Gps::doAction(): No Usb Handler or external USB GPS set for Panda::Gps!" << std::endl;
 		usleep(1000);
 		return;
 	}
@@ -120,7 +124,20 @@ void Gps::doAction() {
 	// Tell this thread to pause, wait for request to complete
 	pause();	// yes, before requesting data, otherwise synchronous USB deadlocks
 
-	usbHandler->requestUartData();
+	if (usingExternalGps) {
+		char buffer[2048];
+		int length = read(fidGps, buffer, sizeof(buffer));
+//		std::cout << "GPS Read length " << length << ": ";
+//		for (int i = 0; i < length; i++) {
+//			printf("%c", buffer[i]);
+//		}
+//	std::cout << std::endl;
+		if (length > 0) {
+			notificationUartRead(buffer, length);
+		}
+	} else {
+		usbHandler->requestUartData();
+	}
 //	std::cout << "Requeting new data" << std::endl;
 }
 
@@ -133,13 +150,13 @@ void Gps::addObserver( GpsListener* listener ) {
 }
 
 void Gps::startParsing() {
-	if(usbHandler == NULL) {
-		std::cerr << "ERROR: Gps::startParsing(): No Usb Handler set for Panda::Gps!" << std::endl;
+	if(usbHandler == NULL || usingExternalGps == false) {
+		std::cerr << "ERROR: Gps::startParsing(): No Usb Handler nor external USB GPS set for Panda::Gps!" << std::endl;
 		return;
 	}
 
-	if ( !usbHandler->hasGpsSupport() ) {
-		std::cerr << "WARNING: Gps::startParsing(): Usb Device does not support GPS!" << std::endl;
+	if ( !usingExternalGps && !usbHandler->hasGpsSupport() ) {
+		std::cerr << "WARNING: Gps::startParsing(): No available GPS!" << std::endl;
 		return;
 	}
 
@@ -148,6 +165,9 @@ void Gps::startParsing() {
 
 void Gps::stopParsing() {
 	stop();
+	if(fidGps != -1) {
+		close(fidGps);
+	}
 	WaitForInternalThreadToExit();
 }
 
@@ -399,6 +419,25 @@ void Gps::initialize() {
 	if ( !usbHandler->hasGpsSupport() ) {
 		std::cerr << "WARNING: Gps::initialize(): Panda does not support GPS!" << std::endl;
 		std::cerr << "       : Gps::initialize(): Attempting to open /dev/ttyACM0 instead" << std::endl;
+		
+		struct termios newtio;
+		if ((fidGps = open("/dev/ttyACM0", O_RDWR | O_NOCTTY )) < 0) {
+			// std::cerr << "device open error: " << field << std::endl;
+			
+			std::cerr << "       : Gps::initialize(): /dev/ttyACM0  Does not exist" << std::endl;
+			return;
+		}
+		
+		usingExternalGps = true;
+		
+		char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
+		setUbxChecksum(cfgrate);
+//		usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
+		write(fidGps, cfgrate, sizeof(cfgrate));
+		
+		write(fidGps, "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
+		write(fidGps, "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37", 28);
+		
 		return;
 	}
 
