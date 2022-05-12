@@ -43,7 +43,7 @@ namespace Panda {
 	 \param bufferLength The number of bytes in the buffer.  Should be 8-16
 	 \return A constructed CanFrame, populated witht eh bufffer data
 	 */
-	CanFrame bufferToCanFrame( char* buffer, int bufferLength);
+	CanFrame bufferToCanFrame( char* buffer, int bufferLength, int pandaCanVersion);
 
 	/*!
 	 \brief Converts a CanFrame into a buffer for sending to the Panda
@@ -51,7 +51,7 @@ namespace Panda {
 	 \param buffer The array of data to be sent.  Should be 16 bytes in length.
 	 \return The length of the packet
 	 */
-	int canFrameToBuffer( CanFrame& frame, unsigned char* buffer);
+	int canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCanVersion);
 
 	class Can;
 
@@ -155,6 +155,8 @@ namespace Panda {
 		void notificationCanRead(char* buffer, size_t bufferLength);	// HACK
 	private:
 		bool currentlyReceiving = false;
+		
+		int pandaCanVersion;
 		
 		std::list<CanFrame> canFrames;
 

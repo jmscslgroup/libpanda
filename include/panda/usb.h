@@ -37,8 +37,10 @@
 #include "pandadefinitions.h"
 
 #define TIMEOUT (0)	// For libusb, in ms
-#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
-#define BYTES_PER_CAN_PACKET (16)
+//#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
+//#define BYTES_PER_CAN_PACKET (16)
+#define NUM_CAN_PACKETS_PER_TRANSFER (64)	// I've had luck with a value of 4, but failure at 3 or less
+#define BYTES_PER_CAN_PACKET (256)
 #define BYTES_PER_UART_TRANSFER (64)
 
 namespace Panda {

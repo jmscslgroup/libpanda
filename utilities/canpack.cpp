@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
 	CanPrint mCanPrint;
 	testCan.addObserver(&mCanPrint);
 	
+	testCan.initialize();
 	testCan.startParsing();
 	
 	printf("\n------------- buffer1 ------------------\n");
@@ -60,7 +61,7 @@ int main(int argc, char **argv) {
 	
 	
 	std::cout << "Building a custom message:" << std::endl;
-	int length = Panda::canFrameToBuffer(frame, testPack);
+	int length = Panda::canFrameToBuffer(frame, testPack, 2);
 	
 	for	(int i = 0; i < length; i++) {
 		if ( i % 16 == 0) {
@@ -93,7 +94,7 @@ int main(int argc, char **argv) {
 	
 	
 	std::cout << "\n\nBuilding a custom message:" << std::endl;
-	length = Panda::canFrameToBuffer(frame, testPack);
+	length = Panda::canFrameToBuffer(frame, testPack, 2);
 	
 	for	(int i = 0; i < length; i++) {
 		if ( i % 16 == 0) {
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
 	testCan.notificationCanRead((char*)testPack, length);
 	
 	
-	
+	testCan.stopParsing();
 	std::cout << "Done." << std::endl;
 	
 	return 0;
