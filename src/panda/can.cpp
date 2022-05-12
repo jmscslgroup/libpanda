@@ -578,6 +578,7 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 					canFrames.push_back(newFrame);	// FIFO insert
 					
 					parsePosition += packetLength;
+					tailLength = 0;
 				} else {
 					tail = &chunk[parsePosition];
 					tailLength = chunkLength - parsePosition;
