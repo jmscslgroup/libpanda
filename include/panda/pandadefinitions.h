@@ -172,6 +172,7 @@
 #define SAFETY_STELLANTIS 25U
 #define SAFETY_FAW 26U
 #define SAFETY_BODY 27U
+
 #define SAFETY_CIRCLES_NISSAN 28U	// Here we go!
 
 

@@ -397,7 +397,8 @@ void Gps::initialize() {
 	}
 
 	if ( !usbHandler->hasGpsSupport() ) {
-		std::cerr << "WARNING: Gps::initialize(): Usb Device does not support GPS!" << std::endl;
+		std::cerr << "WARNING: Gps::initialize(): Panda does not support GPS!" << std::endl;
+		std::cerr << "       : Gps::initialize(): Attempting to open /dev/ttyACM0 instead" << std::endl;
 		return;
 	}
 

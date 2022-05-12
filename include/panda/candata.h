@@ -63,10 +63,13 @@ namespace Panda {
 		/*! \brief The data for the CAN message
 		 */
 		unsigned char data[CAN_DATA_MAX_LENGTH];
-		/*! \brief Perhaps if incomplete?
+		/*! \brief This means a message with these same attributes was successfully
 		 */
 		unsigned char returned;
-		/*! \brief Perhaps if invalid?
+		/*! \brief Rejected occurs when the safety_tx_hook() does not allow the message
+		 In the case of OBD PID communication, this will be set based on safety_elm327.h if:
+		 (len != 8) || (addr != 0x18DB33F1) && ((addr & 0x1FFF00FF) != 0x18DA00F1) &&
+			 ((addr & 0x1FFFFF00) != 0x700)
 		 */
 		unsigned char rejected;
 		/*! \brief The system time upon rec

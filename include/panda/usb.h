@@ -39,8 +39,8 @@
 #define TIMEOUT (0)	// For libusb, in ms
 //#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
 //#define BYTES_PER_CAN_PACKET (16)
-#define NUM_CAN_PACKETS_PER_TRANSFER (64)	// I've had luck with a value of 4, but failure at 3 or less
-#define BYTES_PER_CAN_PACKET (256)
+#define NUM_CAN_PACKETS_PER_TRANSFER (256)	// I've had luck with a value of 4, but failure at 3 or less
+#define BYTES_PER_CAN_PACKET (64)
 #define BYTES_PER_UART_TRANSFER (64)
 
 namespace Panda {
@@ -212,8 +212,8 @@ namespace Panda {
 		//struct libusb_transfer *outgoingTransfer;
 //		struct libusb_transfer *uartTransfer;
 
-//		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
-		unsigned char bufferSynchronousCan[72*4];	// Packet version 2 are 72 bytes each
+		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
+//		unsigned char bufferSynchronousCan[72*4];	// Packet version 2 are 72 bytes each
 		unsigned char bufferSynchronousUart[BYTES_PER_UART_TRANSFER];
 		unsigned int bufferLengthSynchronousUart;
 

@@ -35,6 +35,18 @@
 
 using namespace Panda;
 
+
+void printBuffer(char* buffer, int length) {
+	std::cout << " - Buffer of length " << length <<	":";
+	for (int i = 0; i < length; i++) {
+		if (i%16 == 0) {
+			printf("\n");
+		}
+		printf("0x%02X ", buffer[i]);
+	}
+	printf("\n");
+}
+
 Can::Can()
 :canDump(NULL), csvDump(NULL), pandaCanVersion(2) {
 }
@@ -119,6 +131,8 @@ void Can::startParsing() {
 	
 	
 	if(usbHandler != NULL) {
+		usbHandler->setSafetyMode(SAFETY_ALLOUTPUT, 1);	// OBD II port
+		
 		// Read the VIN here:
 		usleep(200000);
 		std::cout << " - Attempting to read the VIN:" << std::endl;
@@ -126,6 +140,8 @@ void Can::startParsing() {
 		int vinAttempts = 0;
 		bool extended = true;	// HACK
 		while( vinAttempts++ < 10 ) {
+			usbHandler->sendHeartBeat();
+			
 			ObdPidRequest vinRequest(*this);
 			
 			if (vinAttempts > 5 && extended == true) {	// HACK
@@ -168,7 +184,7 @@ void Can::startParsing() {
 		}
 		
 		std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
-		usbHandler->setSafetyMode(SAFETY_NOOUTPUT, 73);	// OBD II port
+		usbHandler->setSafetyMode(SAFETY_NOOUTPUT, 0);	// OBD II port
 	}
 }
 
@@ -189,6 +205,18 @@ void Can::sendMessage( CanFrame& frame ) {	// TODO lots of testing
 	}
 	unsigned char message[messageSize]; // RED: packets are now 72 in length I think
 	int length = canFrameToBuffer(frame, message, pandaCanVersion); // RED: we need to keep track of message lengths
+	
+#ifdef CAN_VERBOSE
+	printf("Can::sendMessage(): Converted frame: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf("%02x", frame.data[i]);
+	}
+	printf(",%d\n to:\n", frame.dataLength);
+	
+	printBuffer((char*)message, length);
+		
+#endif
 	
 	// In comma.ai code they bulk send multiple messages with the following:
 	// usb_bulk_write(3, (unsigned char*)send, msg_count*0x10, 5);
@@ -277,7 +305,7 @@ int Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCa
 		
 		// best to assert that length is within dlcToLen[]
 		unsigned char tempBuffer[256];
-		int extended = frame.messageID > 0x800;
+		int extended = frame.messageID >= 0x800;
 		int dataLengthCode;
 		if (frame.dataLength < 9) {
 			dataLengthCode = frame.dataLength;
@@ -306,12 +334,12 @@ int Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCa
 					break;
 					
 				default:
-					std::cerr << "Error! Panda::canFrameToBuffer() invalid data length of " << frame.dataLength << std::endl;
+					std::cerr << "Error! Panda::canFrameToBuffer() invalid data length of " << (int)frame.dataLength << std::endl;
 					return 0;
 					break;
 			}
 		}
-		int word_4b = frame.messageID << 3 | extended << 2;
+		unsigned int word_4b = (frame.messageID << 3) | (extended << 2);
 		tempBuffer[0] = (dataLengthCode << 4) | (frame.bus << 1);
 		tempBuffer[1] = word_4b & 0xFF;
 		tempBuffer[2] = (word_4b >> 8) & 0xFF;
@@ -320,12 +348,12 @@ int Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCa
 		memcpy(&tempBuffer[5], frame.data, frame.dataLength);
 		
 		int counter = 0;
-		for(int i = 0, j=0; j < frame.dataLength + 5; i += 64, j+=63) {
+		for(int i=0, j=0; j < frame.dataLength + 5; i += 64, j+=63) {
 			buffer[i] = counter++;
 			memcpy(&buffer[i+1], &tempBuffer[j], (63 > frame.dataLength + 5 - j) ? 63 : (frame.dataLength + 5 - j));
 		}
 		
-		return counter + frame.dataLength + 5;
+		bufferLength = counter + frame.dataLength + 5;
 	} else {
 		uint32_t* message = (uint32_t*)buffer;
 		
@@ -362,18 +390,32 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 		
 #define CANPACKET_HEAD_SIZE (0x5)
 		static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}; // dat alength code
-		int parsePosition = 0;
-		canFrame.dataLength = dlcToLen[buffer[parsePosition] >> 4];
+//		int parsePosition = 0;
+		unsigned char lookupIndex = buffer[0] >> 4;
+		if (lookupIndex > sizeof(dlcToLen)/sizeof(dlcToLen[0])) {	// This will never fail
+			std::cerr << "Error: Panda::bufferToCanFrame(): Received an Data Length Lookup: " << (int)lookupIndex << " > " << (int)(sizeof(dlcToLen)/sizeof(dlcToLen[0])) << std::endl;
+			printBuffer(buffer, bufferLength);
+			canFrame.messageID = -1;
+			return canFrame;
+		}
+		canFrame.dataLength = dlcToLen[lookupIndex];
 		int packetLength = CANPACKET_HEAD_SIZE + canFrame.dataLength;
 		//if (packetLength < bufferLength) {	// we will have flexible sized packets sooo... this function will need work
-		char* header = &buffer[parsePosition];	// will be of length CANPACKET_HEAD_SIZE
+		char* header = &buffer[0];	// will be of length CANPACKET_HEAD_SIZE
 		
 		canFrame.bus = (header[0] >> 1) & 0x07;
-		canFrame.messageID = (header[4] << 24 | header[3] << 16 | header[2] << 8 | header[1]) >> 3;
+		if (canFrame.bus > 3) {	// Pandas shouldn't have this...
+			std::cerr << "Error: Panda::bufferToCanFrame(): Received an invalid bus: " << (int)canFrame.bus << std::endl;
+			printBuffer(buffer, bufferLength);
+			canFrame.messageID = -1;
+			return canFrame;
+		}
+//		canFrame.messageID = ((header[4] << 24) | (header[3] << 16) | (header[2] << 8) | header[1]) >> 3;
+		canFrame.messageID = (header[4] << 21) | (header[3] << 13) | (header[2] << 5) | (header[1] >> 3);
 		
 		canFrame.returned = (header[1] >> 1) & 0x01;
 		canFrame.rejected = header[1] & 0x01;
-		memcpy(canFrame.data, &buffer[parsePosition + CANPACKET_HEAD_SIZE], canFrame.dataLength);
+		memcpy(canFrame.data, &buffer[0 + CANPACKET_HEAD_SIZE], canFrame.dataLength);
 		
 		if (canFrame.returned) {
 			canFrame.bus += 128;
@@ -474,7 +516,8 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		
 		for (int index = 0; index < bufferLength; index += 64) {
 			if (counter++ != buffer[index]) {
-				std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter" << std::endl;
+				std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter.  What was recieved:" << std::endl;
+				printBuffer(buffer, bufferLength);
 				break;
 			}
 			
@@ -508,6 +551,11 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 #endif
 					
 					CanFrame newFrame = bufferToCanFrame(&chunk[parsePosition], chunkLength-parsePosition, pandaCanVersion);
+					if (newFrame.messageID == -1) {
+						std::cerr << "Error: Can::notificationCanRead(): Parsing packet resulted in error, this is what was recieved:" << std::endl;
+						printBuffer(buffer, bufferLength);
+						break;
+					}
 					newFrame.sysTime = sysTime;
 					writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
 					canFrames.push_back(newFrame);	// FIFO insert

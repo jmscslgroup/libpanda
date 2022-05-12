@@ -8,7 +8,7 @@ public:
 	void newDataNotification(Panda::CanFrame* frame) {
 		printf("New CAN read: %d.%06d,", (unsigned int)frame->sysTime.tv_sec, (int)frame->sysTime.tv_usec);
 
-		printf("%d,%d,", (int)frame->bus, frame->messageID);
+		printf("%d,%u,", (int)frame->bus, frame->messageID);
 
 		for (int i =0; i < frame->dataLength; i++) {
 			printf("%02x", frame->data[i]);
@@ -41,15 +41,24 @@ int main(int argc, char **argv) {
 	
 	printf("\n------------- buffer1 ------------------\n");
 	testCan.notificationCanRead(buffer1, sizeof(buffer1));
+	usleep(100000);
 	
 	printf("\n------------- buffer2 ------------------\n");
 	testCan.notificationCanRead(buffer2, sizeof(buffer2));
+	usleep(100000);
 	
 	printf("\n------------- buffer3 ------------------\n");
 	testCan.notificationCanRead(buffer3, sizeof(buffer3));
+	usleep(100000);
 	
 	printf("\n------------- buffer4 ------------------\n");
 	testCan.notificationCanRead(buffer4, sizeof(buffer4));
+	usleep(100000);
+	
+	printf("\n------------- buffer1 but malformed ------------------\n");
+	buffer1[64*2] = 0; // should be 2
+	testCan.notificationCanRead(buffer1, sizeof(buffer1));
+	usleep(100000);
 	
 	unsigned char testPack[256];
 	Panda::CanFrame frame;
@@ -76,6 +85,7 @@ int main(int argc, char **argv) {
 	
 	std::cout << "\nSending it through the parser:" << std::endl;
 	testCan.notificationCanRead((char*)testPack, length);
+	usleep(100000);
 	
 	
 	
@@ -108,6 +118,62 @@ int main(int argc, char **argv) {
 	
 	std::cout << "\nSending it through the parser:" << std::endl;
 	testCan.notificationCanRead((char*)testPack, length);
+	usleep(100000);
+	
+	
+
+	frame.dataLength = 9;	// Invalid
+	std::cout << "\n\nBuilding an INVALID message:" << std::endl;
+	length = Panda::canFrameToBuffer(frame, testPack, 2);
+	
+	for	(int i = 0; i < length; i++) {
+		if ( i % 16 == 0) {
+			printf("\n");
+		}
+		printf("0x%02X ", testPack[i]);
+	}
+	printf("\n");
+	
+
+	
+	std::cout << "\nSending it through the parser:" << std::endl;
+	testCan.notificationCanRead((char*)testPack, length);
+	usleep(100000);
+	
+	
+	
+	frame.messageID = 0x18DB33F1; // 417018865
+	frame.bus = 1;
+	frame.dataLength = 8;
+	frame.data[0] = 0x02;
+	frame.data[1] = 0x09;
+	frame.data[2] = 0x02;
+	frame.data[3] = 0;
+	frame.data[4] = 0;
+	frame.data[5] = 0;
+	frame.data[6] = 0;
+	frame.data[7] = 0;
+	
+	
+	std::cout << "\n\nBuilding an Extended OBD PID message:" << std::endl;
+	length = Panda::canFrameToBuffer(frame, testPack, 2);
+	
+	for	(int i = 0; i < length; i++) {
+		if ( i % 16 == 0) {
+			printf("\n");
+		}
+		printf("0x%02X ", testPack[i]);
+	}
+	printf("\n");
+	
+
+	
+	std::cout << "\nSending it through the parser:" << std::endl;
+	testCan.notificationCanRead((char*)testPack, length);
+	usleep(100000);
+	
+	
+	
 	
 	
 	testCan.stopParsing();
