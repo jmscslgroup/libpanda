@@ -131,7 +131,6 @@ void Can::startParsing() {
 	
 	
 	if(usbHandler != NULL) {
-		usbHandler->setSafetyMode(SAFETY_ALLOUTPUT, 1);	// OBD II port
 		
 		// Read the VIN here:
 		usleep(200000);
@@ -251,7 +250,7 @@ void Can::writeRawToFile(char* buffer, size_t length) {
 
 void Can::doAction() {
 	if (usbHandler == NULL) {
-		std::cerr << "ERROR: Can::doAction(): No Usb Handler set for Panda::Can!" << std::endl;
+//		std::cerr << "ERROR: Can::doAction(): No Usb Handler set for Panda::Can!" << std::endl;
 		usleep(1000);
 		//		return;
 	}
@@ -398,6 +397,13 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 			canFrame.messageID = -1;
 			return canFrame;
 		}
+		if (buffer[0] & 0x01 ) {
+			std::cerr << "Error: Panda::bufferToCanFrame(): Reserved bit expected to be 0: " << std::endl;
+			printBuffer(buffer, bufferLength);
+			canFrame.messageID = -1;
+			return canFrame;
+		}
+		
 		canFrame.dataLength = dlcToLen[lookupIndex];
 		int packetLength = CANPACKET_HEAD_SIZE + canFrame.dataLength;
 		//if (packetLength < bufferLength) {	// we will have flexible sized packets sooo... this function will need work
@@ -405,7 +411,7 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 		
 		canFrame.bus = (header[0] >> 1) & 0x07;
 		if (canFrame.bus > 3) {	// Pandas shouldn't have this...
-			std::cerr << "Error: Panda::bufferToCanFrame(): Received an invalid bus: " << (int)canFrame.bus << std::endl;
+			std::cerr << "Error: Panda::bufferToCanFrame(): Received an invalid bus of " << (int)canFrame.bus << std::endl;
 			printBuffer(buffer, bufferLength);
 			canFrame.messageID = -1;
 			return canFrame;
@@ -514,12 +520,22 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		char* tail = chunk;
 		int tailLength = 0;
 		
+		// First let's check the integrity of the buffer, then fail if it's broken
 		for (int index = 0; index < bufferLength; index += 64) {
 			if (counter++ != buffer[index]) {
-				std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter.  What was recieved:" << std::endl;
+				std::cerr << "Error: Can::notificationCanRead(): Malformed Packet Counter.  What was recieved:" << std::endl;
 				printBuffer(buffer, bufferLength);
-				break;
+				unlock();
+				return;
 			}
+		}
+		
+		for (int index = 0; index < bufferLength; index += 64) {
+//			if (counter++ != buffer[index]) {
+//				std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter.  What was recieved:" << std::endl;
+//				printBuffer(buffer, bufferLength);
+//				break;
+//			}
 			
 			memcpy(chunk, tail, tailLength);
 			memcpy(&chunk[tailLength], &buffer[index+1], 63 > bufferLength-(index+1) ? bufferLength - (index+1) : 63);
