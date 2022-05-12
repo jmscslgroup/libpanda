@@ -65,13 +65,21 @@ Can::~Can() {
 void Can::initialize() {
 	std::cout << "Initializing CAN" <<std::endl;
 	
-	
-	std::cout << " - Purging ring buffers" << std::endl;
 	if (usbHandler == NULL) {
 		std::cerr << "Error: Can::initialize(): usbHandler == NULL" << std::endl;
-	} else {
-		usbHandler->canPurge();
+		return;
 	}
+	
+	std::cout << " - Checking CAN Packet Version..." <<std::endl;
+	unsigned char healthVersion;
+	unsigned char canVersion;
+	usbHandler->getHealthAndCanVersions(&healthVersion, &canVersion);
+	std::cout << " --- Panda CAN Version: " << (int)canVersion << std::endl;
+	this->pandaCanVersion = canVersion;
+	
+	std::cout << " - Purging ring buffers" << std::endl;
+	usbHandler->canPurge();
+	
 	
 	std::cout << " - CAN Done." << std::endl;
 }

@@ -150,7 +150,7 @@ void Gps::addObserver( GpsListener* listener ) {
 }
 
 void Gps::startParsing() {
-	if(usbHandler == NULL || usingExternalGps == false) {
+	if(usbHandler == NULL && usingExternalGps == false) {
 		std::cerr << "ERROR: Gps::startParsing(): No Usb Handler nor external USB GPS set for Panda::Gps!" << std::endl;
 		return;
 	}
@@ -434,8 +434,9 @@ void Gps::initialize() {
 		setUbxChecksum(cfgrate);
 //		usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
 		write(fidGps, cfgrate, sizeof(cfgrate));
-		
+		usleep(100000);
 		write(fidGps, "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
+		usleep(100000);
 		write(fidGps, "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37", 28);
 		
 		return;
