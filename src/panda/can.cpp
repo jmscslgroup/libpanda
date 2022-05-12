@@ -397,12 +397,12 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 			canFrame.messageID = -1;
 			return canFrame;
 		}
-		if (buffer[0] & 0x01 ) {
-			std::cerr << "Error: Panda::bufferToCanFrame(): Reserved bit expected to be 0: " << std::endl;
-			printBuffer(buffer, bufferLength);
-			canFrame.messageID = -1;
-			return canFrame;
-		}
+//		if (buffer[0] & 0x01 ) {
+//			std::cerr << "Error: Panda::bufferToCanFrame(): Reserved bit expected to be 0: " << std::endl;
+//			printBuffer(buffer, bufferLength);
+//			canFrame.messageID = -1;
+//			return canFrame;
+//		}
 		
 		canFrame.dataLength = dlcToLen[lookupIndex];
 		int packetLength = CANPACKET_HEAD_SIZE + canFrame.dataLength;
@@ -570,7 +570,8 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 					if (newFrame.messageID == -1) {
 						std::cerr << "Error: Can::notificationCanRead(): Parsing packet resulted in error, this is what was recieved:" << std::endl;
 						printBuffer(buffer, bufferLength);
-						break;
+						unlock();
+						return;
 					}
 					newFrame.sysTime = sysTime;
 					writeCsvToFile(&newFrame, (unsigned char*)&buffer[index], lengthOfFrame);
