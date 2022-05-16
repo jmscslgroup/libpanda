@@ -528,14 +528,14 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	printCentered(menuY+4, menuX, menuWidth, "Sort by pressing key:");
 	printCentered(menuY+5, menuX, menuWidth, "\'m\',\'c\',\'r\',\'u\'");
 	printCentered(menuY+6, menuX, menuWidth, "Or use arrow keys    ");
+	printCentered(menuY+7, menuX, menuWidth, "'x' Toggle hex/dec IDs");
 	printCentered(menuY+8, menuX, menuWidth, "'-' Resets unique data");
-	printCentered(menuY+8, menuX, menuWidth, "'x' Toggle hex/dec IDs");
 
 
 
 	int canX = menuX+menuWidth;
 	int canY = 0;
-	int canWidth = 41;
+	int canWidth = 41 + 64*2 + 1;
 	int canHeight = 40;
 
 	int uiX = menuX;
@@ -596,6 +596,13 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	int uniCntLength = strlen(uniCnt);
 	char formatStringUniCnt[16];
 	snprintf(formatStringUniCnt, 16, "%%%dd", uniCntLength);
+	
+	
+	const char latestCnt[] = "Latest Data:";
+	int latestCntCol = uniCntCol + uniCntLength + 3;
+	int latestCntLength = strlen(latestCnt) +2 + (64-8)*2;
+	char formatStringLatestCnt[128];	// this will need to be dynamic based on length of data
+	snprintf(formatStringLatestCnt, 128, "%%%dd", latestCntLength);
 
 	int titleRow = canY+3;
 
@@ -609,6 +616,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = msgIdCol + msgIdLength;
 			break;
 		case SORT_ID_COUNT:
@@ -619,6 +627,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			attroff(A_STANDOUT);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = msgCntCol + msgCntLength;
 			break;
 		case SORT_ID_RATE:
@@ -630,6 +639,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			attroff(A_STANDOUT);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			reverseColumn = msgRateCol + msgRateLength;
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			break;
 		case SORT_UNIQUE_DATA_COUNT:
 			canFrameStats.sortByUniqueMessageCount();
@@ -639,6 +649,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			attron(A_STANDOUT);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			attroff(A_STANDOUT);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = uniCntCol + uniCntLength;
 			break;
 		default:
@@ -668,6 +679,13 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+			
+			move(row, latestCntCol);
+			for (int i = idStats->latest.dataLength-1; i >= 0; i--) {
+				printw("%02X", idStats->latest.data[i]);
+//				printw(char *fmt, ...)
+			}
+//			mvprintw(row, latestCntCol, formatStringLatestCnt, idStats->data.size());
 
 			if (idStats->highlight) {
 				attroff(A_STANDOUT);
@@ -695,6 +713,13 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+			
+			move(row, latestCntCol);
+			for (int i = idStats->latest.dataLength-1; i >= 0; i--) {
+				printw("%02X", idStats->latest.data[i]);
+//				printw(char *fmt, ...)
+			}
+//			mvprintw(row, latestCntCol, formatStringLatestCnt, idStats->data.size());
 
 			if (idStats->highlight) {
 				attroff(A_STANDOUT);
@@ -705,7 +730,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	}
 
 
-	miniWindow(canY, canY+canHeight, canX, uniCntCol + uniCntLength + 2);
+	miniWindow(canY, canY+canHeight, canX, latestCntCol + latestCntLength + 2);
 
 
 	move(fieldY, fieldX+highlightCurrentIndex);

@@ -28,6 +28,7 @@
 
 #include <map>
 #include <vector>
+#include <array>
 #include <list>
 
 #include "panda.h"
@@ -45,10 +46,12 @@ typedef struct _IdInfo {
 	double priorTime = 0;
 	double currentRate = 1;
 	bool highlight = false;
+	
+	Panda::CanFrame latest;
 
 	// mapping of individual 64-bit data messages to data informaiton (count, bus)
-	// The size of thie corresponds to the number of unique data sent under the parent message ID (see canStats below)
-	std::map<unsigned long long int,DataInfo> data;
+	// The size of this corresponds to the number of unique data sent under the parent message ID (see canStats below)
+	std::map<std::array<unsigned char, 64>,DataInfo> data;
 } IdInfo;
 
 
