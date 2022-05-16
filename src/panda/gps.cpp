@@ -133,7 +133,7 @@ void Gps::doAction() {
 //		}
 //	std::cout << std::endl;
 		if (length > 0) {
-			notificationUartRead(buffer, length);
+			notificationUartRead(buffer, length);	// HACK
 		}
 	} else {
 		usbHandler->requestUartData();
@@ -427,6 +427,7 @@ void Gps::initialize() {
 			std::cerr << "       : Gps::initialize(): /dev/ttyACM0  Does not exist" << std::endl;
 			return;
 		}
+		std::cerr << "       : Gps::initialize(): Success!" << std::endl;
 		
 		usingExternalGps = true;
 		

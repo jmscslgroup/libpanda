@@ -425,7 +425,11 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 			return canFrame;
 		}
 //		canFrame.messageID = ((header[4] << 24) | (header[3] << 16) | (header[2] << 8) | header[1]) >> 3;
-		canFrame.messageID = (header[4] << 21) | (header[3] << 13) | (header[2] << 5) | (header[1] >> 3);
+		canFrame.messageID =
+		(((unsigned int)header[4] << 21) & 0x1FE00000) |
+		(((unsigned int)header[3] << 13) & 0x001FE000) |
+		(((unsigned int)header[2] <<  5) & 0x00001FE0) |
+		(((unsigned int)header[1] >>  3) & 0x0000001F);
 		
 		canFrame.returned = (header[1] >> 1) & 0x01;
 		canFrame.rejected = header[1] & 0x01;
