@@ -529,6 +529,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	printCentered(menuY+5, menuX, menuWidth, "\'m\',\'c\',\'r\',\'u\'");
 	printCentered(menuY+6, menuX, menuWidth, "Or use arrow keys    ");
 	printCentered(menuY+8, menuX, menuWidth, "'-' Resets unique data");
+	printCentered(menuY+8, menuX, menuWidth, "'x' Toggle hex/dec IDs");
 
 
 
@@ -572,7 +573,11 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	int msgIdCol = canX + 2;
 	int msgIdLength = strlen(msgId);
 	char formatStringMsgId[16];
-	snprintf(formatStringMsgId, 16, "%%%dd", msgIdLength);
+	if (messageIdAsHex) {
+		snprintf(formatStringMsgId, 16, "0x%%0%dX", msgIdLength-2);
+	} else {
+		snprintf(formatStringMsgId, 16, "%%%dd", msgIdLength);
+	}
 
 	const char msgCnt[] = "Count:";
 	int msgCntCol = msgIdCol + msgIdLength + 3;
@@ -772,6 +777,11 @@ char CursesHandler::getUserInput( )
 				reverseSortEnable = !reverseSortEnable;
 			}
 			canSortMode = SORT_UNIQUE_DATA_COUNT;
+			break;
+			
+		case 'x':
+		case 'X':
+			messageIdAsHex = !messageIdAsHex;
 			break;
 
 		case '-':

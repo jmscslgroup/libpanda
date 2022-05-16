@@ -61,6 +61,8 @@ private:
 	DisplayMode displayMode;
 	CanSortMode canSortMode;
 	volatile bool reverseSortEnable;
+	
+	bool messageIdAsHex = false;
 
 	bool resetUniqueData;
 
