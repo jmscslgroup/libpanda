@@ -199,11 +199,11 @@ void Can::startParsing() {
 				//	}
 				//	if (vinRequest.complete()) {
 				// We got it!
-				printf("Success! Read: ");
-				for (int i = 0; i < vinRequest.dataLength; i++) {
-					printf("%c", vinRequest.data[i]);
-				}
-				printf("\n");
+				printf("Success! ");
+//				for (int i = 0; i < vinRequest.dataLength; i++) {
+//					printf("%c", vinRequest.data[i]);
+//				}
+//				printf("\n");
 				// Save the VIN:
 				FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
 				fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
@@ -214,8 +214,7 @@ void Can::startParsing() {
 				fwrite( "1\n", 1, strlen("1\n"), file);
 				fclose(file);
 				
-				printf(" - This vehicle is made by :%s\n", vehicleManufacturerToString(vinToManufacturer(vinRequest.data)));
-				printf(" - This vehicle was made in:%d\n", vinToYear(vinRequest.data));
+				printVin(vinRequest.data);
 				
 				break;
 			} else {

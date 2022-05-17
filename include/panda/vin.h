@@ -52,6 +52,22 @@ enum VehicleManufacturer {
 	VEHICLE_MANUFACTURE_OTHER
 };
 
+enum VehicleRegion {
+	VEHICLE_REGION_USA,
+	VEHICLE_REGION_CANADA,
+	VEHICLE_REGION_JAPAN,
+	VEHICLE_REGION_OTHER
+};
+
+
+enum VehicleModel {
+	VEHICLE_MODEL_TOYOTA_RAV4,
+	VEHICLE_MODEL_HONDA_PILOT,
+	VEHICLE_MODEL_NISSAN_ROGUE,
+	VEHICLE_MODEL_GM_CADIALLC_XT5,
+	VEHICLE_MODEL_OTHER
+};
+
 /*! \brief Retreives the year, only for VIN in vehicles made after 2000
 	\param vin The VIN
 	\return The vehicle's year
@@ -59,14 +75,30 @@ enum VehicleManufacturer {
 int vinToYear( unsigned char* vin);
 
 
-/*! \brief Retreives the manufacturer, but expects vehicles most liekly to be found in USA
+/*! \brief Retreives the manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
 	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
 	\param vin The VIN
 	\return The vehicle's manufacturer, as only recognizable by libpanda
  */
 VehicleManufacturer vinToManufacturer( unsigned char* vin );
 
+
+/*! \brief Retreives the region of manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
+	\param vin The VIN
+	\return The vehicle's manufacturer region, as only recognizable by libpanda
+ */
+VehicleRegion vinToRegion( unsigned char* vin );
+
+/*! \brief Retreives the model (and thus manufacture).  This is emprically based on the 3rd digit of the VIN with a super small sample of vehicles
+	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
+	\param vin The VIN
+	\return The vehicle's model, as only recognizable by libpanda
+ */
+VehicleModel vinToModel( unsigned char* vin );
+
 const char* vehicleManufacturerToString( VehicleManufacturer vm );
+const char* vehicleModelToString( VehicleModel vm );
+const char* vehicleRegionToString( VehicleRegion vr );
 
 void printVin( unsigned char* vin);
 

@@ -198,16 +198,12 @@ int main(int argc, char **argv) {
 	unsigned char vin3[] = "JTMB6RFV5MD010181";
 	unsigned char vin4[] = "JN8AT3CB9MW240939";
 	unsigned char vin5[] = "1GYKNCRS3NZ112305";
-//	unsigned char vin5[] = "1GYKNCRS3AZ112305";
 	
 	Panda::printVin(vin1);
 	Panda::printVin(vin2);
 	Panda::printVin(vin3);
 	Panda::printVin(vin4);
-//	for	(unsigned char i = 'A'; i < 'Z'; i++){
-//		vin5[9] = i;
 	Panda::printVin(vin5);
-//	}
 	
 	
 	testCan.stopParsing();
