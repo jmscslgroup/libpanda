@@ -51,7 +51,7 @@ typedef struct _IdInfo {
 
 	// mapping of individual 64-bit data messages to data informaiton (count, bus)
 	// The size of this corresponds to the number of unique data sent under the parent message ID (see canStats below)
-	std::map<std::array<unsigned char, 64>,DataInfo> data;
+	std::map<std::array<unsigned char, CAN_DATA_MAX_LENGTH>,DataInfo> data;
 } IdInfo;
 
 

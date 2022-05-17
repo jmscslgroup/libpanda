@@ -220,22 +220,17 @@ int main(int argc, char **argv) {
 			
 			
 			
-			//			if (m++ >= 0) {
-			newFrame.messageID = 0x801;	// fake stats slow 1Hz
-			newFrame.dataLength = 64;
+			newFrame.messageID = 0x801;	// fake at 10Hz
+			newFrame.dataLength = CAN_DATA_MAX_LENGTH;
 			memset(newFrame.data, 0, newFrame.dataLength);
 			*((int*)&newFrame.data[32]) = m++;
 			mCanFrameStats.newDataNotification(&newFrame);
 			memset(newFrame.data, 0, newFrame.dataLength);
-			//mCanFrameStats.newDataNotification(&newFrame);
-			//				m = 1;
-			//			}
 			
 			if (n++ >= 10) {
 				newFrame.messageID = 0x802;	// fake stats slow 1Hz
 				newFrame.data[0] = o;
-				static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64};
-				newFrame.dataLength = dlcToLen[o++];
+				newFrame.dataLength = Panda::dataLengthCodeToDataLength(o++);
 				if (o >= 16) {
 					o = 0;
 				}

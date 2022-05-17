@@ -535,7 +535,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 
 	int canX = menuX+menuWidth;
 	int canY = 0;
-	int canWidth = 41 + 64*2 + 1;
+	int canWidth = 41 + CAN_DATA_MAX_LENGTH*2 + 1;
 	int canHeight = 40;
 
 	int uiX = menuX;
@@ -600,9 +600,9 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	
 	const char latestCnt[] = "Latest Data:";
 	int latestCntCol = uniCntCol + uniCntLength + 3;
-	int latestCntLength = strlen(latestCnt) +2 + (64-8)*2;
-	char formatStringLatestCnt[128];	// this will need to be dynamic based on length of data
-	snprintf(formatStringLatestCnt, 128, "%%%dd", latestCntLength);
+	int latestCntLength = strlen(latestCnt) + 2 + (CAN_DATA_MAX_LENGTH-8)*2;
+	char formatStringLatestCnt[CAN_DATA_MAX_LENGTH*2];	// this will need to be dynamic based on length of data
+	snprintf(formatStringLatestCnt, CAN_DATA_MAX_LENGTH*2, "%%%dd", latestCntLength);
 
 	int titleRow = canY+3;
 
