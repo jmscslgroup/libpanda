@@ -8,14 +8,18 @@ fi
 git submodule init
 git submodule update
 
+echo "=================================="
 echo "Installing Panda Firmware SDK"
 cd panda/board
 ./get_sdk.sh
-scons -4
+cd ..
+scons -j4
 cd ../..
 echo "Panda firmware version:"
 cat panda/board/obj/version
+echo ""
 echo "Done installing Panda Firmware SDK"
+echo "=================================="
 
 declare -a depencencies=( bmon )
 toInstall=()
