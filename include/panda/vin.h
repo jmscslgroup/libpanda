@@ -27,8 +27,8 @@
 #define VIN_H
 
 
-#include <unistd.h>	// usleep()
-#include <cstring> // memcpy
+//#include <unistd.h>	// usleep()
+//#include <cstring> // memcpy
 
 #include "panda.h"
 //#include "panda/obd-pid.h"
@@ -44,7 +44,33 @@ namespace Panda {
 //	CAN_FRAME_FLOW_CONTROL = 0x03
 //};
 
+enum VehicleManufacturer {
+	VEHICLE_MANUFACTURE_TOYOTA,
+	VEHICLE_MANUFACTURE_HONDA,
+	VEHICLE_MANUFACTURE_NISSAN,
+	VEHICLE_MANUFACTURE_GM,
+	VEHICLE_MANUFACTURE_OTHER
+};
 
+/*! \brief Retreives the year, only for VIN in vehicles made after 2000
+	\param vin The VIN
+	\return The vehicle's year
+ */
+int vinToYear( unsigned char* vin);
+
+
+/*! \brief Retreives the manufacturer, but expects vehicles most liekly to be found in USA
+	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
+	\param vin The VIN
+	\return The vehicle's manufacturer, as only recognizable by libpanda
+ */
+VehicleManufacturer vinToManufacturer( unsigned char* vin );
+
+const char* vehicleManufacturerToString( VehicleManufacturer vm );
+
+void printVin( unsigned char* vin);
+
+/*
 class VinReader : public CanListener {
 public:
 	
@@ -56,9 +82,8 @@ public:
 	void setPandaHandler(Handler& handler);
 	void requestVin();
 	
-	/*
-	 Will save the VIN to a file when discovered:
-	 */
+	//Will save the VIN to a file when discovered:
+	
 	void saveToFile(const char* filename);
 	
 private:
@@ -76,7 +101,7 @@ private:
 	void sendFlowControl();
 	void newDataNotification( CanFrame* canFrame );
 };
-
+*/
 }
 
 #endif

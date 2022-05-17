@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
 	// Initialize Usb, this requires a conencted Panda
 	Panda::Handler pandaHandler;
-	
+	/*
 	Panda::VinReader mVinReader;
 	mVinReader.setPandaHandler(pandaHandler);
 	
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 	}
 	
 	std::cout << "VIN for this vehicle: " << mVinReader.vinResult() << std::endl;
-	
+	*/
 	pandaHandler.stop();
 
 	std::cout << "\rDone." << std::endl;
