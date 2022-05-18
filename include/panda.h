@@ -26,6 +26,8 @@
 #ifndef PANDA_HANDLER_H
 #define PANDA_HANDLER_H
 
+#include "panda_version_i.h"
+
 #include "panda/usb.h"
 #include "panda/can.h"
 #include "panda/gps.h"
@@ -38,6 +40,9 @@
  * \brief Handles USB communication and parsing with a comma.ai Panda
  */
 namespace Panda {
+	/*! \brief Prints the current git version of libpanda and supported git version of panda firmware
+	*/
+	void printVersions();
 
 	/*! \class Handler
 	 \brief A class that handles the Usb, GPS, and CAN data

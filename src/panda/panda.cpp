@@ -29,6 +29,11 @@
 
 using namespace Panda;
 
+void Panda::printVersions() {
+	std::cout << "libpanda Git Version:" << LIBPANDA_VERSION << std::endl;
+	std::cout << "   Panda Git Version:" << PANDA_VERSION << std::endl;
+}
+
 Handler::Handler() {
 	mCan.setUsb(&mUsb);
 	mGps.setUsb(&mUsb);

@@ -1,0 +1,8 @@
+#ifndef PANDA_VERSION_INTERNAL_H
+#define PANDA_VERSION_INTERNAL_H
+
+
+const char LIBPANDA_VERSION[] = "@LIBPANDA_GIT_REV@";
+const char PANDA_VERSION[] = "@PANDA_GIT_REV@";
+
+#endif

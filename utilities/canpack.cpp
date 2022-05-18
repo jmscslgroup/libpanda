@@ -37,6 +37,8 @@ char nissan7[] = {0x00, 0xE4, 0x60, 0x04, 0x00, 0x00, 0x00, 0x00, 0x74, 0x08, 0x
 int main(int argc, char **argv) {
 	std::cout << "Starting " << argv[0] << std::endl;
 
+	Panda::printVersions();
+	
 	Panda::Can testCan;
 	CanPrint mCanPrint;
 	testCan.addObserver(&mCanPrint);

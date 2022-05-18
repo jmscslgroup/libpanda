@@ -38,6 +38,25 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH false)
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib64")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
+execute_process(COMMAND git rev-parse --short=8 HEAD
+                OUTPUT_VARIABLE LIBPANDA_GIT_REV
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE )
+message("Libpanda git version: ${LIBPANDA_GIT_REV}")
+
+execute_process(COMMAND git -C ${CMAKE_SOURCE_DIR}/panda rev-parse --short=8 HEAD
+                OUTPUT_VARIABLE PANDA_GIT_REV
+                ERROR_QUIET 
+                OUTPUT_STRIP_TRAILING_WHITESPACE )
+message("Panda git version: ${PANDA_GIT_REV}")
+
+    include_directories( ${CMAKE_CURRENT_BINARY_DIR}
+                         ${CMAKE_CURRENT_SOURCE_DIR} )
+    configure_file(include/panda_version_i.h.in "${CMAKE_CURRENT_BINARY_DIR}/panda_version_i.h" @ONLY)
+    
+
+
+
 if(APPLE)
 	set(CMAKE_MACOSX_RPATH 1)
 endif()
