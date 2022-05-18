@@ -178,7 +178,7 @@ void Gps::saveToFile( const char* filename ) {
 
 // GPS overloads:
 void Gps::OnError(CNMEAParserData::ERROR_E nError, char *pCmd) {
-	printf("ERROR for Cmd: %s, Number: %d\n", pCmd, nError);
+	printf("Error: Gps::OnError(): for Cmd: \"%s\", Number: %d\n", pCmd, nError);
 }
 
 CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {

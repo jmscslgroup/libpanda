@@ -229,12 +229,6 @@ void ObdPidRequest::doAction() {
 				
 				dataLength = ((((int)frame.data[0] & 0x0F) << 8) | (int)frame.data[1]) - 3;
 //				printf(" - Length: %d\n", dataLength);
-		
-				
-#define OBD_PID_EXTENDED_RESPONSE (0x18DAF100)
-#define OBD_PID_EXTENDED_REQUEST (0x18DA00F1)
-#define OBD_PID_EXTENDED_BROADCAST_ID (0x18DB33F1)
-#define OBD_PID_EXTENDED_ID_MASK (0x000000FF)
 				
 				if (frame.messageID > 0x800) {	// 29-bit
 					assignedId = OBD_PID_EXTENDED_REQUEST | ((OBD_PID_EXTENDED_ID_MASK & frame.messageID) << 8);

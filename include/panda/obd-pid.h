@@ -30,9 +30,6 @@
 
 #include "can.h"
 
-
-#define CAN_FRAME_TYPE_MASK (0xF0)
-
 namespace Panda {
 
 

@@ -246,10 +246,8 @@ namespace Panda {
 
 
 		// Simple handling layers:
-//		void sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index);
-//		void readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length);
 		void sendPandaHardwareSimple(uint8_t request, uint16_t value, uint16_t index);
-		void readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value=0, uint16_t index=0);
+		int readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value=0, uint16_t index=0);
 
 	};
 

@@ -25,6 +25,9 @@
 
 #include "panda/usb.h"
 #include "panda/pandadefinitions.h"
+
+#include "panda_version_i.h"
+
 #include <cstring>
 #include <unistd.h>
 #include <sstream>
@@ -112,19 +115,38 @@ void Usb::initialize() {
 	}
 
 	// Code version based on git:
-	std::cout << " - Git Version: ";
-	unsigned char gitVersion[64];
-	getGitVersion(gitVersion);
+	std::cout << " - Current Panda firmware git version: ";
+	char gitVersion[64];
+	getGitVersion((unsigned char*)gitVersion);
 	std::cout << gitVersion << std::endl;
 	
-//	libusb_control_transfer(handler, 0xc0, 0xe5, 1, 0, NULL, 0, 0);
-	unsigned char firmware[128];
-	getFirmware(firmware);
-	std::cout << " - Firmware:";
-	for (int i = 0; i < 128; i++) {
-		printf("%02X", firmware[i]);
+	bool firmwareMatch = false;
+	char* token = strtok(gitVersion, "-");
+	if (token != NULL) {
+		token = strtok(NULL, "-");
+		if (token != NULL) {
+			if (strcmp(token, PANDA_VERSION) == 0) {
+				firmwareMatch = true;
+			}
+		}
 	}
-	std::cout << std::endl;
+	if (!firmwareMatch) {
+		std::cout << " |-- " << "\u001b[1m\u001b[31m" << "Warning! This Panda version does not match the supported version: " << PANDA_VERSION
+			   << "\u001b[0m" << std::endl;
+	} else {
+		std::cout << " |-- This Panda version is " << "\u001b[1m\u001b[32m" << "Supported" << "\u001b[0m" << std::endl;
+	}
+	
+	
+	
+//	libusb_control_transfer(handler, 0xc0, 0xe5, 1, 0, NULL, 0, 0);
+//	unsigned char firmware[128];
+//	getFirmware(firmware);
+//	std::cout << " - Firmware:";
+//	for (int i = 0; i < 128; i++) {
+//		printf("%02X", firmware[i]);
+//	}
+//	std::cout << std::endl;
 
 	// Void function:
 	libusb_free_device_list(devices, 1);
@@ -152,7 +174,7 @@ void Usb::initialize() {
 
 	switch (hardwareType) {
 		case HARDWARE_WHITE_PANDA:
-			std::cout << " |-- This is a WHITE PANDA, no GPS" << std::endl;
+			std::cout << " |-- This is a WHITE PANDA, no built-in GPS" << std::endl;
 			break;
 		case HARDWARE_GREY_PANDA:
 			hasGps = true;
@@ -167,14 +189,14 @@ void Usb::initialize() {
 			std::cout << " |-- This is an UNO" << std::endl;
 			break;
 		case HARDWARE_PEDAL:
-			std::cout << " |-- This is an PEDAL, no GPS" << std::endl;
+			std::cout << " |-- This is an PEDAL, no built-in GPS" << std::endl;
 			break;
 		case HARDWARE_DOS:
 			std::cout << " |-- This is a DOS" << std::endl;
 			break;
 		case HARDWARE_RED_PANDA:
 			hasGps = false;
-			std::cout << " |-- This is a RED PANDA, no GPS" << std::endl;
+			std::cout << " |-- This is a RED PANDA, no built-in GPS" << std::endl;
 			std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
 			setCanFdBaud(0, 20000);
 			std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
@@ -953,7 +975,10 @@ void Usb::getFirmware( unsigned char* firmware128 ) {
 }
 
 void Usb::getGitVersion( unsigned char* version ) {
-	readPandaHardwareSimple( REQUEST_GIT_VERSION, version, 64);
+	int length = readPandaHardwareSimple( REQUEST_GIT_VERSION, version, 64);
+	if (length < 64) {
+		version[length] = 0x00;	// NULL terminate
+	}
 }
 
 void Usb::systemReset() {
@@ -1101,12 +1126,13 @@ void Usb::sendPandaHardwareSimple(uint8_t request, uint16_t value, uint16_t inde
 
 //void Usb::readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length) {
 //	int status = libusb_control_transfer(handler, requestType, request, 0, 0, buffer, length, TIMEOUT);
-void Usb::readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value, uint16_t index) {
+int Usb::readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value, uint16_t index) {
 	int status = libusb_control_transfer(handler, REQUEST_TYPE_IN, request, value, index, buffer, length, TIMEOUT);
 	if (status < 0) {
 		std::cerr << " FAILED: readPandaHardwareSimple() libusb_control_transfer error" << std::endl;
 		printError(status);
 	}
+	return status;
 }
 
 
