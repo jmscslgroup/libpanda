@@ -28,6 +28,7 @@
 #include <cstring>
 #include <algorithm>
 #include <unistd.h>
+#include <cassert>
 
 CanFrameStats::CanFrameStats() {
 }
@@ -126,8 +127,8 @@ void CanFrameStats::highlightUniqueCount(int countToHighlight) {
 void CanFrameStats::doAction() {
 	if (canFrameFifo.size() > 0) {
 
-
-		unsigned long long int data = 0;
+		std::array<unsigned char, CAN_DATA_MAX_LENGTH> data;
+		data.fill(0x00);
 		// For packet rate:
 		struct timeval sysTime;
 		gettimeofday(&sysTime, NULL);
@@ -137,12 +138,14 @@ void CanFrameStats::doAction() {
 		lock();
 		Panda::CanFrame* canFrame = canFrameFifo.front();
 		canFrameFifo.pop_front();
-		memcpy(&data, canFrame->data, canFrame->dataLength);
+		assert(canFrame->dataLength <= CAN_DATA_MAX_LENGTH);
+		memcpy(data.data(), canFrame->data, canFrame->dataLength);
 		IdInfo* messageStats = &canStats[canFrame->messageID];
 		DataInfo* dataStats = &messageStats->data[data];
 
 		messageStats->ID = canFrame->messageID;
 		messageStats->count++;
+		messageStats->latest = *canFrame;
 
 		dataStats->count++;
 		dataStats->length = canFrame->dataLength;

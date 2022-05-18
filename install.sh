@@ -5,6 +5,22 @@ if [[ $EUID == 0 ]];
   exit
 fi
 
+git submodule init
+git submodule update
+
+echo "=================================="
+echo "Installing Panda Firmware SDK"
+cd panda/board
+./get_sdk.sh
+cd ..
+scons -j4
+cd ../..
+echo "Panda firmware version:"
+cat panda/board/obj/version
+echo ""
+echo "Done installing Panda Firmware SDK"
+echo "=================================="
+
 declare -a depencencies=( bmon )
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
@@ -113,7 +129,7 @@ if [ ! -d ~/irods-icommands-debs ]; then
 	# the following needs to run AFTER installing irods commands
 	sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
 else
-	echo "irods icommands already isntalled."
+	echo "irods icommands already installed."
 fi
 
 # enable persisten journalctl logging:

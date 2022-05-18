@@ -35,6 +35,8 @@
 #include "panda/usb.h"
 #include "panda/candata.h"
 
+#define PANDA_CAN_PACKET_HEAD_SIZE (0x5)
+
 namespace Panda {
 
 	/*!
@@ -52,6 +54,20 @@ namespace Panda {
 	 \return The length of the packet
 	 */
 	int canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCanVersion);
+
+	/*!
+	 \brief Converts an encoded data length (0-16) to a data length (0,1,2,3,4,5,7,8,12,16,20,24,32,48,64)
+	 \param dlc The data length code to be converted into data length
+	 \return The data length, or 0xFF on error
+	 */
+	unsigned char dataLengthCodeToDataLength( unsigned char dlc );
+
+	/*!
+	\brief Converts an data length (0,1,2,3,4,5,7,8,12,16,20,24,32,48,64) to a data length code (0-16)
+	\param dlc The data length to be converted into data length code
+	\return The data length code, or 0xFF on error
+	*/
+	unsigned char dataLengthToDataLengthCode( unsigned char dl );
 
 	class Can;
 

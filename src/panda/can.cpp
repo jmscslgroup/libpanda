@@ -27,6 +27,8 @@
 #include "panda/obd-pid.h"
 #include "panda/obd-pid-definitions.h"
 
+#include "panda/vin.h"
+
 #include <unistd.h>
 #include <time.h>
 #include <cstring> // memcpy
@@ -45,6 +47,34 @@ void printBuffer(char* buffer, int length) {
 		printf("0x%02X ", buffer[i]);
 	}
 	printf("\n");
+}
+
+unsigned char Panda::dataLengthCodeToDataLength( unsigned char dlc ) {
+	static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64};
+	if(dlc < 0 || dlc > 15) {
+		return 0xFF;
+	}
+	return dlcToLen[dlc];
+}
+
+unsigned char Panda::dataLengthToDataLengthCode( unsigned char dl ) {
+	if (dl < 9) {
+		return dl;
+	} else {
+		switch (dl) {
+			case 12: return 9;
+			case 16: return 10;
+			case 20: return 11;
+			case 24: return 12;
+			case 32: return 13;
+			case 48: return 14;
+			case 64: return 15;
+				
+			default:
+				break;
+		}
+	}
+	return 0xFF; // Not a valid data length
 }
 
 Can::Can()
@@ -169,11 +199,11 @@ void Can::startParsing() {
 				//	}
 				//	if (vinRequest.complete()) {
 				// We got it!
-				printf("Success! Read: ");
-				for (int i = 0; i < vinRequest.dataLength; i++) {
-					printf("%c", vinRequest.data[i]);
-				}
-				printf("\n");
+				printf("Success! ");
+//				for (int i = 0; i < vinRequest.dataLength; i++) {
+//					printf("%c", vinRequest.data[i]);
+//				}
+//				printf("\n");
 				// Save the VIN:
 				FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
 				fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
@@ -183,6 +213,9 @@ void Can::startParsing() {
 				file = fopen( "/etc/libpanda.d/newVin", "w+");
 				fwrite( "1\n", 1, strlen("1\n"), file);
 				fclose(file);
+				
+				printVin(vinRequest.data);
+				
 				break;
 			} else {
 				std::cerr << "Timeout" << std::endl;
@@ -313,45 +346,50 @@ int Panda::canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCa
 		// best to assert that length is within dlcToLen[]
 		unsigned char tempBuffer[256];
 		int extended = frame.messageID >= 0x800;
-		int dataLengthCode;
-		if (frame.dataLength < 9) {
-			dataLengthCode = frame.dataLength;
-		} else {
-			switch (frame.dataLength) {
-				case 12:
-					dataLengthCode = 9;
-					break;
-				case 16:
-					dataLengthCode = 10;
-					break;
-				case 20:
-					dataLengthCode = 11;
-					break;
-				case 24:
-					dataLengthCode = 12;
-					break;
-				case 32:
-					dataLengthCode = 13;
-					break;
-				case 48:
-					dataLengthCode = 14;
-					break;
-				case 64:
-					dataLengthCode = 15;
-					break;
-					
-				default:
-					std::cerr << "Error! Panda::canFrameToBuffer() invalid data length of " << (int)frame.dataLength << std::endl;
-					return 0;
-					break;
-			}
+		int dataLengthCode = dataLengthToDataLengthCode(frame.dataLength);
+		if (dataLengthCode == 0xff) {
+			std::cerr << "Error! Panda::canFrameToBuffer() invalid data length of " << (int)frame.dataLength << std::endl;
+			return 0;
 		}
+//		if (frame.dataLength < 9) {
+//			dataLengthCode = frame.dataLength;
+//		} else {
+//			switch (frame.dataLength) {
+//				case 12:
+//					dataLengthCode = 9;
+//					break;
+//				case 16:
+//					dataLengthCode = 10;
+//					break;
+//				case 20:
+//					dataLengthCode = 11;
+//					break;
+//				case 24:
+//					dataLengthCode = 12;
+//					break;
+//				case 32:
+//					dataLengthCode = 13;
+//					break;
+//				case 48:
+//					dataLengthCode = 14;
+//					break;
+//				case 64:
+//					dataLengthCode = 15;
+//					break;
+//
+//				default:
+//					std::cerr << "Error! Panda::canFrameToBuffer() invalid data length of " << (int)frame.dataLength << std::endl;
+//					return 0;
+//					break;
+//			}
+//		}
 		unsigned int word_4b = (frame.messageID << 3) | (extended << 2);
 		tempBuffer[0] = (dataLengthCode << 4) | (frame.bus << 1);
-		tempBuffer[1] = word_4b & 0xFF;
-		tempBuffer[2] = (word_4b >> 8) & 0xFF;
-		tempBuffer[3] = (word_4b >> 16) & 0xFF;
-		tempBuffer[4] = (word_4b >> 24) & 0xFF;
+//		tempBuffer[1] = word_4b & 0xFF;
+//		tempBuffer[2] = (word_4b >> 8) & 0xFF;
+//		tempBuffer[3] = (word_4b >> 16) & 0xFF;
+//		tempBuffer[4] = (word_4b >> 24) & 0xFF;
+		*((unsigned int*)&tempBuffer[1]) = word_4b;
 		memcpy(&tempBuffer[5], frame.data, frame.dataLength);
 		
 		int counter = 0;
@@ -392,30 +430,24 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 	
 	if (pandaCanVersion == 2) {
 		
-		
-		// All of the above commented out for CAN packet version 2 parsing:
-		
-#define CANPACKET_HEAD_SIZE (0x5)
-		static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}; // dat alength code
-//		int parsePosition = 0;
-		unsigned char lookupIndex = buffer[0] >> 4;
-		if (lookupIndex > sizeof(dlcToLen)/sizeof(dlcToLen[0])) {	// This will never fail
-			std::cerr << "Error: Panda::bufferToCanFrame(): Received an Data Length Lookup: " << (int)lookupIndex << " > " << (int)(sizeof(dlcToLen)/sizeof(dlcToLen[0])) << std::endl;
+		canFrame.dataLength = dataLengthCodeToDataLength(buffer[0] >> 4);
+
+		if (canFrame.dataLength == 0xFF) {	// This will never fail
+			std::cerr << "Error: Panda::bufferToCanFrame(): Received an Data Length Lookup: " << (int)(buffer[0] >> 4) << " > 16" << std::endl;
 			printBuffer(buffer, bufferLength);
 			canFrame.messageID = -1;
 			return canFrame;
 		}
-//		if (buffer[0] & 0x01 ) {
-//			std::cerr << "Error: Panda::bufferToCanFrame(): Reserved bit expected to be 0: " << std::endl;
-//			printBuffer(buffer, bufferLength);
-//			canFrame.messageID = -1;
-//			return canFrame;
-//		}
+////		if (buffer[0] & 0x01 ) {
+////			std::cerr << "Error: Panda::bufferToCanFrame(): Reserved bit expected to be 0: " << std::endl;
+////			printBuffer(buffer, bufferLength);
+////			canFrame.messageID = -1;
+////			return canFrame;
+////		}
 		
-		canFrame.dataLength = dlcToLen[lookupIndex];
-		int packetLength = CANPACKET_HEAD_SIZE + canFrame.dataLength;
+		int packetLength = PANDA_CAN_PACKET_HEAD_SIZE + canFrame.dataLength;
 		//if (packetLength < bufferLength) {	// we will have flexible sized packets sooo... this function will need work
-		char* header = &buffer[0];	// will be of length CANPACKET_HEAD_SIZE
+		char* header = &buffer[0];	// will be of length PANDA_CAN_PACKET_HEAD_SIZE
 		
 		canFrame.bus = (header[0] >> 1) & 0x07;
 		if (canFrame.bus > 3) {	// Pandas shouldn't have this...
@@ -425,15 +457,16 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 			return canFrame;
 		}
 //		canFrame.messageID = ((header[4] << 24) | (header[3] << 16) | (header[2] << 8) | header[1]) >> 3;
-		canFrame.messageID =
-		(((unsigned int)header[4] << 21) & 0x1FE00000) |
-		(((unsigned int)header[3] << 13) & 0x001FE000) |
-		(((unsigned int)header[2] <<  5) & 0x00001FE0) |
-		(((unsigned int)header[1] >>  3) & 0x0000001F);
+//		canFrame.messageID =
+//		((((unsigned int)header[4]) << 21) & 0x1FE00000) |
+//		((((unsigned int)header[3]) << 13) & 0x001FE000) |
+//		((((unsigned int)header[2]) <<  5) & 0x00001FE0) |
+//		((((unsigned int)header[1]) >>  3) & 0x0000001F);
+		canFrame.messageID = *((unsigned int*)&header[1]) >> 3 & 0x1FFFFFFF;
 		
 		canFrame.returned = (header[1] >> 1) & 0x01;
 		canFrame.rejected = header[1] & 0x01;
-		memcpy(canFrame.data, &buffer[0 + CANPACKET_HEAD_SIZE], canFrame.dataLength);
+		memcpy(canFrame.data, &buffer[0 + PANDA_CAN_PACKET_HEAD_SIZE], canFrame.dataLength);
 		
 		if (canFrame.returned) {
 			canFrame.bus += 128;
@@ -519,17 +552,10 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 	lock();
 	
 	if (pandaCanVersion == 2) {
-		
-		
-		// The following is for a newer CANPACKET_VERSION == 2
-		//#define CANPACKET_HEAD_SIZE (0x5)
-		static unsigned char dlcToLen[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}; // data length code
-		
-		
-		int counter = 0;
-		char chunk[256];
+		int counter = 0;	// Checks for 1, 2, 3... in specific parts of the recieved buffer
+		char chunk[256];	// Stores the buffer with counter removed in parts
 		int chunkLength = 0;
-		char* tail = chunk;
+		char* tail = chunk; // Reference to unused end of chunk, which is the start of the next CAN packet
 		int tailLength = 0;
 		
 		// First let's check the integrity of the buffer, then fail if it's broken
@@ -543,12 +569,6 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 		}
 		
 		for (int index = 0; index < bufferLength; index += 64) {
-//			if (counter++ != buffer[index]) {
-//				std::cerr << "Error: Can::notificationCanRead(): Lost Recieve Packet Counter.  What was recieved:" << std::endl;
-//				printBuffer(buffer, bufferLength);
-//				break;
-//			}
-			
 			memcpy(chunk, tail, tailLength);
 			memcpy(&chunk[tailLength], &buffer[index+1], 63 > bufferLength-(index+1) ? bufferLength - (index+1) : 63);
 			chunkLength = tailLength + (63 > bufferLength-(index+1) ? bufferLength - (index+1) : 63);
@@ -566,8 +586,8 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 #endif
 			
 			while (parsePosition < chunkLength) {
-				int dataLength = dlcToLen[chunk[parsePosition] >> 4];
-				int packetLength = CANPACKET_HEAD_SIZE + dataLength;
+				int dataLength = dataLengthCodeToDataLength(chunk[parsePosition] >> 4);
+				int packetLength = PANDA_CAN_PACKET_HEAD_SIZE + dataLength;
 				
 #ifdef CAN_VERBOSE
 				std::cout << "- Data length, packet length =  " << dataLength << ", " << packetLength << std::endl;

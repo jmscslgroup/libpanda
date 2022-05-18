@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <cstring>
 #include "panda.h"
+#include "panda/vin.h"
 
 class CanPrint : public Panda::CanListener {
 public:
@@ -191,6 +192,18 @@ int main(int argc, char **argv) {
 	
 	
 	
+	std::cout << "\n\n------------- Checking VIN parsing -------------" << std::endl;
+	unsigned char vin1[] = "5FNYF6H05HB089022";
+	unsigned char vin2[] = "2T3Y1RFV8KC014025";
+	unsigned char vin3[] = "JTMB6RFV5MD010181";
+	unsigned char vin4[] = "JN8AT3CB9MW240939";
+	unsigned char vin5[] = "1GYKNCRS3NZ112305";
+	
+	Panda::printVin(vin1);
+	Panda::printVin(vin2);
+	Panda::printVin(vin3);
+	Panda::printVin(vin4);
+	Panda::printVin(vin5);
 	
 	
 	testCan.stopParsing();
