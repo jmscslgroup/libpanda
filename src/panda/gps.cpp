@@ -39,6 +39,7 @@ using namespace Panda;
 Gps::Gps()
 :csvDump(NULL) {
 	fidGps = -1;
+	gpsConfigState = GPS_CONFIG_START;
 }
 
 Gps::~Gps() {
@@ -132,12 +133,21 @@ void Gps::handleConfiguration() {
 			break;
 			
 		case GPS_CONFIG_ACK: // next task
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Success!" << std::endl;
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Acknowledged!" << std::endl;
 			gpsConfigState = GPS_CONFIG_START;
 			break;
 			
 		case GPS_CONFIG_NACK:
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": GPS module rejected configuration" << std::endl;
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": GPS module rejected command" << std::endl;
+			gpsConfigState = GPS_CONFIG_START;
+			break;
+			
+		case GPS_CONFIG_SUCCESS:
+//			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
+//			for (int i = 0; i < responseLength; i++) {
+//				printf("0x%02X ", responsePayload[i]);
+//			}
+//			printf("\n");
 			gpsConfigState = GPS_CONFIG_START;
 			break;
 			
@@ -152,22 +162,32 @@ void Gps::handleConfiguration() {
 void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload) {
 	
 	if (mClass == UBX_CLASS_ACK ) {
-		if (mId == UBX_ID_ACK_ACK ) {
-			if (payload[0] == ackClass && payload[1] == ackId) {
+		if (payload[0] == ackClass && payload[1] == ackId) {
+			if (mId == UBX_ID_ACK_ACK ) {
 				gpsConfigState = GPS_CONFIG_ACK;
-			}
-			return;
-		} else if (mId == UBX_ID_ACK_NACK ) {
-			if (payload[0] == ackClass && payload[1] == ackId) {
+				return;
+			} else if (mId == UBX_ID_ACK_NACK ) {
 				gpsConfigState = GPS_CONFIG_NACK;
+				return;
 			}
-			return;
 		}
 	}
+	if (mClass == ackClass && mId == ackId) {
+		memcpy(responsePayload, payload, length);
+		responseLength = length;
+		std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
+		   for (int i = 0; i < responseLength; i++) {
+			   printf("0x%02X ", responsePayload[i]);
+		   }
+		   printf("\n");
+//		gpsConfigState = GPS_CONFIG_SUCCESS;
+		return;
+	}
+	
+	
 	printf("WARNING: Gps::notificationUbxMessage() unhandled UBX response for Class/Id %s, Length %d, Payload: ", ubxClassIdToString( mClass, mId).c_str(), length);
 	for (int i = 0; i < length; i++) {
 		printf("0x%02X ", payload[i]);
-		
 	}
 	
 }
@@ -306,6 +326,13 @@ void Gps::doAction() {
 
 bool Gps::isReady() {
 	return state.info.status == 'A';
+}
+
+bool Gps::available() {
+	if (usbHandler != NULL && usbHandler->hasGpsSupport()) {
+		return true;
+	}
+	return usingExternalGps;
 }
 
 void Gps::addObserver( GpsListener* listener ) {
@@ -1017,6 +1044,10 @@ void Gps::initialize() {
 	
 	char cfgrate[256], cfgratePayload[] = "\x64\x00\x01\x00\x01\x00";
 	makeUbx(cfgrate, UBX_CLASS_CFG, UBX_ID_CFG_RATE, 6, cfgratePayload);
+	setUbxChecksum(cfgrate);
+	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
+	
+	makeUbx(cfgrate, UBX_CLASS_CFG, UBX_ID_CFG_RATE, 0, cfgratePayload);	// Poll the same message
 	setUbxChecksum(cfgrate);
 	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
 	

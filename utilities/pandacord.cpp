@@ -166,7 +166,8 @@ int main(int argc, char **argv) {
 	writeToFileThenClose(filenameGpsStatus, "0\n");	// state 0: on but time not set
 
 	int lastNmeaMessageCount = 0;
-	if (pandaHandler.getUsb().hasGpsSupport()) {
+//	if (pandaHandler.getUsb().hasGpsSupport()) {
+	if (pandaHandler.getGps().available()) {
 		pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 		std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
 		std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
@@ -182,7 +183,7 @@ int main(int argc, char **argv) {
 		writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
 		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 	} else {
-		std::cout << "This panda does not have a GPS, continuing to log data without time synchronization" << std::endl;
+		std::cout << "This system does not have a GPS, continuing to log data without time synchronization" << std::endl;
 		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 	}
 

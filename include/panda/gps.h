@@ -47,6 +47,7 @@ enum GPS_CONFIG_STATE {
 	GPS_CONFIG_WAIT,
 	GPS_CONFIG_ACK,
 	GPS_CONFIG_NACK,
+	GPS_CONFIG_SUCCESS,
 	GPS_CONFIG_FAIL
 };
 
@@ -146,6 +147,11 @@ std::string ubxClassIdToString( char mClass, char mId);
 		 \return true is ready, flase if not ready.
 		 */
 		bool isReady();
+		
+		/*! \brief Checks if a gps device is available, whether in panda or through external USB
+		 \return true if one is conencted, flase otherwise.
+		 */
+		bool available();
 
 		/*! \brief Starts a reading and parsing thread.
 		 A valid and initialized USB handler is needed to be set for success.
@@ -189,6 +195,8 @@ std::string ubxClassIdToString( char mClass, char mId);
 		
 		char ackClass;
 		char ackId;
+		unsigned short responseLength;
+		char responsePayload[256];
 		GPS_CONFIG_STATE gpsConfigState;
 		int configurationWaitCounter = 0;
 		int ubxSendAttempt = 0;
