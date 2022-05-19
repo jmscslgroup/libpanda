@@ -92,66 +92,58 @@ void Gps::setUsb( Panda::Usb* usbHandler ) {
 }
 
 void Gps::handleConfiguration() {
-	if (ubxCommands.empty() && configurationTracker == 0) {
+	if (ubxCommands.empty() && gpsConfigState == GPS_CONFIG_START) {
 		return;
 	}
 	
-	
-	
-//	char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
-////	char cfgrate[] = "\xB5\x62\x06\x00\x01\x00\x01\xFF\xFF";
-//	char payload[1];
-//	payload[0] = 0x01;
-//	int length = makeUbx(cfgrate, 0x06, 0x00, 0x0001, payload);
-	
-	switch (configurationTracker) {
-		case 0: // Grab from queue
+	switch (gpsConfigState) {
+		case GPS_CONFIG_START: // Grab from queue
 			ubxCurrentCommand = ubxCommands.front();
 			ubxCommands.pop();
 			
-			configurationTracker = 1;
 			ubxSendAttempt = 1;
 			configurationWaitCounter = 0;
+			
+			gpsConfigState = GPS_CONFIG_SEND;
 			// no break, send immediately:
 			
-		case 1: // sending
+		case GPS_CONFIG_SEND: // sending
 			
 			ackClass = ubxCurrentCommand[2];
 			ackId = ubxCurrentCommand[3];
-			printf(" - Sending UBX 0x%02X 0x%02X...\n", ackClass, ackId);
-//			setUbxChecksum(cfgrate);
-//			printf(" |-- ");
-//			for (int i = 0; i < getUbxLength(ubxCurrentCommand.c_str()); i++) {
-//				printf("0x%02X ", ubxCurrentCommand.c_str()[i]);
-//			}
-//			printf("\n");
 			
+			printf(" - Sending UBX-%s...\n", ubxClassIdToString(ackClass, ackId).c_str());
 			gpsSend(ubxCurrentCommand.c_str(), getUbxLength(ubxCurrentCommand.c_str()));
-			
-			
-			
-			configurationTracker = 2;
+
+			gpsConfigState = GPS_CONFIG_WAIT;
 			break;
 			
-		case 2:	// waiting...
+		case GPS_CONFIG_WAIT:	// waiting...
 			configurationWaitCounter++;
 			if (configurationWaitCounter % 30 == 0) {
-				std::cout << " - Gps Config: Timed out... attempting again " << ubxSendAttempt++ << std::endl;
-				configurationTracker = 1; // send again
+				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Timed out... attempting again " << ubxSendAttempt++ << std::endl;
+				gpsConfigState = GPS_CONFIG_SEND; // send again
 			}
 			if (configurationWaitCounter >= 300) {
-				std::cout << " - Gps Config: Too many attempts" << std::endl;
-				configurationTracker = 0;
+				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Too many attempts" << std::endl;
 				configurationWaitCounter = 0;
+				gpsConfigState = GPS_CONFIG_FAIL;
 			}
 			break;
 			
-		case 3: // next task
-			std::cout << " - Gps Config: Success!" << std::endl;
-			configurationTracker = 0;
+		case GPS_CONFIG_ACK: // next task
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Success!" << std::endl;
+			gpsConfigState = GPS_CONFIG_START;
 			break;
 			
-		default:
+		case GPS_CONFIG_NACK:
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": GPS module rejected configuration" << std::endl;
+			gpsConfigState = GPS_CONFIG_START;
+			break;
+			
+		case GPS_CONFIG_FAIL:
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Failed to configure" << std::endl;
+			gpsConfigState = GPS_CONFIG_START;
 			break;
 	}
 	
@@ -159,28 +151,23 @@ void Gps::handleConfiguration() {
 
 void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload) {
 	
-	if (mClass == 0x05 ) {
-		if (mId == 0x01 ) {
-			printf("Message acknowledged for 0x%02x 0x%02x\n", payload[0], payload[1]);
+	if (mClass == UBX_CLASS_ACK ) {
+		if (mId == UBX_ID_ACK_ACK ) {
 			if (payload[0] == ackClass && payload[1] == ackId) {
-				configurationTracker++;
-				ackClass = 0;
-				ackId = 0;
+				gpsConfigState = GPS_CONFIG_ACK;
 			}
 			return;
-		} else if (mId == 0x00 ) {
-			printf("Message NOT acknowledged for 0x%02x 0x%02x\n", payload[0], payload[1]);
+		} else if (mId == UBX_ID_ACK_NACK ) {
 			if (payload[0] == ackClass && payload[1] == ackId) {
-				configurationTracker--;
-				ackClass = 0;
-				ackId = 0;
+				gpsConfigState = GPS_CONFIG_NACK;
 			}
 			return;
 		}
 	}
-	printf("WARNING: Gps::notificationUbxMessage() unhandled UBX response for Class/Id 0x%02x 0x%02x, Length %d, Payload: ", mClass, mId, length);
+	printf("WARNING: Gps::notificationUbxMessage() unhandled UBX response for Class/Id %s, Length %d, Payload: ", ubxClassIdToString( mClass, mId).c_str(), length);
 	for (int i = 0; i < length; i++) {
 		printf("0x%02X ", payload[i]);
+		
 	}
 	
 }
@@ -704,7 +691,7 @@ void Gps::initialize() {
 		ubxCfgRstPayload[2] = 0x01; // Hardware Reset 0x00, Controlled Software Reset 0x01
 		ubxCfgRstPayload[3] = 0x00;	// reserved1
 
-		makeUbx(ubxCfgRst, 0x06, 0x04, 4, ubxCfgRstPayload);
+		makeUbx(ubxCfgRst, UBX_CLASS_CFG, UBX_ID_CFG_RST, 4, ubxCfgRstPayload);
 		gpsSend(ubxCfgRst, getUbxLength(ubxCfgRst));
 		usleep(1000);
 		close(fidGps);
@@ -731,7 +718,7 @@ void Gps::initialize() {
 		   /* Setting the Baud rate */
 		   cfsetispeed(&SerialPortSettings,B19200); /* Set Read  Speed as 19200                       */
 		   cfsetospeed(&SerialPortSettings,B19200); /* Set Write Speed as 19200                       */
-
+	
 		   /* 8N1 Mode */
 		   SerialPortSettings.c_cflag &= ~PARENB;   /* Disables the Parity Enable bit(PARENB),So No Parity   */
 		   SerialPortSettings.c_cflag &= ~CSTOPB;   /* CSTOPB = 2 Stop bits,here it is cleared so 1 Stop bit */
@@ -755,8 +742,6 @@ void Gps::initialize() {
 
 		   if((tcsetattr(fidGps,TCSANOW,&SerialPortSettings)) != 0) /* Set the attributes to the termios structure*/
 			   printf("\n  ERROR ! in Setting attributes");
-		   else
-					   printf("\n  BaudRate = 19200 \n  StopBits = 1 \n  Parity   = none");
 		
 		
 //		char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
@@ -976,18 +961,64 @@ void Gps::initialize() {
 	*/
 	
 	
-	char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
+	char cfgrate[256], cfgratePayload[] = "\x64\x00\x01\x00\x01\x00";
+	makeUbx(cfgrate, UBX_CLASS_CFG, UBX_ID_CFG_RATE, 6, cfgratePayload);
 	setUbxChecksum(cfgrate);
 	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
 	
-	char cfgnav[] = "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63";
+	char cfgnav[256], cfgNavPayload[] = "\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+	makeUbx(cfgnav, UBX_CLASS_CFG, UBX_ID_CFG_NAV5, 0x24, cfgNavPayload);
 	setUbxChecksum(cfgnav);
 	ubxCommands.push(std::string(cfgnav, getUbxLength(cfgnav)));
 	
 	
-	char cfgOdo[] = "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37";
+	char cfgOdo[256], cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+	makeUbx(cfgOdo, UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
 	setUbxChecksum(cfgOdo);
 	ubxCommands.push(std::string(cfgOdo, getUbxLength(cfgOdo)));
 	
 	std::cerr << " - GPS Done." << std::endl;
+}
+
+
+std::string Panda::ubxClassIdToString( char mClass, char mId ) {
+	switch (mClass) {
+		case UBX_CLASS_CFG:
+			switch (mId) {
+				case UBX_ID_CFG_PRT:  return "CFG-PRT";
+				case UBX_ID_CFG_ODO:  return "CFG-ODO";
+				case UBX_ID_CFG_RST:  return "CFG-RST";
+				case UBX_ID_CFG_RATE: return "CFG-RATE";
+				case UBX_ID_CFG_NAV5: return "CFG-NAV5";
+					
+				default:
+					break;
+			}
+			break;
+			
+		case UBX_CLASS_ACK:
+			switch (mId) {
+				case UBX_ID_ACK_ACK:  return "ACK-ACK";
+				case UBX_ID_ACK_NACK: return "ACK-NACK";
+					break;
+					
+				default:
+					break;
+			}
+			break;
+			
+		case UBX_CLASS_NAV:
+			switch (mId) {
+				default:
+					break;
+			}
+			break;
+			
+		default:
+			break;
+	}
+	char result[256];
+	sprintf(result, "0x%02X 0x%02X", mClass, mId);
+	
+	return result;
 }

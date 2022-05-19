@@ -40,6 +40,36 @@
 #include "panda/gpsdata.h"
 
 namespace Panda {
+
+enum GPS_CONFIG_STATE {
+	GPS_CONFIG_START,
+	GPS_CONFIG_SEND,
+	GPS_CONFIG_WAIT,
+	GPS_CONFIG_ACK,
+	GPS_CONFIG_NACK,
+	GPS_CONFIG_FAIL
+};
+
+enum UBX_CLASS {
+	UBX_CLASS_NAV = 0x01,
+	UBX_CLASS_ACK = 0x05,
+	UBX_CLASS_CFG = 0x06
+};
+
+enum UBX_ID_ACK {
+	UBX_ID_ACK_ACK  = 0x01,
+	UBX_ID_ACK_NACK = 0x00
+};
+
+enum UBX_ID_CFG {
+	UBX_ID_CFG_PRT  = 0x00,
+	UBX_ID_CFG_RST  = 0x04,
+	UBX_ID_CFG_RATE = 0x08,
+	UBX_ID_CFG_ODO  = 0x1e,
+	UBX_ID_CFG_NAV5 = 0x24
+};
+
+std::string ubxClassIdToString( char mClass, char mId);
 	
 	void setUbxChecksum(char* packet);
 	int makeUbx(char* dst, char mClass, char mId, unsigned short payloadLength, char* payload);
@@ -159,7 +189,7 @@ namespace Panda {
 		
 		char ackClass;
 		char ackId;
-		int configurationTracker = 0;
+		GPS_CONFIG_STATE gpsConfigState;
 		int configurationWaitCounter = 0;
 		int ubxSendAttempt = 0;
 		void handleConfiguration();
