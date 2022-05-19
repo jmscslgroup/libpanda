@@ -263,7 +263,7 @@ typedef struct __attribute__((packed)) PandaRtcTimestamp_t {
 // This order was copied from cereal based nt he boardd.cc code.  The order however seems wrong.
 // This is known to work, based on tests, for the white, grey and black pandas
 // These values come from comm.ai/panda/board/boards/board_declarations.h:45
-enum {
+enum PandaHardwareType {
 	HARDWARE_UNKNOWN=0,	// I don't know what this is
 	HARDWARE_WHITE_PANDA=1, // based on experimentation
 	HARDWARE_GREY_PANDA=2, // based on experimentation

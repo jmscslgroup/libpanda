@@ -131,10 +131,10 @@ void Usb::initialize() {
 		}
 	}
 	if (!firmwareMatch) {
-		std::cout << " |-- " << "\u001b[1m\u001b[31m" << "Warning! This Panda version does not match the supported version: " << PANDA_VERSION
+		std::cout << " |-- " << "\u001b[1m\u001b[31m" << "Warning! This Panda firmware does not match the supported version: " << PANDA_VERSION
 			   << "\u001b[0m" << std::endl;
 	} else {
-		std::cout << " |-- This Panda version is " << "\u001b[1m\u001b[32m" << "Supported" << "\u001b[0m" << std::endl;
+		std::cout << " |-- This Panda firmware is " << "\u001b[1m\u001b[32m" << "Supported" << "\u001b[0m" << std::endl;
 	}
 	
 	
@@ -151,8 +151,8 @@ void Usb::initialize() {
 	// Void function:
 	libusb_free_device_list(devices, 1);
 	
-	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
-	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+//	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
+//	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
 
 	std::cout << " - Setting Safety to ELM327:" << std::endl;
 //	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
@@ -168,7 +168,7 @@ void Usb::initialize() {
 
 
 	std::cout << " - Reading USB hardware model:" << std::endl;
-	unsigned char hardwareType = getHardware();
+	PandaHardwareType hardwareType = getHardware();
 
 	//printf("Got the following value in return: %d\n", (int)hardwareType);
 
@@ -205,7 +205,6 @@ void Usb::initialize() {
 			break;
 
 		case HARDWARE_UNKNOWN:
-		default:
 			std::cout << " |-- This is UNKOWN HARDWARE" << std::endl;
 	}
 	
@@ -951,10 +950,10 @@ void Usb::getCanDebug() {
 	sendPandaHardwareSimple( REQUEST_CAN_DEBUG, 0, 0);
 }
 
-unsigned char Usb::getHardware() {
-	unsigned char hardware[1];
-	readPandaHardwareSimple( REQUEST_HARDWARE, hardware, 1);
-	return hardware[0];
+PandaHardwareType Usb::getHardware() {
+	unsigned char hardware;
+	readPandaHardwareSimple( REQUEST_HARDWARE, &hardware, 1);
+	return (PandaHardwareType)hardware;
 }
 
 void Usb::getPandaSerial( unsigned char* serial16 ) {
@@ -1251,7 +1250,7 @@ std::string Panda::faultsToString( int faults ) {
 	return result.str();
 }
 
-const char* Panda::hardwareTypeToString( int hardwareType ) {
+const char* Panda::hardwareTypeToString( PandaHardwareType hardwareType ) {
 	switch (hardwareType) {
 		case HARDWARE_WHITE_PANDA: return "White Panda";
 		case HARDWARE_GREY_PANDA: return "Grey Panda";
@@ -1261,7 +1260,6 @@ const char* Panda::hardwareTypeToString( int hardwareType ) {
 		case HARDWARE_DOS: return "Dos";
 		case HARDWARE_RED_PANDA: return "Red Panda";
 		case HARDWARE_UNKNOWN:
-		default:
 			break;
 	}
 	return "Unknown Hardware";

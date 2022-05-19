@@ -29,6 +29,8 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <queue>
+//#include <array>
 
 #include "NMEAParser.h"
 #include "mogi/thread.h"
@@ -39,6 +41,10 @@
 
 namespace Panda {
 	
+	void setUbxChecksum(char* packet);
+	int makeUbx(char* dst, char mClass, char mId, unsigned short payloadLength, char* payload);
+	unsigned short getUbxLength(const char* ubx);
+
 	class Gps;
 
 	/*!
@@ -120,7 +126,10 @@ namespace Panda {
 		 Called after startParsing() when done with GPS data
 		 */
 		void stopParsing();
-
+		
+		// Send a string to the GPS module
+		void gpsSend(const char* data, int length);
+		
 	private:
 		GpsData state;
 		int fidGps; // This is for external GPS devices
@@ -141,11 +150,29 @@ namespace Panda {
 
 		// Overload frum UsbListener
 		void notificationUartRead(char* buffer, size_t bufferLength);
+		
+		void processUart(char* buffer, int bufferLength);
 
+		// Called when a UBX is received
+		int parseUbx(unsigned char* buffer, int length);
+		void notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload);
+		
+		char ackClass;
+		char ackId;
+		int configurationTracker = 0;
+		int configurationWaitCounter = 0;
+		int ubxSendAttempt = 0;
+		void handleConfiguration();
+		
+		std::queue<std::string> ubxCommands;
+		std::string ubxCurrentCommand;
+		
 		// NMEAParser overload:
 		virtual void OnError(CNMEAParserData::ERROR_E nError, char *pCmd);
 		// NMEAPArser overload:
 		virtual CNMEAParserData::ERROR_E ProcessRxCommand(char *pCmd, char *pData);
+		
+		
 	};
 
 }

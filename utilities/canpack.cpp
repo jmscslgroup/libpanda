@@ -208,6 +208,30 @@ int main(int argc, char **argv) {
 	Panda::printVin(vin5);
 	
 	
+	std::cout << "\n\n------------- Checking uBlox checksums -------------" << std::endl;
+	
+	unsigned char ubx1[] = {0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0x01, 0x12, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x23, 0x2E };
+	printf("Before:");
+	for	(int i = 0; i < sizeof(ubx1); i++) {
+		printf("0x%02X ", ubx1[i]);
+	}
+	printf("\n");
+	Panda::setUbxChecksum((char*)ubx1);
+	printf("After :");
+	for	(int i = 0; i < sizeof(ubx1); i++) {
+		printf("0x%02X ", ubx1[i]);
+	}
+	printf("\n");
+	
+	std::cout << "\n------------- Checking UBX command -------------" << std::endl;
+	char ubxMake[100];
+	int ubxLength = Panda::makeUbx(ubxMake, 0x06, 0x01, 0x0008, (char*)&ubx1[6]);
+	printf("Result:");
+	for	(int i = 0; i < ubxLength; i++) {
+		printf("0x%02X ", ubxMake[i]);
+	}
+	printf("\n");
+	
 	testCan.stopParsing();
 	std::cout << "Done." << std::endl;
 	

@@ -96,6 +96,12 @@ int main(int argc, char **argv) {
 		usleep(100000);
 	}
 	std::cout << std::endl;
+	
+	char cfg_prt[] = "\xB5\x62\x06\x00\x01\x00\x01\xFF\xFF";
+	Panda::setUbxChecksum(cfg_prt);
+//	usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
+	mGps.gpsSend(cfg_prt, sizeof(cfg_prt));
+	sleep(1);
 
 	std::cout << "Stopping GPS...";
 	mGps.stopParsing();

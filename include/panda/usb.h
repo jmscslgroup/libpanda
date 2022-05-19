@@ -57,7 +57,7 @@ namespace Panda {
 	const char* faultStatusToString( int fault_status);
 	std::string faultsToString( int faults );
 	const char* usbPowerModeToString( int usb_power_mode );
-	const char* hardwareTypeToString( int hardwareType );
+	const char* hardwareTypeToString( PandaHardwareType hardwareType );
 	void printPandaHealth( const PandaHealth& health );
 
 	class UsbListener {
@@ -123,7 +123,7 @@ namespace Panda {
 		void setPhonePower(bool enable);                // Unused on Red and Black
 		void getCanDebug();                             // I think this invokes debug info through a separate UART/debug console
 		
-		unsigned char getHardware();                    // Whether this is  aRed, Black, White, Grey, Uno, Dos or Pedal
+		PandaHardwareType getHardware();                // Whether this is  aRed, Black, White, Grey, Uno, Dos or Pedal
 		void getPandaSerial(unsigned char* serial16);   // This is different than the USB serial
 		void enterBootloaderMode( unsigned char mode ); // Making this for the sake of completeness, but will go unimplemented. 0 for bootloader (debug firmware build only), 1 for softloader
 		

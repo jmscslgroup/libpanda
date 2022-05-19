@@ -91,10 +91,167 @@ void Gps::setUsb( Panda::Usb* usbHandler ) {
 	this->usbHandler = usbHandler;
 }
 
-void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
-	currentlyReceiving = bufferLength > 0;
+void Gps::handleConfiguration() {
+	if (ubxCommands.empty() && configurationTracker == 0) {
+		return;
+	}
+	
+	
+	
+//	char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
+////	char cfgrate[] = "\xB5\x62\x06\x00\x01\x00\x01\xFF\xFF";
+//	char payload[1];
+//	payload[0] = 0x01;
+//	int length = makeUbx(cfgrate, 0x06, 0x00, 0x0001, payload);
+	
+	switch (configurationTracker) {
+		case 0: // Grab from queue
+			ubxCurrentCommand = ubxCommands.front();
+			ubxCommands.pop();
+			
+			configurationTracker = 1;
+			ubxSendAttempt = 1;
+			configurationWaitCounter = 0;
+			// no break, send immediately:
+			
+		case 1: // sending
+			
+			ackClass = ubxCurrentCommand[2];
+			ackId = ubxCurrentCommand[3];
+			printf(" - Sending UBX 0x%02X 0x%02X...\n", ackClass, ackId);
+//			setUbxChecksum(cfgrate);
+//			printf(" |-- ");
+//			for (int i = 0; i < getUbxLength(ubxCurrentCommand.c_str()); i++) {
+//				printf("0x%02X ", ubxCurrentCommand.c_str()[i]);
+//			}
+//			printf("\n");
+			
+			gpsSend(ubxCurrentCommand.c_str(), getUbxLength(ubxCurrentCommand.c_str()));
+			
+			
+			
+			configurationTracker = 2;
+			break;
+			
+		case 2:	// waiting...
+			configurationWaitCounter++;
+			if (configurationWaitCounter % 30 == 0) {
+				std::cout << " - Gps Config: Timed out... attempting again " << ubxSendAttempt++ << std::endl;
+				configurationTracker = 1; // send again
+			}
+			if (configurationWaitCounter >= 300) {
+				std::cout << " - Gps Config: Too many attempts" << std::endl;
+				configurationTracker = 0;
+				configurationWaitCounter = 0;
+			}
+			break;
+			
+		case 3: // next task
+			std::cout << " - Gps Config: Success!" << std::endl;
+			configurationTracker = 0;
+			break;
+			
+		default:
+			break;
+	}
+	
+}
 
-	resume();	// will request more data
+void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload) {
+	
+	if (mClass == 0x05 ) {
+		if (mId == 0x01 ) {
+			printf("Message acknowledged for 0x%02x 0x%02x\n", payload[0], payload[1]);
+			if (payload[0] == ackClass && payload[1] == ackId) {
+				configurationTracker++;
+				ackClass = 0;
+				ackId = 0;
+			}
+			return;
+		} else if (mId == 0x00 ) {
+			printf("Message NOT acknowledged for 0x%02x 0x%02x\n", payload[0], payload[1]);
+			if (payload[0] == ackClass && payload[1] == ackId) {
+				configurationTracker--;
+				ackClass = 0;
+				ackId = 0;
+			}
+			return;
+		}
+	}
+	printf("WARNING: Gps::notificationUbxMessage() unhandled UBX response for Class/Id 0x%02x 0x%02x, Length %d, Payload: ", mClass, mId, length);
+	for (int i = 0; i < length; i++) {
+		printf("0x%02X ", payload[i]);
+	}
+	
+}
+
+int Gps::parseUbx(unsigned char* buffer, int length) {
+	
+	if (length < 8) {
+		std::cerr << "GPS: Incomplete incoming UBX transmission" << std::endl;
+		return 0;
+	}
+	int ubxLength = (int)buffer[4] | ((int)buffer[5] << 8);
+	if (ubxLength + 4 > length) {
+		std::cerr << "GPS: Incomplete incoming UBX transmission (type 2)" << std::endl;
+		return 0;
+	}
+//	printf("Length %d\n", ubxLength);
+	unsigned char copyOfUbx[ubxLength + 8];
+	memcpy(copyOfUbx, buffer, ubxLength + 6);
+	Panda::setUbxChecksum((char*)copyOfUbx);
+	
+	if (copyOfUbx[ubxLength+6] != buffer[ubxLength+6] ||
+		copyOfUbx[ubxLength+7] != buffer[ubxLength+7]) {
+		std::cerr << "GPS: UBX protocol recieved invalid checksum:";
+//		for ( int i = 0; i < ubxLength + 8; i++) {
+//			printf("0x%02X ", copyOfUbx[i]);
+//		}
+//		printf("\nublox:");
+		for ( int i = 0; i < ubxLength + 8; i++) {
+			printf("0x%02X ", buffer[i]);
+		}
+		printf("\n");
+		return 0;
+	}
+//	std::cout << "Check this out! --> ";
+//	for ( int i = 0; i < ubxLength + 8; i++) {
+//		printf("0x%02X ", copyOfUbx[i]);
+//	}
+//	printf("\n");
+	notificationUbxMessage(copyOfUbx[2], copyOfUbx[3], ubxLength, &copyOfUbx[6]);
+	
+
+	
+	
+	return ubxLength + 8;
+}
+
+
+void Gps::processUart(char* buffer, int bufferLength) {
+	for (int i = 0;  i < bufferLength-1; i++) {
+		if (((unsigned char*)buffer)[i] == 0xB5 &&
+			((unsigned char*)buffer)[i+1] == 0x62) {
+//			printf("Found an SOB: ");
+//			for (int j = i; j < bufferLength; j++) {
+//				printf("0x%02X ", buffer[j]);
+//			}
+//			printf("\n");
+			int parseLength = parseUbx((unsigned char*)&buffer[i], bufferLength-i);
+			if (parseLength > 0) {
+//				buffer += i+parseLength;
+//				bufferLength -= i+parseLength;
+//				i = 0;
+//				printf("new buffer: ");
+//				for (int j = 0; j < bufferLength; j++) {
+//					printf("0x%02X ", buffer[j]);
+//				}
+				
+				processUart(&buffer[i+parseLength], bufferLength-i-parseLength);
+				return;
+			}
+		}
+	}
 
 	CNMEAParserData::ERROR_E nErr;
 	if ((nErr = this->ProcessNMEABuffer((char*)buffer, bufferLength)) != CNMEAParserData::ERROR_OK) {
@@ -108,6 +265,23 @@ void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
 	//usbHandler->requestUartData();	// buffer may still have more, make an immediate new request
 
 	//std::cout << "done with notificationUartRead()" << std::endl;
+}
+
+void Gps::notificationUartRead(char* buffer, size_t bufferLength) {
+	currentlyReceiving = bufferLength > 0;
+
+	resume();	// will request more data
+	
+//	printf("Gps::notificationUartRead(): ");
+//	for (int j = 0; j < bufferLength; j++) {
+//			printf("0x%02X ", buffer[j]);
+//	}
+//	printf("\n");
+	
+	
+	processUart(buffer, bufferLength);
+	
+	
 }
 
 void Gps::doAction() {
@@ -138,6 +312,8 @@ void Gps::doAction() {
 	} else {
 		usbHandler->requestUartData();
 	}
+	
+	handleConfiguration();
 //	std::cout << "Requeting new data" << std::endl;
 }
 
@@ -193,7 +369,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 #endif
 
 	// Check if this is the GPGGA command. If it is, then display some data
-	if (strcmp(pCmd, "GNGGA") == 0) {
+	if (strcmp(pCmd, "GNGGA") == 0 || strcmp(pCmd, "GPGGA") == 0) {
 		CNMEAParserData::GGA_DATA_T ggaData;
 		if(GetGNGGA(ggaData) == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
@@ -233,7 +409,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 
 			//newData = true; // This doesn't give us much new except for vertical speed, which is of rare interest.  also no date
 		}
-	} else if (strcmp(pCmd, "GLGSV") == 0) {
+	} else if (strcmp(pCmd, "GLGSV") == 0 || strcmp(pCmd, "GPGSV") == 0) {
 		CNMEAParserData::GSV_DATA_T gsvData;
 		if(GetGLGSV(gsvData) == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
@@ -266,7 +442,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 
 			//newData = true;	// Satellite updates aren't that important
 		}
-	} else if (strcmp(pCmd, "GNRMC") == 0) {
+	} else if (strcmp(pCmd, "GNRMC") == 0 || strcmp(pCmd, "GPRMC") == 0) {
 		CNMEAParserData::RMC_DATA_T rmcData;
 		if(GetGNRMC(rmcData) == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
@@ -313,14 +489,14 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 	} else if (strcmp(pCmd, "GNZDA") == 0) {
 		CNMEAParserData::ZDA_DATA_T zdaData;
 		if(GetGNZDA(zdaData) == CNMEAParserData::ERROR_OK) {
-#ifdef GPS_VERBOSE
+//#ifdef GPS_VERBOSE
 //			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
 			std::cout << "GNZDA Parsed! Time, date, GMT data." << std::endl;
 			std::cout << "   Date:                " << zdaData.m_nMonth << "/" << zdaData.m_nDay << "/" << zdaData.m_nYear << std::endl;
 			std::cout << "   Time:                " << zdaData.m_nHour << ":" << zdaData.m_nMinute << ":" << zdaData.m_dSecond << std::endl;
 			std::cout << "   GMT hour offset:     " << zdaData.m_nLocalHour << std::endl;
 			std::cout << "   GMT minute offset:   " << zdaData.m_nLocalMinute << std::endl;
-#endif
+//#endif
 
 			state.time.tm_year = zdaData.m_nYear-1900;
 			state.time.tm_mon = zdaData.m_nMonth-1;
@@ -332,7 +508,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 
 			//newData = true;	// Just time.  boring
 		}
-	} else if (strcmp(pCmd, "GNGSA") == 0) {
+	} else if (strcmp(pCmd, "GNGSA") == 0 || strcmp(pCmd, "GPGSA") == 0) {
 		CNMEAParserData::GSA_DATA_T gsaData;
 		if(GetGNGSA(gsaData) == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
@@ -358,11 +534,78 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 
 			//newData = true;	// Do we really care about notification on this?
 		}
-	} else {
+	} else if (strcmp(pCmd, "GNVTG") == 0 || strcmp(pCmd, "GPVTG") == 0) {
+		CNMEAParserData::VTG_DATA_T	vtgData;
+		if(GetGNVTG(vtgData) == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
-//		printf("\nCmd: %s\nData: %s\n", pCmd, pData);
-		std::cout << " - This command is not handled by the parser!" << std::endl;
+//			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			std::cout << "GNVTG Parsed! Track made good and ground speed data." << std::endl;
+			std::cout << "   Track True    :" << vtgData.m_trackTrue << std::endl;
+			std::cout << "   Track Magnetic:" << vtgData.m_trackMag << std::endl;
+			std::cout << "   Speed in Kn   :" << vtgData.m_speedKn << std::endl;
+			std::cout << "   Speed in km/h :" << vtgData.m_speedKm << std::endl;
+			std::cout << "   Mode          :" << (char)vtgData.m_posModeInd << std::endl;
+			
+
 #endif
+			
+			// TODO: fill in the appropriate fields
+		}
+		
+	} else if (strcmp(pCmd, "GNTXT") == 0 || strcmp(pCmd, "GPTXT") == 0) {
+		CNMEAParserData::TXT_DATA_T	txtData;
+		if(GetGNTXT(txtData) == CNMEAParserData::ERROR_OK) {
+#ifdef GPS_VERBOSE
+//			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			std::cout << "GNTXT Parsed! Text transmission" << std::endl;
+			std::cout << "   Total Messages in this xmit:" << txtData.m_numMsgs << std::endl;
+			std::cout << "   This message number        :" << txtData.m_msgNum << std::endl;
+			std::cout << "   Message type               :" << (int)txtData.m_txtIdentifier << std::endl;
+			std::cout << "   Message                    :" << txtData.m_txt << std::endl;
+			
+			
+#endif
+			switch (txtData.m_txtIdentifier) {
+				case CNMEAParserData::TXT_IDENTIFIER_ERROR: std::cout << "\u001b[31mGPS ERROR ";
+					break;
+					
+				case CNMEAParserData::TXT_IDENTIFIER_NOTICE: std::cout << "\u001b[34mGPS Notice ";
+					break;
+					
+				case CNMEAParserData::TXT_IDENTIFIER_WARNING: std::cout << "\u001b[33mGPS Warning ";
+					break;
+					
+				case CNMEAParserData::TXT_IDENTIFIER_USER: std::cout << "\u001b[32mGPS User ";
+					break;
+			}
+			std::cout << "[" << txtData.m_msgNum << "/" << txtData.m_numMsgs << "]:";
+			std::cout << "\u001b[0m" << txtData.m_txt << std::endl;
+			
+			// TODO: fill in the appropriate fields
+		}
+		
+	} else if (strcmp(pCmd, "GNGLL") == 0 || strcmp(pCmd, "GPGLL") == 0 ) {
+		CNMEAParserData::GLL_DATA_T	gllData;
+		if(GetGNGLL(gllData) == CNMEAParserData::ERROR_OK) {
+#ifdef GPS_VERBOSE
+			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			std::cout << "GNGLL Parsed! Text transmission" << std::endl;
+			printf("   Latitude:            %f\n", gllData.m_dLatitude);
+			printf("   Longitude:           %f\n", gllData.m_dLongitude);
+			printf("   Time:                %02d:%02d:%02d.%03d\n", gllData.m_nHour, gllData.m_nMinute, gllData.m_nSecond, gllData.m_nMilliSecond);
+			printf("   Status:              %c\n", (char)gllData.m_nStatus);
+			printf("   Mode:                %c\n", (char)gllData.m_posModeInd);
+			
+#endif
+			
+			// TODO: fill in the appropriate fields
+		}
+		
+	} else {
+//#ifdef GPS_VERBOSE
+		printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+		std::cout << " - This command is not handled by the parser!" << std::endl;
+//#endif
 		// No new data in this parse session;
 	}
 
@@ -376,6 +619,14 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 	return CNMEAParserData::ERROR_OK;
 }
 
+
+void Gps::gpsSend(const char* data, int length) {
+	if (usingExternalGps) {
+		write(fidGps, data, length);
+	} else if (usbHandler != NULL && usbHandler->hasGpsSupport()){
+		usbHandler->uartWrite(data, length);
+	}
+}
 
 //  An nmea string starting with '$', is checkum delimited with '*', and has placeholder for 2 bytes for the checksum.
 //  May want the carriage return/newline as well.
@@ -397,15 +648,32 @@ void setNmeaChecksum(char* packet) {
 // For example,l a packet with length 6 (12 bytes) could be formatted with checksum holders denoted as 0xFF:
 // packet[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
 #define UBX_LENGTH_INDEX (4)
-void setUbxChecksum(char* packet) {
-	unsigned char checksumA = 0, checksumB = 0;
+void Panda::setUbxChecksum(char* packet) {
+	unsigned int checksumA = 0, checksumB = 0;
 	int endIndexOfPacket = 6 + ((int)packet[UBX_LENGTH_INDEX]) + (((int)packet[UBX_LENGTH_INDEX+1]) << 8);
 	for (int i = 2; i < endIndexOfPacket; i++) {
-		checksumA += packet[i];
+		checksumA += ((unsigned char*)packet)[i];
 		checksumB += checksumA;
 	}
-	packet[endIndexOfPacket] = checksumA;
-	packet[endIndexOfPacket+1] = checksumB;
+	packet[endIndexOfPacket] = checksumA & 0xFF;
+	packet[endIndexOfPacket+1] = checksumB & 0xFF;
+}
+
+int Panda::makeUbx(char* dst, char mClass, char mId, unsigned short payloadLength, char* payload) {
+	dst[0] = 0xB5;
+	dst[1] = 0x62;
+	dst[2] = mClass;
+	dst[3] = mId;
+//	*(unsigned short*)&dst[4] = payloadLength;
+	dst[4] = payloadLength & 0xFF;
+	dst[5] = (payloadLength >> 8) && 0xFF;
+	memcpy(&dst[6], payload, payloadLength);
+	setUbxChecksum(dst);
+	return payloadLength+8;
+}
+
+unsigned short Panda::getUbxLength(const char* ubx) {
+	return (unsigned short)ubx[4] + (((unsigned short)ubx[5]) << 8 ) + 8;
 }
 
 void Gps::initialize() {
@@ -427,61 +695,136 @@ void Gps::initialize() {
 			std::cerr << "       : Gps::initialize(): /dev/ttyACM0  Does not exist" << std::endl;
 			return;
 		}
-		std::cerr << "       : Gps::initialize(): Success!" << std::endl;
 		
 		usingExternalGps = true;
 		
-		char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
-		setUbxChecksum(cfgrate);
-//		usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
-		write(fidGps, cfgrate, sizeof(cfgrate));
-		usleep(100000);
-		write(fidGps, "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
-		usleep(100000);
-		write(fidGps, "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37", 28);
+		char ubxCfgRst[256], ubxCfgRstPayload[4];
+		ubxCfgRstPayload[0] = 0x00;	// hot start
+		ubxCfgRstPayload[1] = 0x00; // hot start
+		ubxCfgRstPayload[2] = 0x01; // Hardware Reset 0x00, Controlled Software Reset 0x01
+		ubxCfgRstPayload[3] = 0x00;	// reserved1
+
+		makeUbx(ubxCfgRst, 0x06, 0x04, 4, ubxCfgRstPayload);
+		gpsSend(ubxCfgRst, getUbxLength(ubxCfgRst));
+		usleep(1000);
+		close(fidGps);
 		
-		return;
+		int reOpenCount = 0;
+		while (reOpenCount++ < 10) {
+			usleep(500000);
+			if ((fidGps = open("/dev/ttyACM0", O_RDWR | O_NOCTTY )) < 0) {
+				// std::cerr << "device open error: " << field << std::endl;
+
+				std::cerr << "       : Gps::initialize(): Waiting for /dev/ttyACM0" << std::endl;
+				continue;
+			}
+			std::cerr << "       : Gps::initialize(): Success!" << std::endl;
+			break;
+		}
+		
+		/*---------- Setting the Attributes of the serial port using termios structure --------- */
+
+		   struct termios SerialPortSettings;  /* Create the structure                          */
+
+		   tcgetattr(fidGps, &SerialPortSettings); /* Get the current attributes of the Serial port */
+
+		   /* Setting the Baud rate */
+		   cfsetispeed(&SerialPortSettings,B19200); /* Set Read  Speed as 19200                       */
+		   cfsetospeed(&SerialPortSettings,B19200); /* Set Write Speed as 19200                       */
+
+		   /* 8N1 Mode */
+		   SerialPortSettings.c_cflag &= ~PARENB;   /* Disables the Parity Enable bit(PARENB),So No Parity   */
+		   SerialPortSettings.c_cflag &= ~CSTOPB;   /* CSTOPB = 2 Stop bits,here it is cleared so 1 Stop bit */
+		   SerialPortSettings.c_cflag &= ~CSIZE;    /* Clears the mask for setting the data size             */
+		   SerialPortSettings.c_cflag |=  CS8;      /* Set the data bits = 8                                 */
+
+		   SerialPortSettings.c_cflag &= ~CRTSCTS;       /* No Hardware flow Control                         */
+		   SerialPortSettings.c_cflag |= CREAD | CLOCAL; /* Enable receiver,Ignore Modem Control lines       */
+
+
+		   SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY);          /* Disable XON/XOFF flow control both i/p and o/p */
+		   SerialPortSettings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  /* Non Cannonical mode                            */
+		SerialPortSettings.c_lflag = 0;
+
+		   SerialPortSettings.c_oflag &= ~OPOST;/*No Output Processing*/
+
+		   /* Setting Time outs */
+		   SerialPortSettings.c_cc[VMIN] = 13; /* Read at least 10 characters */
+		   SerialPortSettings.c_cc[VTIME] = 0; /* Wait indefinetly   */
+
+
+		   if((tcsetattr(fidGps,TCSANOW,&SerialPortSettings)) != 0) /* Set the attributes to the termios structure*/
+			   printf("\n  ERROR ! in Setting attributes");
+		   else
+					   printf("\n  BaudRate = 19200 \n  StopBits = 1 \n  Parity   = none");
+		
+		
+//		char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
+//		setUbxChecksum(cfgrate);
+////		usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
+//		write(fidGps, cfgrate, sizeof(cfgrate));
+//		usleep(100000);
+//		write(fidGps, "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
+//		usleep(100000);
+//		write(fidGps, "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37", 28);
+		
+//		return;
+		std::cerr << " - Upping baudrate" << std::endl;
+		// set baudrate:
+		char nmeaString[100];
+		sprintf(nmeaString, "$PUBX,41,1,0007,0003,%d,0*FF\r\n", GPS_BAUD);
+		setNmeaChecksum(nmeaString);
+//		usbHandler->uartWrite(nmeaString, strlen(nmeaString));
+		gpsSend(nmeaString, strlen(nmeaString));
+		
+		
+		
+		
+	} else {
+		std::cerr << " - Resetting" << std::endl;
+		
+		usbHandler->setEspPower(0);
+		usleep(100000);
+		
+		usbHandler->uartPurge();
+		
+		usbHandler->setUartBaud(UART_DEVICE_GPS, INIT_GPS_BAUD);
+		
+		usbHandler->setEspPower(1);
+		usleep(500000);
+		
+		//	std::cerr << " - Enabling ZDA messages" << std::endl;
+		char nmeaString[100];
+		//
+		//	// Bunting: the following was added by me after failing to accomplish the same using UBX commands further down.
+		//	sprintf(nmeaString, "$PUBX,40,ZDA,0,1,0,0,0,0*FF\r\n");
+		//	setNmeaChecksum(nmeaString);
+		//	usbHandler->uartWrite(nmeaString, strlen(nmeaString));
+		
+		std::cerr << " - Upping baudrate" << std::endl;
+		// set baudrate:
+		sprintf(nmeaString, "$PUBX,41,1,0007,0003,%d,0*FF\r\n", GPS_BAUD);
+		setNmeaChecksum(nmeaString);
+//		usbHandler->uartWrite(nmeaString, strlen(nmeaString));
+		gpsSend(nmeaString, strlen(nmeaString));
+		
+		usleep(100000);
+		//	usbHandler->uartPurge();
+		
+		std::cerr << " - Reconnecting with new baudrate" << std::endl;
+		usbHandler->setUartBaud(UART_DEVICE_GPS, GPS_BAUD);
+		usleep(100000);
 	}
-
-	std::cerr << " - Resetting" << std::endl;
-	
-	
-	
-	usbHandler->setEspPower(0);
-	usleep(100000);
-
-	usbHandler->uartPurge();
-
-	usbHandler->setUartBaud(UART_DEVICE_GPS, INIT_GPS_BAUD);
-	
-	usbHandler->setEspPower(1);
-	usleep(500000);
-
-//	std::cerr << " - Enabling ZDA messages" << std::endl;
-	char nmeaString[100];
-//
-//	// Bunting: the following was added by me after failing to accomplish the same using UBX commands further down.
-//	sprintf(nmeaString, "$PUBX,40,ZDA,0,1,0,0,0,0*FF\r\n");
-//	setNmeaChecksum(nmeaString);
-//	usbHandler->uartWrite(nmeaString, strlen(nmeaString));
-
-	std::cerr << " - Upping baudrate" << std::endl;
-	// set baudrate:
-	sprintf(nmeaString, "$PUBX,41,1,0007,0003,%d,0*FF\r\n", GPS_BAUD);
-	setNmeaChecksum(nmeaString);
-	usbHandler->uartWrite(nmeaString, strlen(nmeaString));
-
-	usleep(100000);
-//	usbHandler->uartPurge();
-
-	std::cerr << " - Reconnecting with new baudrate" << std::endl;
-	usbHandler->setUartBaud(UART_DEVICE_GPS, GPS_BAUD);
-	usleep(100000);
-
 	
 	std::cerr << " - Sending config" << std::endl;
 
-	// The following is copied from panda python code.  These are hardcoded UBX messages that they calim are generated from test/ubloxd.py
+////	 Bunting: the following was added by me after failing to accomplish the same using UBX commands further down.
+//	char nmeaString[] =  "$PUBX,40,ZDA,0,1,0,0,0,0*FF\r\n";
+//	setNmeaChecksum(nmeaString);
+//	usbHandler->uartWrite(nmeaString, strlen(nmeaString));
+//	usleep(100000);
+	
+	// The following is copied from panda python code.  These are hardcoded UBX messages that they claim are generated from test/ubloxd.py
 	//  The structure according to the u-blox-M8 manual, under Interface description->UBX protocl is summarized:
 	// <0xB5> <0x62> <1B message Class> <1B ID> <2B length> <payload> <2B UBX checksum>
 	//  - all message classes ar 0x06: CFG, Configuration input messages
@@ -553,27 +896,37 @@ void Gps::initialize() {
 	//		ck_b += ck_a;
 	//	}
 	//	std::cout << "-------- ck_a = " << (int)ck_a << "  ck_b = " << (int)ck_b << std::endl;
-
+/*
 	//	uartWrite("\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x00\x00\x79\x10", 14);
 	//char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x00\x00\xFF\xFF";
 	// tyring GPS time instead of UTC time:
+	std::cout << " - Upping report rate to 10Hz..." << std::endl;
 	char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
 	setUbxChecksum(cfgrate);
-	usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
+//	usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
+	gpsSend(cfgrate, sizeof(cfgrate));
 
-
-
+	usleep(100000);
 	// CFG-NAV5: length is 36. lots of GPS configured things in this one.  Seems well formed
 	// Everything is 0 (default?) except:
 	// Byte 0-1: mask: 0x05 bits 0 and 2 high.  bit 0: apply dynamic model settings.  bit 2: Apply fix mode settings
 	// Byte 2: dynModel: automotive "Dynamic platform model"
 	// Byte 3:   fixmode: Auto 2d/3d "Position Fixing Mode"
-	usbHandler->uartWrite("\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
+//	usbHandler->uartWrite("\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63", 44);
+	std::cout << " - Setting to dyanmic model..." << std::endl;
+	char cfgnav[] = "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63";
+	setUbxChecksum(cfgnav);
+	gpsSend(cfgnav, sizeof(cfgnav));
+	usleep(100000);
 	// CFG-ODO: length is 20.  This sets up stuff involving a low-speed COG engine (?) filter.
 	//    for filtering course and speed?
 	//		Byte 4: Set of useODO (opposed to useCOG), I think meaning course wont be computed for speeds less than 8m/s
 	//		Byte 5: set to be in automotive mode
-	usbHandler->uartWrite("\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37", 28);
+	std::cout << " - Setting to automotive mode..." << std::endl;
+	char cfgOdo[] = "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37";
+	setUbxChecksum(cfgOdo);
+	gpsSend(cfgOdo, sizeof(cfgOdo));
+	usleep(100000);
 	// CFG-NAV5: length is 0.  Again I don't see this in the manual
 	//	uartWrite("\xB5\x62\x06\x24\x00\x00\x2A\x84", 8);
 	// CFG-NAV5X: length is 0.  Again I don't see this in the manual
@@ -595,9 +948,9 @@ void Gps::initialize() {
 	// ZDA messages have class ID 0xF0 0x08
 	// enabling... in the 6-byte bitmask is unclear.
 	//    and example has a a single 0x01, as follows:
-	//	char cfgMsgZda[] = "0xB5\x62\x06\x01\x08\x00\xF0\x08\x00\x01\x00\x00\x00\x01\xFF\xFF";
-	//	setUbxChecksum(cfgMsgZda);
-	//	uartWrite(cfgMsgZda, sizeof(cfgMsgZda));
+	// char cfgMsgZda[] = "0xB5\x62\x06\x01\x08\x00\xF0\x08\x00\x01\x00\x00\x00\x01\xFF\xFF";
+	// setUbxChecksum(cfgMsgZda);
+	// uartWrite(cfgMsgZda, sizeof(cfgMsgZda));
 	//
 	//	// the 3-byte version:
 	//	char cfgMsgZda[] = "0xB5\x62\x06\x01\x03\x00\xF0\x08\x01\xFF\xFF";
@@ -606,6 +959,35 @@ void Gps::initialize() {
 	//	//  well both of the above failed.  I switched to PUBX command at the very top of this function and it enables ZDA
 
 
-
+	
+	//	char cfgrate[] = "\xB5\x62\x06\x00\x01\x00\x01\xFF\xFF";
+	
+	char ubx[256];
+	char payload[256];
+	payload[0] = 0x01;
+	makeUbx(ubx, 0x06, 0x00, 1, payload);
+	ubxCommands.push(std::string( "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF", getUbxLength("\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF")));
+	ubxCommands.push(std::string( ubx, getUbxLength(ubx)));
+	payload[0] = 0;
+	makeUbx(ubx, 0x06, 0x00, 1, payload);
+	ubxCommands.push(std::string( ubx, getUbxLength(ubx)));
+	
+	
+	*/
+	
+	
+	char cfgrate[] = "\xB5\x62\x06\x08\x06\x00\x64\x00\x01\x00\x01\x00\xFF\xFF";
+	setUbxChecksum(cfgrate);
+	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
+	
+	char cfgnav[] = "\xB5\x62\x06\x24\x24\x00\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x5A\x63";
+	setUbxChecksum(cfgnav);
+	ubxCommands.push(std::string(cfgnav, getUbxLength(cfgnav)));
+	
+	
+	char cfgOdo[] = "\xB5\x62\x06\x1E\x14\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3C\x37";
+	setUbxChecksum(cfgOdo);
+	ubxCommands.push(std::string(cfgOdo, getUbxLength(cfgOdo)));
+	
 	std::cerr << " - GPS Done." << std::endl;
 }
