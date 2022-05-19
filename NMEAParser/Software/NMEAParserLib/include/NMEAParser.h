@@ -35,6 +35,9 @@
 #include "NMEASentenceGSA.h"
 #include "NMEASentenceRMC.h"
 #include "NMEASentenceZDA.h" // Bunting addition
+#include "NMEASentenceVTG.h" // Bunting addition
+#include "NMEASentenceTXT.h" // Bunting addition
+#include "NMEASentenceGLL.h" // Bunting addition
 
 ///
 /// \class CNMEAParser
@@ -61,6 +64,9 @@ private:
 	CNMEASentenceGSA	m_GNGSA;												///< GNGSA GNSS DOP and active satellites (usually GPS and GLONASS but can be GLONASS only)
 	CNMEASentenceRMC	m_GNRMC;												///< GNRMC Recommended minimum data for GPS
 	CNMEASentenceZDA	m_GNZDA;												///< // Added by Bunting
+	CNMEASentenceVTG	m_GNVTG;												///< // Added by Bunting
+	CNMEASentenceTXT	m_GNTXT;												///< // Added by Bunting
+	CNMEASentenceGLL	m_GNGLL;												///< // Added by Bunting
 
 	// GLONASS
 	CNMEASentenceGSV	m_GLGSV;												///< GLGSV Satellite message (GLONASS)
@@ -132,6 +138,27 @@ public:
 	///
 	CNMEAParserData::ERROR_E GetGNZDA(CNMEAParserData::ZDA_DATA_T & sentenseData);
 
+	///
+	/// \brief Places a copy of the GNVTG data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGNVTG(CNMEAParserData::VTG_DATA_T & sentenseData);
+	
+	///
+	/// \brief Places a copy of the GNTXT data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGNTXT(CNMEAParserData::TXT_DATA_T & sentenseData);
+	
+	///
+	/// \brief Places a copy of the GNGLL data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGNGLL(CNMEAParserData::GLL_DATA_T & sentenseData);
+	
 	///
     /// \brief Places a copy of the GNGSA data into sentenseData
     /// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
