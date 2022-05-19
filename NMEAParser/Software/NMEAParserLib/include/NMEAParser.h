@@ -52,6 +52,9 @@ private:
 	CNMEASentenceGSV	m_GPGSV;												///< GPGSV Satellite message (GPS)
 	CNMEASentenceGSA	m_GPGSA;												///< GPGSA GNSS DOP and active satellites
 	CNMEASentenceRMC	m_GPRMC;												///< GPRMC Recommended minimum data for GPS
+	CNMEASentenceVTG	m_GPVTG;												///< // Added by Bunting
+	CNMEASentenceTXT	m_GPTXT;												///< // Added by Bunting
+	CNMEASentenceGLL	m_GPGLL;												///< // Added by Bunting
 
 	// Galileo
 	CNMEASentenceGGA	m_GAGGA;												///< GAGGA Specific sentence data
@@ -146,6 +149,13 @@ public:
 	CNMEAParserData::ERROR_E GetGNVTG(CNMEAParserData::VTG_DATA_T & sentenseData);
 	
 	///
+	/// \brief Places a copy of the GPVTG data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGPVTG(CNMEAParserData::VTG_DATA_T & sentenseData);
+	
+	///
 	/// \brief Places a copy of the GNTXT data into sentenseData (added by Matt Bunting)
 	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
 	/// \return Returns ERROR_OK if successful.
@@ -153,11 +163,25 @@ public:
 	CNMEAParserData::ERROR_E GetGNTXT(CNMEAParserData::TXT_DATA_T & sentenseData);
 	
 	///
+	/// \brief Places a copy of the GPTXT data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGPTXT(CNMEAParserData::TXT_DATA_T & sentenseData);
+	
+	///
 	/// \brief Places a copy of the GNGLL data into sentenseData (added by Matt Bunting)
 	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
 	/// \return Returns ERROR_OK if successful.
 	///
 	CNMEAParserData::ERROR_E GetGNGLL(CNMEAParserData::GLL_DATA_T & sentenseData);
+	
+	///
+	/// \brief Places a copy of the GPGLL data into sentenseData (added by Matt Bunting)
+	/// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.
+	/// \return Returns ERROR_OK if successful.
+	///
+	CNMEAParserData::ERROR_E GetGPGLL(CNMEAParserData::GLL_DATA_T & sentenseData);
 	
 	///
     /// \brief Places a copy of the GNGSA data into sentenseData

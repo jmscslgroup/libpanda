@@ -358,8 +358,15 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 	// Check if this is the GPGGA command. If it is, then display some data
 	if (strcmp(pCmd, "GNGGA") == 0 || strcmp(pCmd, "GPGGA") == 0) {
 		CNMEAParserData::GGA_DATA_T ggaData;
-		if(GetGNGGA(ggaData) == CNMEAParserData::ERROR_OK) {
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNGGA") == 0) {
+			error = GetGNGGA(ggaData);
+		} else {
+			error = GetGPGGA(ggaData);
+		}
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
+			printf("\nCmd: %s Data: %s\n", pCmd, pData);
 			printf("GNGGA Parsed!  Time, position, and fix related data of the receiver\n");
 			printf("   Time:                %02d:%02d:%02d\n", ggaData.m_nHour, ggaData.m_nMinute, ggaData.m_nSecond);
 			printf("   Latitude:            %f\n", ggaData.m_dLatitude);
@@ -398,7 +405,15 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		}
 	} else if (strcmp(pCmd, "GLGSV") == 0 || strcmp(pCmd, "GPGSV") == 0) {
 		CNMEAParserData::GSV_DATA_T gsvData;
-		if(GetGLGSV(gsvData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GLGSV") == 0) {
+			error = GetGLGSV(gsvData);
+		} else {
+			error = GetGPGSV(gsvData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
 			//printf("\nCmd: %s\nData: %s\n", pCmd, pData);
 			
@@ -431,7 +446,15 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		}
 	} else if (strcmp(pCmd, "GNRMC") == 0 || strcmp(pCmd, "GPRMC") == 0) {
 		CNMEAParserData::RMC_DATA_T rmcData;
-		if(GetGNRMC(rmcData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNRMC") == 0) {
+			error = GetGNRMC(rmcData);
+		} else {
+			error = GetGPRMC(rmcData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
 			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
 			std::cout << "GNRMC Parsed! Time, date, position, course and speed data." << std::endl;
@@ -497,8 +520,17 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		}
 	} else if (strcmp(pCmd, "GNGSA") == 0 || strcmp(pCmd, "GPGSA") == 0) {
 		CNMEAParserData::GSA_DATA_T gsaData;
-		if(GetGNGSA(gsaData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNGSA") == 0) {
+			error = GetGNGSA(gsaData);
+		} else {
+			error = GetGPGSA(gsaData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
+			printf("\nCmd: %s Data: %s\n", pCmd, pData);
 			std::cout << "GNGSA Parsed! Time, date, position, course and speed data." << std::endl;
 			std::cout << "   HDOP:" << gsaData.dHDOP << ", PDOP:" << gsaData.dPDOP << ", VDOP:" << gsaData.dVDOP << std::endl;
 			std::cout << "   Auto Mode:           " << (char)gsaData.nAutoMode << std::endl;
@@ -523,9 +555,17 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		}
 	} else if (strcmp(pCmd, "GNVTG") == 0 || strcmp(pCmd, "GPVTG") == 0) {
 		CNMEAParserData::VTG_DATA_T	vtgData;
-		if(GetGNVTG(vtgData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNVTG") == 0) {
+			error = GetGNVTG(vtgData);
+		} else {
+			error = GetGPVTG(vtgData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
-//			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			printf("\nCmd: %s Data: %s\n", pCmd, pData);
 			std::cout << "GNVTG Parsed! Track made good and ground speed data." << std::endl;
 			std::cout << "   Track True    :" << vtgData.m_trackTrue << std::endl;
 			std::cout << "   Track Magnetic:" << vtgData.m_trackMag << std::endl;
@@ -541,16 +581,22 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		
 	} else if (strcmp(pCmd, "GNTXT") == 0 || strcmp(pCmd, "GPTXT") == 0) {
 		CNMEAParserData::TXT_DATA_T	txtData;
-		if(GetGNTXT(txtData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNTXT") == 0) {
+			error = GetGNTXT(txtData);
+		} else {
+			error = GetGPTXT(txtData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
-//			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			printf("\nCmd: %s Data: %s\n", pCmd, pData);
 			std::cout << "GNTXT Parsed! Text transmission" << std::endl;
 			std::cout << "   Total Messages in this xmit:" << txtData.m_numMsgs << std::endl;
 			std::cout << "   This message number        :" << txtData.m_msgNum << std::endl;
 			std::cout << "   Message type               :" << (int)txtData.m_txtIdentifier << std::endl;
 			std::cout << "   Message                    :" << txtData.m_txt << std::endl;
-			
-			
 #endif
 			switch (txtData.m_txtIdentifier) {
 				case CNMEAParserData::TXT_IDENTIFIER_ERROR: std::cout << "\u001b[31mGPS ERROR ";
@@ -573,9 +619,17 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		
 	} else if (strcmp(pCmd, "GNGLL") == 0 || strcmp(pCmd, "GPGLL") == 0 ) {
 		CNMEAParserData::GLL_DATA_T	gllData;
-		if(GetGNGLL(gllData) == CNMEAParserData::ERROR_OK) {
+		
+		CNMEAParserData::ERROR_E error;
+		if (strcmp(pCmd, "GNGLL") == 0) {
+			error = GetGNGLL(gllData);
+		} else {
+			error = GetGPGLL(gllData);
+		}
+		
+		if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
-			printf("\nCmd: %s\nData: %s\n", pCmd, pData);
+			printf("\nCmd: %s Data: %s\n", pCmd, pData);
 			std::cout << "GNGLL Parsed! Text transmission" << std::endl;
 			printf("   Latitude:            %f\n", gllData.m_dLatitude);
 			printf("   Longitude:           %f\n", gllData.m_dLongitude);
