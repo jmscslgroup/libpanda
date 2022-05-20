@@ -85,6 +85,36 @@ int main(int argc, char **argv) {
 	mUsb.startRecording();
 	mGps.startParsing();
 
+	
+	// Test sending some GPS UBX commands
+	char cfgPrtPayload[] = "\x01";
+	mGps.sendUbxCommand(Panda::UBX_CLASS_CFG, Panda::UBX_ID_CFG_PRT, 1, cfgPrtPayload);
+	while(mGps.busyUbx()) {
+		usleep(1000);
+	}
+	char result[512];
+	int length = mGps.getUbxResponse(result);
+	printf("UBX-CFG-PRT read result, length %d\n", length);
+	printf(" - Port Identifier: %d\n", result[0]);
+	printf(" - Port Identifier: %u\n", *(uint32_t*)&result[8]);
+
+	
+	// Software and hardware information:
+	mGps.sendUbxCommand(Panda::UBX_CLASS_MON, Panda::UBX_ID_MON_VER, 0, NULL);
+	while(mGps.busyUbx()) {
+		usleep(1000);
+	}
+	length = mGps.getUbxResponse(result);
+	printf("UBX-MON-VER read result, length %d\n", length);
+	printf(" - Software Version: %s\n", result);
+	printf(" - Hardware Version: %s\n", &result[30]);
+	for (int i = 40; i < length; i += 30) {
+		printf(" - Extended Info   : %s\n", &result[i]);
+	}
+	
+	sleep(1);
+	
+	
 	std::cout << "Each \'.\' represents 100 NMEA messages received.  " << std::endl;
 	std::cout << "Each \'*\' represents 10 notifications received.  " << std::endl;
 	int lastNmeaMessageCount = 0;
@@ -97,25 +127,7 @@ int main(int argc, char **argv) {
 	}
 	std::cout << std::endl;
 	
-	// Test sending some GPS UBX commands
-	char cfgPrtPayload[] = "\x01";
-	mGps.sendUbxCommand(Panda::UBX_CLASS_CFG, 0x00, 1, cfgPrtPayload);
-	
-	
-	mGps.sendUbxCommand(Panda::UBX_CLASS_MON, Panda::UBX_ID_MON_VER, 0, NULL);
-//	usleep(10000); // HACK
-	while(mGps.busyUbx()) {
-		usleep(1000);
-	}
-	char result[512];
-	int length = mGps.getUbxResponse(result);
-	printf("UBX read result, length %d: ", length);
-	for (int i = 0; i < length; i++) {
-		printf("%c", result[i]);
-	}
-	printf("\n");
-	
-	sleep(1);
+
 
 	std::cout << "Stopping GPS...";
 	mGps.stopParsing();

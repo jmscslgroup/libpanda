@@ -118,10 +118,10 @@ void Gps::handleConfiguration() {
 			
 		case GPS_CONFIG_SEND: // sending
 			
-			ackClass = ubxCurrentCommand[2];
-			ackId = ubxCurrentCommand[3];
+			ubxLastSentClass = ubxCurrentCommand[2];
+			ubxLastSentId = ubxCurrentCommand[3];
 			
-			printf(" - Sending UBX-%s...\n", ubxClassIdToString(ackClass, ackId).c_str());
+			printf(" - Sending UBX-%s...\n", ubxClassIdToString(ubxLastSentClass, ubxLastSentId).c_str());
 			gpsSend(ubxCurrentCommand.c_str(), getUbxLength(ubxCurrentCommand.c_str()));
 
 			gpsConfigState = GPS_CONFIG_WAIT;
@@ -130,39 +130,47 @@ void Gps::handleConfiguration() {
 		case GPS_CONFIG_WAIT:	// waiting...
 			configurationWaitCounter++;
 			if (configurationWaitCounter % 40 == 0) {
-				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Timed out... attempting again " << ubxSendAttempt++ << std::endl;
+				std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Timed out... attempting again " << ubxSendAttempt++ << std::endl;
 				gpsConfigState = GPS_CONFIG_SEND; // send again
 			}
 			if (configurationWaitCounter >= 400) {
-				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Too many attempts" << std::endl;
+				std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Too many attempts" << std::endl;
 				configurationWaitCounter = 0;
 				gpsConfigState = GPS_CONFIG_FAIL;
 			}
 			break;
 			
 		case GPS_CONFIG_ACK: // next task
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Acknowledged!" << std::endl;
-			gpsConfigState = GPS_CONFIG_IDLE;
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Acknowledged!" << std::endl;
+			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
 		case GPS_CONFIG_NACK:
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": GPS module rejected command" << std::endl;
-			gpsConfigState = GPS_CONFIG_IDLE;
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": GPS module rejected command" << std::endl;
+			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
 		case GPS_CONFIG_SUCCESS:
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " Success!" << std::endl;
-//			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << " Success!" << std::endl;
+//			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << " response: ";
 //			for (int i = 0; i < responseLength; i++) {
 //				printf("0x%02X ", responsePayload[i]);
 //			}
 //			printf("\n");
-			gpsConfigState = GPS_CONFIG_IDLE;
+			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
 		case GPS_CONFIG_FAIL:
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Failed to configure" << std::endl;
-			gpsConfigState = GPS_CONFIG_IDLE;
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Failed to configure" << std::endl;
+			gpsConfigState = GPS_CONFIG_COMPLETE;
+			break;
+			
+		case GPS_CONFIG_COMPLETE:
+			if (ubxCommands.empty()) {
+				gpsConfigState = GPS_CONFIG_IDLE;
+			} else {
+				gpsConfigState = GPS_CONFIG_START;
+			}
 			break;
 	}
 	
@@ -181,7 +189,7 @@ int Gps::getUbxResponse(char* result) {
 void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload) {
 	
 	if (mClass == UBX_CLASS_ACK ) {
-		if (payload[0] == ackClass && payload[1] == ackId) {
+		if (payload[0] == ubxLastSentClass && payload[1] == ubxLastSentId) {
 			if (mId == UBX_ID_ACK_ACK ) {
 				gpsConfigState = GPS_CONFIG_ACK;
 				return;
@@ -191,16 +199,16 @@ void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned c
 			}
 		}
 	}
-	if (mClass == ackClass && mId == ackId) {
+	if (mClass == ubxLastSentClass && mId == ubxLastSentId) {
 		memcpy(responsePayload, payload, length);
 		responseLength = length;
-//		std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
+//		std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << " response: ";
 //		   for (int i = 0; i < responseLength; i++) {
 //			   printf("0x%02X ", responsePayload[i]);
 //		   }
 //		   printf("\n");
 		
-		if (mClass != UBX_CLASS_CFG) {	// This should also send an ACK, so wait
+		if (mClass != UBX_CLASS_CFG) {	// CFG commands respond with an additional ACK, so wait
 			gpsConfigState = GPS_CONFIG_SUCCESS;
 		}
 		return;
@@ -1084,7 +1092,10 @@ void Gps::sendUbxCommand(char mClass, char mId, unsigned short payloadLength, ch
 	char ubx[1024];
 	makeUbx(ubx, mClass, mId, payloadLength, payload);
 	ubxCommands.push(std::string(ubx, getUbxLength(ubx)));
-	gpsConfigState = GPS_CONFIG_START;
+	if (gpsConfigState == GPS_CONFIG_IDLE) {
+		gpsConfigState = GPS_CONFIG_START;
+	}
+	
 }
 
 std::string Panda::ubxClassIdToString( char mClass, char mId ) {

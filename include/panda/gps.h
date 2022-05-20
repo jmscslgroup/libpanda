@@ -49,7 +49,8 @@ enum GPS_CONFIG_STATE {
 	GPS_CONFIG_ACK,
 	GPS_CONFIG_NACK,
 	GPS_CONFIG_SUCCESS,
-	GPS_CONFIG_FAIL
+	GPS_CONFIG_FAIL,
+	GPS_CONFIG_COMPLETE
 };
 
 enum UBX_CLASS {
@@ -208,8 +209,8 @@ std::string ubxClassIdToString( char mClass, char mId);
 		int parseUbx(unsigned char* buffer, int length);
 		void notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload);
 		
-		char ackClass;
-		char ackId;
+		char ubxLastSentClass;
+		char ubxLastSentId;
 		unsigned short responseLength;
 		char responsePayload[256];	// this could all be a struct...
 		
