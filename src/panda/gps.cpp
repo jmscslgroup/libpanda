@@ -39,7 +39,8 @@ using namespace Panda;
 Gps::Gps()
 :csvDump(NULL) {
 	fidGps = -1;
-	gpsConfigState = GPS_CONFIG_START;
+	gpsConfigState = GPS_CONFIG_IDLE;
+	responseLength = 0;
 }
 
 Gps::~Gps() {
@@ -93,11 +94,18 @@ void Gps::setUsb( Panda::Usb* usbHandler ) {
 }
 
 void Gps::handleConfiguration() {
-	if (ubxCommands.empty() && gpsConfigState == GPS_CONFIG_START) {
+	if (ubxCommands.empty() && gpsConfigState == GPS_CONFIG_IDLE) {
 		return;
 	}
 	
 	switch (gpsConfigState) {
+		case GPS_CONFIG_IDLE:
+			if (ubxCommands.empty()) {
+				return;
+			}
+			gpsConfigState = GPS_CONFIG_START;
+			// No break, continue
+
 		case GPS_CONFIG_START: // Grab from queue
 			ubxCurrentCommand = ubxCommands.front();
 			ubxCommands.pop();
@@ -121,11 +129,11 @@ void Gps::handleConfiguration() {
 			
 		case GPS_CONFIG_WAIT:	// waiting...
 			configurationWaitCounter++;
-			if (configurationWaitCounter % 30 == 0) {
+			if (configurationWaitCounter % 40 == 0) {
 				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Timed out... attempting again " << ubxSendAttempt++ << std::endl;
 				gpsConfigState = GPS_CONFIG_SEND; // send again
 			}
-			if (configurationWaitCounter >= 300) {
+			if (configurationWaitCounter >= 400) {
 				std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Too many attempts" << std::endl;
 				configurationWaitCounter = 0;
 				gpsConfigState = GPS_CONFIG_FAIL;
@@ -134,29 +142,40 @@ void Gps::handleConfiguration() {
 			
 		case GPS_CONFIG_ACK: // next task
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Acknowledged!" << std::endl;
-			gpsConfigState = GPS_CONFIG_START;
+			gpsConfigState = GPS_CONFIG_IDLE;
 			break;
 			
 		case GPS_CONFIG_NACK:
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": GPS module rejected command" << std::endl;
-			gpsConfigState = GPS_CONFIG_START;
+			gpsConfigState = GPS_CONFIG_IDLE;
 			break;
 			
 		case GPS_CONFIG_SUCCESS:
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " Success!" << std::endl;
 //			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
 //			for (int i = 0; i < responseLength; i++) {
 //				printf("0x%02X ", responsePayload[i]);
 //			}
 //			printf("\n");
-			gpsConfigState = GPS_CONFIG_START;
+			gpsConfigState = GPS_CONFIG_IDLE;
 			break;
 			
 		case GPS_CONFIG_FAIL:
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << ": Failed to configure" << std::endl;
-			gpsConfigState = GPS_CONFIG_START;
+			gpsConfigState = GPS_CONFIG_IDLE;
 			break;
 	}
 	
+}
+
+bool Gps::busyUbx() {
+	return gpsConfigState != GPS_CONFIG_IDLE;
+}
+
+// Returns the result of the latest successul UBX read
+int Gps::getUbxResponse(char* result) {
+	memcpy(result, responsePayload, responseLength);
+	return responseLength;
 }
 
 void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload) {
@@ -175,12 +194,15 @@ void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned c
 	if (mClass == ackClass && mId == ackId) {
 		memcpy(responsePayload, payload, length);
 		responseLength = length;
-		std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
-		   for (int i = 0; i < responseLength; i++) {
-			   printf("0x%02X ", responsePayload[i]);
-		   }
-		   printf("\n");
-//		gpsConfigState = GPS_CONFIG_SUCCESS;
+//		std::cout << " --- Gps UBX-" << ubxClassIdToString(ackClass, ackId) << " response: ";
+//		   for (int i = 0; i < responseLength; i++) {
+//			   printf("0x%02X ", responsePayload[i]);
+//		   }
+//		   printf("\n");
+		
+		if (mClass != UBX_CLASS_CFG) {	// This should also send an ACK, so wait
+			gpsConfigState = GPS_CONFIG_SUCCESS;
+		}
 		return;
 	}
 	
@@ -1042,29 +1064,28 @@ void Gps::initialize() {
 	*/
 	
 	
-	char cfgrate[256], cfgratePayload[] = "\x64\x00\x01\x00\x01\x00";
-	makeUbx(cfgrate, UBX_CLASS_CFG, UBX_ID_CFG_RATE, 6, cfgratePayload);
-	setUbxChecksum(cfgrate);
-	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
+	char cfgratePayload[] = "\x64\x00\x01\x00\x01\x00";
+	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_RATE, 6, cfgratePayload);
 	
-	makeUbx(cfgrate, UBX_CLASS_CFG, UBX_ID_CFG_RATE, 0, cfgratePayload);	// Poll the same message
-	setUbxChecksum(cfgrate);
-	ubxCommands.push(std::string(cfgrate, getUbxLength(cfgrate)));
+	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_RATE, 0, NULL); // Poll the same message
 	
-	char cfgnav[256], cfgNavPayload[] = "\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-	makeUbx(cfgnav, UBX_CLASS_CFG, UBX_ID_CFG_NAV5, 0x24, cfgNavPayload);
-	setUbxChecksum(cfgnav);
-	ubxCommands.push(std::string(cfgnav, getUbxLength(cfgnav)));
+	char cfgNavPayload[] = "\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_NAV5, 0x24, cfgNavPayload);
 	
 	
-	char cfgOdo[256], cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-	makeUbx(cfgOdo, UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
-	setUbxChecksum(cfgOdo);
-	ubxCommands.push(std::string(cfgOdo, getUbxLength(cfgOdo)));
+	char cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
 	
 	std::cerr << " - GPS Done." << std::endl;
 }
 
+
+void Gps::sendUbxCommand(char mClass, char mId, unsigned short payloadLength, char* payload) {
+	char ubx[1024];
+	makeUbx(ubx, mClass, mId, payloadLength, payload);
+	ubxCommands.push(std::string(ubx, getUbxLength(ubx)));
+	gpsConfigState = GPS_CONFIG_START;
+}
 
 std::string Panda::ubxClassIdToString( char mClass, char mId ) {
 	switch (mClass) {
@@ -1094,6 +1115,15 @@ std::string Panda::ubxClassIdToString( char mClass, char mId ) {
 			
 		case UBX_CLASS_NAV:
 			switch (mId) {
+				default:
+					break;
+			}
+			break;
+			
+		case UBX_CLASS_MON:
+			switch (mId) {
+				case UBX_ID_MON_VER:  return "MON-VER";
+					
 				default:
 					break;
 			}

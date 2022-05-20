@@ -97,10 +97,24 @@ int main(int argc, char **argv) {
 	}
 	std::cout << std::endl;
 	
-	char cfg_prt[] = "\xB5\x62\x06\x00\x01\x00\x01\xFF\xFF";
-	Panda::setUbxChecksum(cfg_prt);
-//	usbHandler->uartWrite(cfgrate, sizeof(cfgrate));
-	mGps.gpsSend(cfg_prt, sizeof(cfg_prt));
+	// Test sending some GPS UBX commands
+	char cfgPrtPayload[] = "\x01";
+	mGps.sendUbxCommand(Panda::UBX_CLASS_CFG, 0x00, 1, cfgPrtPayload);
+	
+	
+	mGps.sendUbxCommand(Panda::UBX_CLASS_MON, Panda::UBX_ID_MON_VER, 0, NULL);
+//	usleep(10000); // HACK
+	while(mGps.busyUbx()) {
+		usleep(1000);
+	}
+	char result[512];
+	int length = mGps.getUbxResponse(result);
+	printf("UBX read result, length %d: ", length);
+	for (int i = 0; i < length; i++) {
+		printf("%c", result[i]);
+	}
+	printf("\n");
+	
 	sleep(1);
 
 	std::cout << "Stopping GPS...";

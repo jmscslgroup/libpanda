@@ -42,6 +42,7 @@
 namespace Panda {
 
 enum GPS_CONFIG_STATE {
+	GPS_CONFIG_IDLE,
 	GPS_CONFIG_START,
 	GPS_CONFIG_SEND,
 	GPS_CONFIG_WAIT,
@@ -54,7 +55,8 @@ enum GPS_CONFIG_STATE {
 enum UBX_CLASS {
 	UBX_CLASS_NAV = 0x01,
 	UBX_CLASS_ACK = 0x05,
-	UBX_CLASS_CFG = 0x06
+	UBX_CLASS_CFG = 0x06,
+	UBX_CLASS_MON = 0x0A
 };
 
 enum UBX_ID_ACK {
@@ -68,6 +70,10 @@ enum UBX_ID_CFG {
 	UBX_ID_CFG_RATE = 0x08,
 	UBX_ID_CFG_ODO  = 0x1e,
 	UBX_ID_CFG_NAV5 = 0x24
+};
+
+enum UBX_ID_MON {
+	UBX_ID_MON_VER  = 0x04
 };
 
 std::string ubxClassIdToString( char mClass, char mId);
@@ -163,8 +169,17 @@ std::string ubxClassIdToString( char mClass, char mId);
 		 */
 		void stopParsing();
 		
-		// Send a string to the GPS module
+		// Send a string to the GPS module's raw serial port
 		void gpsSend(const char* data, int length);
+		
+		// Sends a command and checks that it's received
+		void sendUbxCommand(char mClass, char mId, unsigned short payloadLength, char* payload);
+		
+		// Returns true is UBX commands are eing processed
+		bool busyUbx();
+		
+		// Returns the result of the latest successul UBX read
+		int getUbxResponse(char* result);
 		
 	private:
 		GpsData state;
@@ -196,7 +211,8 @@ std::string ubxClassIdToString( char mClass, char mId);
 		char ackClass;
 		char ackId;
 		unsigned short responseLength;
-		char responsePayload[256];
+		char responsePayload[256];	// this could all be a struct...
+		
 		GPS_CONFIG_STATE gpsConfigState;
 		int configurationWaitCounter = 0;
 		int ubxSendAttempt = 0;
