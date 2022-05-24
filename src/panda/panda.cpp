@@ -25,7 +25,11 @@
 
 #include "panda.h"
 
+#include "panda/obd-pid-definitions.h"
+
+#include <unistd.h>
 #include <iostream>
+#include <cstring>
 
 using namespace Panda;
 
@@ -34,7 +38,9 @@ void Panda::printVersions() {
 	std::cout << "   Panda Git Version:" << PANDA_VERSION << std::endl;
 }
 
-Handler::Handler() {
+Handler::Handler()
+:vModel(VEHICLE_MODEL_OTHER), vRegion(VEHICLE_REGION_OTHER), vMake(VEHICLE_MANUFACTURE_OTHER), vYear(0)
+{
 	mCan.setUsb(&mUsb);
 	mGps.setUsb(&mUsb);
 	
@@ -54,7 +60,74 @@ void Handler::initialize() {
 	mUsb.startRecording();
 	mGps.startParsing();
 	mCan.startParsing();
+	
+	requestVin();
 }
+
+void Handler::requestVin() {
+	// Read the VIN here:
+	usleep(200000);
+	std::cout << " - Attempting to read the VIN:" << std::endl;
+	
+	int vinAttempts = 0;
+	bool extended = true;	// HACK
+	while( vinAttempts++ < 10 ) {
+		mUsb.sendHeartBeat();
+		
+		ObdPidRequest vinRequest(mCan);
+		
+		if (vinAttempts > 5 && extended == true) {	// HACK
+			std::cout << "Extended Addressing OBD PID failed, attempting legacy addressed OBD PID reading" << std::endl;	// HACK
+			extended = false;	// HACK
+		}	// HACK
+		
+		std::cerr << " - - VIN Attempt " << vinAttempts << "/10..." << std::endl;
+		
+		vinRequest.request(Panda::OBD_PID_SERVICE_VEHICLE_INFO, Panda::OBD_PID_VEHICLE_INFO_VIN, extended);
+		int timeoutCount = 0;
+		while (timeoutCount++ < 100 && !vinRequest.complete()) {
+			usleep(10000);
+		}
+		if (vinRequest.complete()) {
+			//			break;
+			//		}
+			//	}
+			//	if (vinRequest.complete()) {
+			// We got it!
+			printf("Success! ");
+			//				for (int i = 0; i < vinRequest.dataLength; i++) {
+			//					printf("%c", vinRequest.data[i]);
+			//				}
+			//				printf("\n");
+			// Save the VIN:
+			FILE* file = fopen( "/etc/libpanda.d/vin", "w+");
+			fwrite( vinRequest.data, 1, vinRequest.dataLength, file);
+			fclose(file);
+			
+			// Notify a new vin has been read:
+			file = fopen( "/etc/libpanda.d/newVin", "w+");
+			fwrite( "1\n", 1, strlen("1\n"), file);
+			fclose(file);
+			
+			printVin(vinRequest.data);
+			
+			vMake = vinToManufacturer(vinRequest.data);
+			vModel = vinToModel(vinRequest.data);
+			vYear = vinToYear(vinRequest.data);
+			vRegion = vinToRegion(vinRequest.data);
+			
+			break;
+		} else {
+//			std::cerr << "Timeout" << std::endl;
+		}
+		
+	}
+	
+	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
+	mUsb.setSafetyMode(SAFETY_NOOUTPUT, 0);	// OBD II port
+	
+}
+
 
 void Handler::stop() {
 	std::cout << "Stopping GPS...";
@@ -92,3 +165,6 @@ Usb& Handler::getUsb() {
 	return mUsb;
 }
 
+VehicleManufacturer Handler::getVehicleManufacturer() {
+	return vMake;
+}

@@ -26,6 +26,8 @@
 #include "panda/vin.h"
 #include "panda/obd-pid-definitions.h"
 
+#include <cstdio>
+
 using namespace Panda;
 
 

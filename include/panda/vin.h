@@ -30,7 +30,7 @@
 //#include <unistd.h>	// usleep()
 //#include <cstring> // memcpy
 
-#include "panda.h"
+//#include "panda.h"
 //#include "panda/obd-pid.h"
 
 //#define CAN_FRAME_TYPE_MASK (0xF0)

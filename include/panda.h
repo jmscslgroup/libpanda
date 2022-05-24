@@ -34,6 +34,7 @@
 #include "panda/gpsTime.h"
 #include "panda/gpsTracker.h"
 #include "panda/obd-pid.h"
+#include "panda/vin.h"
 
 /**
  * @namespace Panda
@@ -103,11 +104,25 @@ namespace Panda {
 		 \return The USB Handler.
 		 */
 		Usb& getUsb();
+		
+		
+		/*! \brief Returns the vehicle's manufacturer
+		 \return The USB Handler.
+		 */
+		VehicleManufacturer getVehicleManufacturer();
 
 	private:
 		Usb mUsb;
 		Can mCan;
 		Gps mGps;
+		
+		// This will be parsed from reading the VIN, if supported by libapnda
+		VehicleModel vModel;
+		VehicleRegion vRegion;
+		VehicleManufacturer	vMake;
+		int vYear;
+		
+		void requestVin();
 	};
 }
 
