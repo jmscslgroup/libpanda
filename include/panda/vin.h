@@ -72,7 +72,7 @@ enum VehicleModel {
 	\param vin The VIN
 	\return The vehicle's year
  */
-int vinToYear( unsigned char* vin);
+int vinToYear( const unsigned char* vin);
 
 
 /*! \brief Retreives the manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
@@ -80,27 +80,27 @@ int vinToYear( unsigned char* vin);
 	\param vin The VIN
 	\return The vehicle's manufacturer, as only recognizable by libpanda
  */
-VehicleManufacturer vinToManufacturer( unsigned char* vin );
+VehicleManufacturer vinToManufacturer( const unsigned char* vin );
 
 
 /*! \brief Retreives the region of manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
 	\param vin The VIN
 	\return The vehicle's manufacturer region, as only recognizable by libpanda
  */
-VehicleRegion vinToRegion( unsigned char* vin );
+VehicleRegion vinToRegion( const unsigned char* vin );
 
 /*! \brief Retreives the model (and thus manufacture).  This is emprically based on the 3rd digit of the VIN with a super small sample of vehicles
 	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
 	\param vin The VIN
 	\return The vehicle's model, as only recognizable by libpanda
  */
-VehicleModel vinToModel( unsigned char* vin );
+VehicleModel vinToModel( const unsigned char* vin );
 
-const char* vehicleManufacturerToString( VehicleManufacturer vm );
-const char* vehicleModelToString( VehicleModel vm );
-const char* vehicleRegionToString( VehicleRegion vr );
+const char* vehicleManufacturerToString( const VehicleManufacturer vm );
+const char* vehicleModelToString( const VehicleModel vm );
+const char* vehicleRegionToString( const VehicleRegion vr );
 
-void printVin( unsigned char* vin);
+void printVin( const unsigned char* vin);
 
 /*
 class VinReader : public CanListener {

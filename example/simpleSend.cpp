@@ -29,9 +29,25 @@
 #include <cstring>
 #include <cmath>
 
+#include "panda/controller.h"
 #include "panda/toyota.h"
 
 #include "joystickState.h"
+
+
+class ExampleControllerListener : public Panda::ControllerListener {
+private:
+	void newPandaHealthNotification(const PandaHealth& pandaHealth) {
+		Panda::printPandaHealth(pandaHealth);
+	};
+	
+	
+	void newControlNotification(Panda::Controller* controller) {
+		std::cout << "ExampleControllerListener::newControlNotification() controls_allowed: " << controller->getControlsAllowed() << std::endl;
+	};
+};
+
+
 
 static volatile bool keepRunning = true;
 void killPanda(int killSignal) {
@@ -54,42 +70,75 @@ int main(int argc, char **argv) {
 
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
-	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
+//	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
+//	Panda::ToyotaHandler toyotaHandler();
+	
+	
+	
 //	pandaHandler.getCan().addObserver(&toyotaHandler);
 	
 	// Let's roll
 	pandaHandler.initialize();
-	toyotaHandler.start();
+	
+	// initlize gets the VIN, now we van build a controller:
+	Panda::ControllerClient* pandaController = new Panda::ControllerClient(pandaHandler);
+//	toyotaHandler.start();
+	if(pandaController->getController() == NULL) {
+		std::cerr << "ERROR: No VIN discovered, unable to make controller" << std::endl;
+//		exit(EXIT_FAILURE);
+		
+		delete pandaController;
+		
+		pandaHandler.forceSetVin((const unsigned char*)"2T3Y1RFV8KC014025");
+		pandaController = new Panda::ControllerClient(pandaHandler);
+		if(pandaController->getController() == NULL) {
+			std::cerr << "ERROR 2: No VIN discovered, unable to make test controller" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		
+	}
+	
+	ExampleControllerListener myExampleControllerListener;
+	pandaController->getController()->addObserver(&myExampleControllerListener);
+	pandaController->getController()->start();
 	
 	// These are for setting the HUD
 	unsigned char hudLaneLeft = 2;
 	unsigned char hudLaneRight = 2;
 	
-	int printPandaHealthDecimator = 0;
+//	int printPandaHealthDecimator = 0;
 	
 	while(keepRunning) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
-		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
-			printPandaHealthDecimator = 0;
-			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
-//			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaHealth().controls_allowed << std::endl;
-//			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getPandaControlsAllowed()() << std::endl;
-//			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
-		}
+//		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
+//			printPandaHealthDecimator = 0;
+//			Panda::printPandaHealth(toyotaHandler.getPandaHealth());
+////			std::cout << "Controls Allowed panda: " << (int)toyotaHandler.getPandaControlsAllowed() << std::endl;
+////			std::cout << "Controls Allowed Libpanda: " << toyotaHandler.getControlsAllowed()() << std::endl;
+////			std::cout << "Ignition On: " << toyotaHandler.getIgnitionOn() << std::endl;
+//		}
 		
 		// Setting HUD elements:
+		
 		hudLaneLeft += mJoystickState.getButtonL1Rising();
 		hudLaneLeft -= mJoystickState.getButtonL2Rising();
 		hudLaneRight += mJoystickState.getButtonR1Rising();
 		hudLaneRight -= mJoystickState.getButtonR2Rising();
-		toyotaHandler.setHudLanes(hudLaneLeft, hudLaneRight);
+		if (pandaHandler.getVehicleManufacturer() == Panda::VEHICLE_MANUFACTURE_TOYOTA) {
+			Panda::ToyotaHandler* toyotaHandler = static_cast<Panda::ToyotaHandler*>(pandaController->getController());
+			
+			toyotaHandler->setHudLanes(hudLaneLeft, hudLaneRight);
+			
+			toyotaHandler->setHudLdaAlert( mJoystickState.getTriangle() );
+			toyotaHandler->setHudTwoBeeps( mJoystickState.getX() );
+			toyotaHandler->setHudRepeatedBeeps( mJoystickState.getSelect() );
+			toyotaHandler->setHudBarrier( mJoystickState.getDY() > 0 );
+			toyotaHandler->setHudMiniCar( mJoystickState.getDX() > 0 );
+		}
 		
-		toyotaHandler.setHudLdaAlert( mJoystickState.getTriangle() );
-		toyotaHandler.setHudTwoBeeps( mJoystickState.getX() );
-		toyotaHandler.setHudRepeatedBeeps( mJoystickState.getSelect() );
-		toyotaHandler.setHudBarrier( mJoystickState.getDY() > 0 );
-		toyotaHandler.setHudMiniCar( mJoystickState.getDX() > 0 );
+		
+		
 		
 		// This will cancel the cruise control, cruise must be rest by driver to allow further controls
 //		toyotaHandler.setHudCruiseCancelRequest( mJoystickState.getSquare() );
@@ -120,9 +169,12 @@ int main(int argc, char **argv) {
 		// Holding circle tests the heartbeat (stopping it)
 		// The heartbeat failing will also trigger some HUD elements like setHudRepeatedBeeps and setHudLdaAlert
 		if ( !mJoystickState.getCircle() ) {
-			toyotaHandler.setAcceleration(acceleration);
-//			toyotaHandler.setSteerTorque(steerTorque);
-			toyotaHandler.setSteerTorque(0);
+//			toyotaHandler.setAcceleration(acceleration);
+////			toyotaHandler.setSteerTorque(steerTorque);
+//			toyotaHandler.setSteerTorque(0);
+			pandaController->getController()->setAcceleration(acceleration);
+//			pandaController->getController()->setSteerTorque(steerTorque);
+			pandaController->getController()->setSteerTorque(0);
 		}
 		
 		// Debug Joystick:
@@ -132,9 +184,10 @@ int main(int argc, char **argv) {
 	
 	
 	// Will never reach here
-	std::cout << "Stopping toyotaHandler..." << std::endl;
+	std::cout << "Stopping pandacontroller..." << std::endl;
+//	toyotaHandler.stop();
+	pandaController->getController()->stop();
 	std::cout << "Stopping pandaHandler..." << std::endl;
-	toyotaHandler.stop();
 	pandaHandler.stop();
 
 	std::cout << "simpleSend is Done." << std::endl;

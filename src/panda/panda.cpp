@@ -94,7 +94,7 @@ void Handler::requestVin() {
 			//	}
 			//	if (vinRequest.complete()) {
 			// We got it!
-			printf("Success! ");
+//			printf("Success! ");
 			//				for (int i = 0; i < vinRequest.dataLength; i++) {
 			//					printf("%c", vinRequest.data[i]);
 			//				}
@@ -109,12 +109,7 @@ void Handler::requestVin() {
 			fwrite( "1\n", 1, strlen("1\n"), file);
 			fclose(file);
 			
-			printVin(vinRequest.data);
-			
-			vMake = vinToManufacturer(vinRequest.data);
-			vModel = vinToModel(vinRequest.data);
-			vYear = vinToYear(vinRequest.data);
-			vRegion = vinToRegion(vinRequest.data);
+			forceSetVin(vinRequest.data);
 			
 			break;
 		} else {
@@ -126,6 +121,15 @@ void Handler::requestVin() {
 	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
 	mUsb.setSafetyMode(SAFETY_NOOUTPUT, 0);	// OBD II port
 	
+}
+
+void Handler::forceSetVin(const unsigned char* vin) {
+	printVin(vin);
+	
+	vMake = vinToManufacturer(vin);
+	vModel = vinToModel(vin);
+	vYear = vinToYear(vin);
+	vRegion = vinToRegion(vin);
 }
 
 

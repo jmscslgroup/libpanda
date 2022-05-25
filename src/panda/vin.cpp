@@ -31,7 +31,7 @@
 using namespace Panda;
 
 
-int Panda::vinToYear( unsigned char* vin ) {
+int Panda::vinToYear( const unsigned char* vin ) {
 	unsigned char yearCode = vin[9];
 	if (yearCode >= '1' && yearCode <= '9') {
 		return 2000 + (int)(yearCode-'0');
@@ -42,7 +42,7 @@ int Panda::vinToYear( unsigned char* vin ) {
 	return 2010 + (int)(yearCode-'A');
 }
 
-VehicleManufacturer Panda::vinToManufacturer( unsigned char* vin ) {
+VehicleManufacturer Panda::vinToManufacturer( const unsigned char* vin ) {
 	switch (vin[1]) {
 		case 'T': return VEHICLE_MANUFACTURE_TOYOTA;
 		case 'N': return VEHICLE_MANUFACTURE_NISSAN;
@@ -55,7 +55,7 @@ VehicleManufacturer Panda::vinToManufacturer( unsigned char* vin ) {
 	return VEHICLE_MANUFACTURE_OTHER;
 }
 
-VehicleRegion Panda::vinToRegion( unsigned char* vin ) {
+VehicleRegion Panda::vinToRegion( const unsigned char* vin ) {
 	switch (vin[0]) {
 		case '1':
 		case '4':
@@ -69,7 +69,7 @@ VehicleRegion Panda::vinToRegion( unsigned char* vin ) {
 	return VEHICLE_REGION_OTHER;
 }
 
-const char* Panda::vehicleManufacturerToString( VehicleManufacturer vm ) {
+const char* Panda::vehicleManufacturerToString( const VehicleManufacturer vm ) {
 	switch (vm) {
 		case VEHICLE_MANUFACTURE_TOYOTA: return "Toyota";
 		case VEHICLE_MANUFACTURE_HONDA: return "Honda";
@@ -82,7 +82,7 @@ const char* Panda::vehicleManufacturerToString( VehicleManufacturer vm ) {
 	return "Unknown Manufacturer";
 }
 
-const char* Panda::vehicleModelToString( VehicleModel vm ) {
+const char* Panda::vehicleModelToString( const VehicleModel vm ) {
 	switch (vm) {
 		case VEHICLE_MODEL_HONDA_PILOT: return "Pilot";
 		case VEHICLE_MODEL_NISSAN_ROGUE: return "Rogue";
@@ -92,7 +92,7 @@ const char* Panda::vehicleModelToString( VehicleModel vm ) {
 	}
 	return "Unknown Model";
 }
-const char* Panda::vehicleRegionToString( VehicleRegion vr ) {
+const char* Panda::vehicleRegionToString( const VehicleRegion vr ) {
 	switch (vr) {
 		case VEHICLE_REGION_USA: return "USA";
 		case VEHICLE_REGION_CANADA: return "Canada";
@@ -102,7 +102,7 @@ const char* Panda::vehicleRegionToString( VehicleRegion vr ) {
 	return "Unknown Region";
 }
 
-VehicleModel Panda::vinToModel( unsigned char* vin ) {
+VehicleModel Panda::vinToModel( const unsigned char* vin ) {
 	VehicleManufacturer manufacturer = vinToManufacturer(vin);
 	VehicleRegion region = vinToRegion(vin);
 	
@@ -153,7 +153,7 @@ VehicleModel Panda::vinToModel( unsigned char* vin ) {
 	return VEHICLE_MODEL_OTHER;
 }
 
-void Panda::printVin( unsigned char* vin) {
+void Panda::printVin( const unsigned char* vin) {
 	printf("Information about VIN: %s\n", vin);
 	printf(" - Manufacturer :%s\n", vehicleManufacturerToString(vinToManufacturer(vin)));
 	printf(" - Year         :%d\n", vinToYear(vin));

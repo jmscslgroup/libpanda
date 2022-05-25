@@ -105,11 +105,15 @@ namespace Panda {
 		 */
 		Usb& getUsb();
 		
-		
-		/*! \brief Returns the vehicle's manufacturer
-		 \return The USB Handler.
+		/*! \brief Returns the vehicle's manufacturer.  If it has not been set, failed to read, or
+		 \return The vehicle manufacturer after VIN is set
 		 */
 		VehicleManufacturer getVehicleManufacturer();
+		
+		/*! \brief Force sets the Handler's VIN.  This should not be called manually if a known vehicle type is connected
+		 \param vin The VIN
+		 */
+		void forceSetVin(const unsigned char* vin);
 
 	private:
 		Usb mUsb;
