@@ -20,6 +20,11 @@ function( new_install LIBNAME )
 		DESTINATION include
 		COMPONENT headers
 		)
+		
+	install( FILES ${GENERATED_HEADERS}
+		DESTINATION include
+		COMPONENT headers
+		)
 
 	message("-- Install Directory ${LIBNAME}: lib${LIB_SUFFIX}")
 	message("-- Install Directory ${LIBNAME}-static: lib${LIB_SUFFIX}")
@@ -53,7 +58,7 @@ message("Panda git version: ${PANDA_GIT_REV}")
     include_directories( ${CMAKE_CURRENT_BINARY_DIR}
                          ${CMAKE_CURRENT_SOURCE_DIR} )
     configure_file(include/panda_version_i.h.in "${CMAKE_CURRENT_BINARY_DIR}/panda_version_i.h" @ONLY)
-    
+    set(GENERATED_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/panda_version_i.h)
 
 
 
@@ -86,8 +91,8 @@ add_subdirectory( NMEAParser/Software )
 
 file(GLOB_RECURSE ${LIBNAME}_SOURCES "src/*.cpp")
 file(GLOB_RECURSE ${LIBNAME}_HEADERS "include/*.h")
-set(c_sources     ${${LIBNAME}_SOURCES} ${${LIBNAME}_HEADERS})
-set(c_headers     ${${LIBNAME}_HEADERS})
+set(c_sources     ${${LIBNAME}_SOURCES} ${${LIBNAME}_HEADERS} ${GENERATED_HEADERS})
+set(c_headers     ${${LIBNAME}_HEADERS} ${GENERATED_HEADERS}/)
 
 # Dependencies:
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
