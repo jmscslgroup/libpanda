@@ -110,7 +110,7 @@ CanFrame buildDSU_CRUISE(unsigned char SET_SPEED);
 uint8_t toyotaChecksum(Panda::CanFrame& frame);
 
 /*!
- \brief This funciton is helpful for debugging but should either not live in toyota.h or shoul dbe removed:
+ \brief This funciton is helpful for debugging but should either not live in toyota.h or should be removed:
  \param frame The frame to be printed to the console
  */
 void printFrame( Panda::CanFrame frame );
@@ -183,6 +183,9 @@ private:
 //	// Overloaded from Mogi::Thread.
 //	// This handles the constant updates.
 //	void doAction();
+	
+	// Overloaded from Panda::controller
+	// This is called at regular fast intervals, where we decimate the interval and send CAN messages
 	void intervalAction();
 	
 	// All of the following are called from doAction()

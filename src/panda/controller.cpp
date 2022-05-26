@@ -2,11 +2,14 @@
  Author: Matt Bunting
  */
 
-#include "panda/controller.h"
-#include "panda/toyota.h"
-
 #include <unistd.h>
 #include <chrono>
+
+#include "panda/controller.h"
+#include "panda/toyota.h"
+#include "panda/nissan.h"
+
+
 
 using namespace Panda;
 
@@ -29,12 +32,13 @@ Controller*  Controller::create( Panda::Handler& handler ) {
 	Controller* result = NULL;
 	switch (handler.getVehicleManufacturer()) {
 		case VEHICLE_MANUFACTURE_TOYOTA:
-			// result = new...
 			result = new ToyotaHandler;
 			break;
+			
 		case VEHICLE_MANUFACTURE_NISSAN:
-			// result = new...
+			result = new NissanController;
 			break;
+			
 		default:
 			break;
 	}
@@ -129,7 +133,7 @@ void Controller::doAction() {
 		}
 	}
 	
-	// Let child handl CAN messaging
+	// Let child handle CAN messaging
 	this->intervalAction();
 	
 	// Now deterine the time to delay
@@ -158,4 +162,8 @@ void Controller::setIntervalActionRate( double rate ) {
 
 void Controller::sendCan(CanFrame& frame) {
 	this->pandaHandler->getCan().sendMessage(frame);
+}
+
+Panda::Handler* Controller::getPandaHandler() {
+	return pandaHandler;
 }

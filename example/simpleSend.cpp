@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 	// Let's roll
 	pandaHandler.initialize();
 	
-	// initlize gets the VIN, now we van build a controller:
+	// initialize gets the VIN, now we can build a controller:
 	Panda::ControllerClient* pandaController = new Panda::ControllerClient(pandaHandler);
 //	toyotaHandler.start();
 	if(pandaController->getController() == NULL) {

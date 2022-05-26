@@ -307,7 +307,7 @@ void ToyotaHandler::sendLka() {
 }
 
 void ToyotaHandler::sendTrackB() {
-	counterTrackB += 2;	// I notice in recorded data that his incrmeents by 2
+	counterTrackB += 2;	// I notice in recorded data that his increments by 2
 	counterTrackB |= 0x80;	// also the MSB is always 1.  perhaps the DBC is wrong?
 	Panda::CanFrame frame = buildTRACK_B_1(counterTrackB);
 	

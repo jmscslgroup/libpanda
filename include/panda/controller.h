@@ -27,7 +27,7 @@ class Controller : public Mogi::Thread, public Panda::CanListener {
 	friend class ControllerClient;
 	friend class HeartbeatHelper;
 	friend class ControllerListener;
-		
+	
 private:
 	HeartbeatHelper* mHeartbeatHelper;
 	Panda::Handler* pandaHandler;
@@ -54,7 +54,7 @@ private:
 	// Overload from Panda::CanListener
 	void newDataNotification(CanFrame* canFrame);
 	
-
+	
 protected:
 	Controller();
 	
@@ -101,6 +101,8 @@ public:
 	 */
 	virtual void setAcceleration( double acceleration ) {};
 	
+	
+	Panda::Handler* getPandaHandler();
 };
 
 /*!
@@ -130,7 +132,7 @@ private:
 	
 public:
 	ControllerClient(Panda::Handler& handler) {
-//		vehicleController = Controller::create(handler.getVehicleMake());
+		//		vehicleController = Controller::create(handler.getVehicleMake());
 		vehicleController = Controller::create(handler);
 	};
 	
