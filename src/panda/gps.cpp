@@ -464,10 +464,13 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 		CNMEAParserData::GSV_DATA_T gsvData;
 		
 		CNMEAParserData::ERROR_E error;
+		std::map<int,GpsSatellite>* satellites;
 		if (strcmp(pCmd, "GLGSV") == 0) {
 			error = GetGLGSV(gsvData);
+			satellites = &state.satellitesGlonass;
 		} else {
 			error = GetGPGSV(gsvData);
+			satellites = &state.satellitesGps;
 		}
 		
 		if(error == CNMEAParserData::ERROR_OK) {
@@ -482,8 +485,9 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 				std::cout << "   - Sat ID:" << gsvData.SatInfo[i].nPRN << " Azimuth:" << gsvData.SatInfo[i].dAzimuth << " Elevation:" << gsvData.SatInfo[i].dElevation << ", SNR: " << gsvData.SatInfo[i].nSNR  << std::endl;
 			}
 #endif
+			
 
-			for (std::map<int,GpsSatellite>::iterator it = state.satellites.begin(); it != state.satellites.end(); it++) {
+			for (std::map<int,GpsSatellite>::iterator it = satellites->begin(); it != satellites->end(); it++) {
 				it->second.visible = false;	// Is this logical?
 			}
 
@@ -492,11 +496,11 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 				if (gsvData.SatInfo[i].nPRN == 0) {
 					continue;
 				}
-				state.satellites[gsvData.SatInfo[i].nPRN].visible = gsvData.SatInfo[i].nSNR > 0;	// Is this logical?
-				state.satellites[gsvData.SatInfo[i].nPRN].azimuth = gsvData.SatInfo[i].dAzimuth;
-				state.satellites[gsvData.SatInfo[i].nPRN].elevation = gsvData.SatInfo[i].dElevation;
-				state.satellites[gsvData.SatInfo[i].nPRN].SNR = gsvData.SatInfo[i].nSNR;
-				state.satellites[gsvData.SatInfo[i].nPRN].ID = gsvData.SatInfo[i].nPRN;
+				(*satellites)[gsvData.SatInfo[i].nPRN].visible = gsvData.SatInfo[i].nSNR > 0;	// Is this logical?
+				(*satellites)[gsvData.SatInfo[i].nPRN].azimuth = gsvData.SatInfo[i].dAzimuth;
+				(*satellites)[gsvData.SatInfo[i].nPRN].elevation = gsvData.SatInfo[i].dElevation;
+				(*satellites)[gsvData.SatInfo[i].nPRN].SNR = gsvData.SatInfo[i].nSNR;
+				(*satellites)[gsvData.SatInfo[i].nPRN].ID = gsvData.SatInfo[i].nPRN;
 			}
 
 			//newData = true;	// Satellite updates aren't that important
@@ -632,7 +636,7 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 			
 
 #endif
-			
+//			state.motion.course
 			// TODO: fill in the appropriate fields
 		}
 		

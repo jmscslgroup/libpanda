@@ -71,6 +71,8 @@ private:
 	bool highlightEnter = false;
 	bool highlightCurrent = false;
 	//int highlight = -1;
+	
+	double heading;	// This is heavily filtered
 
 public:
 	// Singleton:

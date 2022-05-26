@@ -168,7 +168,10 @@ namespace Panda {
 		int satelitesInView = 0;
 		/*! \brief A mapping of satellite PRN(int) to satellite information(GpsSatellite)
 		 */
-		std::map<int,GpsSatellite> satellites;
+		std::map<int,GpsSatellite> satellitesGps;
+		/*! \brief A mapping of satellite PRN(int) to satellite information(GpsSatellite)
+		 */
+		std::map<int,GpsSatellite> satellitesGlonass;
 		/*! \brief Basic settings and statuses of the GPS
 		 */
 		GpsInfo info;

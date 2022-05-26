@@ -301,12 +301,34 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	int satX = menuX;
 	int satY = menuY+menuHeight;
 	int satWidth = 27;
-	int satHeight = 17;
+//	int satHeight = 17;
+	int numSatellites = handler.getGps().getData().satellitesGps.size() + handler.getGps().getData().satellitesGlonass.size();
+	int satHeight = numSatellites > 12 ? numSatellites + 4 : 16;
 
 	int statX = satX + satWidth;
 	int statY = satY;
 	int statWidth = 17;
 	int statHeight = satHeight;
+	
+	double alpha = 0.985;
+	double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
+//	static double gpsHeading;
+//	gpsHeading += 0.1;
+	if (gpsHeading > M_PI*2.0) {
+		gpsHeading -= M_PI*2.0;
+	}
+	if (heading - gpsHeading > M_PI) {
+		heading -= M_PI*2.0;
+	} else if (heading - gpsHeading < -M_PI) {
+		heading += M_PI*2.0;
+	}
+	heading = alpha * heading + (1-alpha)*gpsHeading;
+	if (heading > M_PI*2.0) {
+		heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
+	} else if (heading < 0) {
+		heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
+	}
+	
 
 
 //	miniWindow(menuY, menuY+menuHeight, menuX, menuX+menuWidth);	// Panda menu
@@ -398,25 +420,29 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	mvprintw(row,satX + 18,"Elev");
 	mvprintw(row++,satX + 24,"SNR");
 	attroff(A_BOLD);
-	for (std::map<int,Panda::GpsSatellite>::const_iterator it = handler.getGps().getData().satellites.begin(); it != handler.getGps().getData().satellites.end(); it++) {
-		if(!it->second.visible) {
-			attron(A_DIM);
-			mvprintw(row,satX + 1,"%02d", it->first);
-		} else  {
-			attron(A_BOLD);
-			mvprintw(row,satX + 1,"%02d", it->first);
-			attroff(A_BOLD);
-		}
-		mvprintw(row,satX + 6,it->second.visible ? "yes" : " no");
-		mvprintw(row,satX + 13,"%3d", (int)it->second.azimuth);
-		mvprintw(row,satX + 19,"%2d", (int)it->second.elevation);
-		int colorPair = (it->second.SNR / 17)+1;
-		colorPair = colorPair > 4 ? 4 : colorPair;
-		attron(COLOR_PAIR(colorPair));
-		mvprintw(row++,satX + 25,"%02d", it->second.SNR);
-		attroff(COLOR_PAIR(colorPair));
-		if(!it->second.visible) {
-			attroff(A_DIM);
+	const std::map<int,Panda::GpsSatellite>* satellites[2] = {&handler.getGps().getData().satellitesGps, &handler.getGps().getData().satellitesGlonass};
+	for (int i = 0; i < 2; i++) {
+		for (std::map<int,Panda::GpsSatellite>::const_iterator it = satellites[i]->begin(); it != satellites[i]->end(); it++) {
+			if(!it->second.visible) {
+				attron(A_DIM);
+			} else {
+				attron(A_BOLD);
+			}
+			mvprintw(row,satX + 1,"%02d%c", it->first, i == 0 ? 'P' : 'L');
+			if(it->second.visible) {
+				attroff(A_BOLD);
+			}
+			mvprintw(row,satX + 6,it->second.visible ? "yes" : " no");
+			mvprintw(row,satX + 13,"%3d", (int)it->second.azimuth);
+			mvprintw(row,satX + 19,"%2d", (int)it->second.elevation);
+			int colorPair = (it->second.SNR / 17)+1;
+			colorPair = colorPair > 4 ? 4 : colorPair;
+			attron(COLOR_PAIR(colorPair));
+			mvprintw(row++,satX + 25,"%02d", it->second.SNR);
+			attroff(COLOR_PAIR(colorPair));
+			if(!it->second.visible) {
+				attroff(A_DIM);
+			}
 		}
 	}
 
@@ -435,14 +461,14 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	// draw a circle:
 	for (int i = 0; i < 360; i+= 10) {
-		double radian = 3.14159/180.0*(double)i;
+		double radian = 3.14159/180.0*(double)i - heading;
 		int x = centerx + radius*sin(radian)*xyscale;
 		int y = centery - radius*cos(radian);
 		mvprintw( y, x, "*" );
 	}
 	// print scale:
 	for (int i = 0; i < 360; i+= 30) {
-		double radian = 3.14159/180.0*(double)i;
+		double radian = 3.14159/180.0*(double)i - heading;
 		int x = centerx + radius*sin(radian)*xyscale;
 		int y = centery - radius*cos(radian);
 		attron(A_BOLD);
@@ -462,20 +488,23 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	}
 	// print satellite data:
 
-
-	for (std::map<int,Panda::GpsSatellite>::const_iterator it = handler.getGps().getData().satellites.begin(); it != handler.getGps().getData().satellites.end(); it++) {
-		if (it->second.visible) {
-			//				double satRadius = sin((90.0-(double)it->second.elevation)*3.14159/180.0) * (radius-1);
-			double satRadius = (90.0-(double)it->second.elevation)/90.0 * (radius-1);
-			double radian = 3.14159/180.0*(double)it->second.azimuth;
-			int x = centerx + satRadius*sin(radian)*xyscale;
-			int y = centery - satRadius*cos(radian);
-
-			int colorPair = (it->second.SNR / 17)+1;
-			colorPair = colorPair > 4 ? 4 : colorPair;
-			attron(COLOR_PAIR(colorPair+4));
-			mvprintw( y, x, "%d", it->second.ID );
-			attroff(COLOR_PAIR(colorPair+4));
+	
+	
+	for (int i = 0; i < 2; i++) {
+		for (std::map<int,Panda::GpsSatellite>::const_iterator it = satellites[i]->begin(); it != satellites[i]->end(); it++) {
+			if (it->second.visible) {
+				//				double satRadius = sin((90.0-(double)it->second.elevation)*3.14159/180.0) * (radius-1);
+				double satRadius = (90.0-(double)it->second.elevation)/90.0 * (radius-1);
+				double radian = 3.14159/180.0*(double)it->second.azimuth - heading;
+				int x = centerx + satRadius*sin(radian)*xyscale;
+				int y = centery - satRadius*cos(radian);
+				
+				int colorPair = (it->second.SNR / 17)+1;
+				colorPair = colorPair > 4 ? 4 : colorPair;
+				attron(COLOR_PAIR(colorPair+4));
+				mvprintw( y, x, "%d", it->second.ID );
+				attroff(COLOR_PAIR(colorPair+4));
+			}
 		}
 	}
 }
