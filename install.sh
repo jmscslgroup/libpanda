@@ -5,6 +5,8 @@ if [[ $EUID == 0 ]];
   exit
 fi
 
+sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+
 git submodule init
 git submodule update
 
