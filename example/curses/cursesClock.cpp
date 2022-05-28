@@ -21,13 +21,13 @@ void drawclock(double width, double height, Coordinates2D center, bool miniticks
 	point1.y = center.y;
 	point2.x = center.x + width;
 	point2.y = center.y;
-	ln(point1, point2);
+	ln2(point1, point2);
 	
 	point1.x = center.x;
 	point1.y = center.y + height;
 	point2.x = center.x;
 	point2.y = center.y - height;
-	ln(point1, point2);
+	ln2(point1, point2);
 	
 	point1 = center;
 	point2.x = 25;
@@ -54,21 +54,21 @@ void drawclock(double width, double height, Coordinates2D center, bool miniticks
 	double seconds = M_PI*2.0/60.0*((double)timeinfo->tm_sec + time.tv_usec/1000000.0);
 	point2.x = point1.x + width*sin(seconds)*0.90;
 	point2.y = point1.y - height*cos(seconds)*0.90;
-	ln(point1, point2);
+	ln2(point1, point2);
 	attroff(COLOR_PAIR(1));
 	
 	attron(COLOR_PAIR(2));
 	double minutes = M_PI*2.0/60.0*(double)timeinfo->tm_min + seconds/60.0;
 	point2.x = point1.x + width*sin(minutes)*0.80;
 	point2.y = point1.y - height*cos(minutes)*0.80;
-	ln(point1, point2);
+	ln2(point1, point2);
 	attroff(COLOR_PAIR(2));
 	
 	attron(COLOR_PAIR(3));
 	double hours = M_PI*2.0/12.0*(double)timeinfo->tm_hour + minutes/12.0;
 	point2.x = point1.x + width*sin(hours)*0.6;
 	point2.y = point1.y - height*cos(hours)*0.6;
-	ln(point1, point2);
+	ln2(point1, point2);
 	attroff(COLOR_PAIR(3));
 	attroff(A_BOLD);
 	

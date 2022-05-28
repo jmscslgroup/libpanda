@@ -505,7 +505,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	west.y = centery - radius*cos(-heading + M_PI + M_PI_2);
 	
 	attron(COLOR_PAIR(2));
-	ln(east, west);
+	ln2(east, west);
 	attroff(COLOR_PAIR(2));
 	
 	Coordinates2D north, south;
@@ -515,7 +515,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	south.y = centery - radius*cos(-heading + M_PI);
 	
 	attron(COLOR_PAIR(3));
-	ln(north, south);
+	ln2(north, south);
 	attroff(COLOR_PAIR(3));
 	
 	
