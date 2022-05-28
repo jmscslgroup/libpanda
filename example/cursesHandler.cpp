@@ -356,7 +356,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	int gpsClockX = mapX;
 	int gpsClockY = mapY+mapHeight;
 	int gpsClockWidth = mapWidth/2;
-	int gpsClockHeight = (gpsClockWidth+2)/xyscale;
+	int gpsClockHeight = (gpsClockWidth)/xyscale;
 	miniWindow( gpsClockY, gpsClockY+gpsClockHeight + 1, gpsClockX, gpsClockX+gpsClockWidth);
 	
 	int sysClockX = gpsClockX+gpsClockWidth+1;
@@ -369,7 +369,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	gettimeofday(&time, NULL);
 	Coordinates2D clockCenter;
 	clockCenter.x = (double)sysClockX + (double)sysClockWidth/2.0 + 0.5;
-	clockCenter.y = (double)sysClockY + (double)sysClockHeight/2.0 + 1.0;
+	clockCenter.y = (double)sysClockY + (double)sysClockHeight/2.0 + 0.5;
 	drawclock((double)sysClockWidth/2.2, (double)sysClockHeight/2.3, clockCenter, true, time);
 	
 	struct tm gpsTmCopy = handler.getGps().getData().time;
@@ -378,7 +378,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	gpsTime.tv_sec = gpsTime_t;
 	gpsTime.tv_usec = (handler.getGps().getData().timeMilliseconds)*1000;
 	clockCenter.x = (double)gpsClockX + (double)gpsClockWidth/2.0 + 0.5;
-	clockCenter.y = (double)gpsClockY + (double)gpsClockHeight/2.0 + 1.0;
+	clockCenter.y = (double)gpsClockY + (double)gpsClockHeight/2.0 + 0.5;
 	drawclock((double)gpsClockWidth/2.2, (double)gpsClockHeight/2.3, clockCenter, true, gpsTime);
 	
 

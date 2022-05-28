@@ -84,6 +84,7 @@ char getp( Coordinates2D* pts, double err)
 // The silly thing here is that for determining individual characters,
 //  floating operations are done which circumvents the integer-only intention
 //  in the original algorithm
+// This was super helpful: https://zingl.github.io/Bresenham.pdf
 void ln2( Coordinates2D a, Coordinates2D b) {
 	set( a, 'O');
 	set( b, 'O');

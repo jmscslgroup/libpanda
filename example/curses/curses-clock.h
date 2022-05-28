@@ -9,4 +9,6 @@
 
 void drawclock(double width, double height, Coordinates2D center, bool miniticks, struct timeval time);
 
+void drawSecondsDial(double width, double height, Coordinates2D center, bool miniticks, struct timeval time);
+
 #endif
