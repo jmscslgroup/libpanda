@@ -133,6 +133,13 @@ new_install( mogithread )
 
 # Test executables:
 if(${CURSES_FOUND})
+     add_library(cursesgfx example/curses/cursesGfx.cpp
+                           example/curses/curses-gfx.h
+                           example/curses/cursesClock.cpp
+                           example/curses/curses-clock.h )
+     target_link_libraries(cursesgfx ncurses )
+	 include_directories(example/curses)
+
      add_executable(pandaCurses  example/pandaCurses.cpp
                                  example/cursesHandler.cpp
                                  example/cursesHandler.h
@@ -145,7 +152,8 @@ if(${CURSES_FOUND})
                                         ${LIBNAME}
                                         mogithread
                                         NMEAParserLib
-                                        ncurses )
+                                        ncurses 
+                                        cursesgfx )
 endif()
 
 add_executable(simpleSend	example/simpleSend.cpp

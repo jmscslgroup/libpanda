@@ -34,6 +34,9 @@
 #include <iostream>
 #include <math.h>
 
+#include "curses-gfx.h"
+#include "curses-clock.h"
+
 #define SIMPLE_TERM
 
 #ifdef SIMPLE_TERM
@@ -287,6 +290,9 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	//	int rowSave = row+1;
 
 	//border(0, 0, 0, 0, 0, 0, 0, 0);
+	
+	
+	double xyscale = 2.25; // since column space is stretched relative to row space
 
 	int menuX = 0;
 	int menuY = 0;
@@ -310,26 +316,27 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	int statWidth = 17;
 	int statHeight = satHeight;
 	
-	double alpha = 0.985;
+	double alpha = 0.95;
 	double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
 //	static double gpsHeading;
 //	gpsHeading += 0.1;
-	if (gpsHeading > M_PI*2.0) {
-		gpsHeading -= M_PI*2.0;
-	}
-	if (heading - gpsHeading > M_PI) {
-		heading -= M_PI*2.0;
-	} else if (heading - gpsHeading < -M_PI) {
-		heading += M_PI*2.0;
-	}
-	heading = alpha * heading + (1-alpha)*gpsHeading;
-	if (heading > M_PI*2.0) {
-		heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
-	} else if (heading < 0) {
-		heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
+	if (gpsHeading != 0) {	// HACK
+		if (gpsHeading > M_PI*2.0) {
+			gpsHeading -= M_PI*2.0;
+		}
+		if (heading - gpsHeading > M_PI) {
+			heading -= M_PI*2.0;
+		} else if (heading - gpsHeading < -M_PI) {
+			heading += M_PI*2.0;
+		}
+		heading = alpha * heading + (1-alpha)*gpsHeading;
+		if (heading > M_PI*2.0) {
+			heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
+		} else if (heading < 0) {
+			heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
+		}
 	}
 	
-
 
 //	miniWindow(menuY, menuY+menuHeight, menuX, menuX+menuWidth);	// Panda menu
 	miniWindow(gpsY, gpsY+gpsHeight, gpsX, gpsX+gpsWidth);	// GPS
@@ -338,12 +345,42 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	int mapX = gpsX+gpsWidth+1;
 	int mapY = gpsY;
-	int mapWidth = 54;
 	int mapHeight = 28;
+	int mapWidth = mapHeight*xyscale-2;
 	miniWindow( mapY, mapY+mapHeight, mapX, mapX+mapWidth);
 
 	//miniWindow(0,29,0,99); // Full border
-
+	
+	
+	// All the folling "+1", "+0.5", "/2.x" are herustics, a pain to tune
+	int gpsClockX = mapX;
+	int gpsClockY = mapY+mapHeight;
+	int gpsClockWidth = mapWidth/2;
+	int gpsClockHeight = (gpsClockWidth+2)/xyscale;
+	miniWindow( gpsClockY, gpsClockY+gpsClockHeight + 1, gpsClockX, gpsClockX+gpsClockWidth);
+	
+	int sysClockX = gpsClockX+gpsClockWidth+1;
+	int sysClockY = gpsClockY;
+	int sysClockWidth = gpsClockWidth;
+	int sysClockHeight = gpsClockHeight;
+	miniWindow( sysClockY, sysClockY+sysClockHeight + 1, sysClockX, sysClockX+sysClockWidth);
+	
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	Coordinates2D clockCenter;
+	clockCenter.x = (double)sysClockX + (double)sysClockWidth/2.0 + 0.5;
+	clockCenter.y = (double)sysClockY + (double)sysClockHeight/2.0 + 1.0;
+	drawclock((double)sysClockWidth/2.2, (double)sysClockHeight/2.3, clockCenter, true, time);
+	
+	struct tm gpsTmCopy = handler.getGps().getData().time;
+	time_t gpsTime_t = mktime(&gpsTmCopy);
+	struct timeval gpsTime;
+	gpsTime.tv_sec = gpsTime_t;
+	gpsTime.tv_usec = (handler.getGps().getData().timeMilliseconds)*1000;
+	clockCenter.x = (double)gpsClockX + (double)gpsClockWidth/2.0 + 0.5;
+	clockCenter.y = (double)gpsClockY + (double)gpsClockHeight/2.0 + 1.0;
+	drawclock((double)gpsClockWidth/2.2, (double)gpsClockHeight/2.3, clockCenter, true, gpsTime);
+	
 
 	attron(A_BOLD);
 //	printCentered(menuY+1, menuX, menuWidth, "Panda Menu");
@@ -353,6 +390,9 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	printCentered(satY+1, satX, satWidth, "GPS Satellites");
 	printCentered(statY+1, statX, statWidth, "GPS Stats");
+	
+	mvprintw(sysClockY+1, sysClockX+2, "System");
+	mvprintw(gpsClockY+1, gpsClockX+2, "GPS");
 	attroff(A_BOLD);
 
 //	// Panda menu:
@@ -449,22 +489,46 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	// Satellite map just for kicks!
 	double radius = 13; // row radius(height)
-	double xyscale = 2.0; // since column space is stretched relative to row space
+//	double xyscale = 2.2; // since column space is stretched relative to row space
 	double centerx = mapX + 1 + 0.5 + radius*xyscale;
 	double centery = mapY + 1 + 0.5 + radius;
 
 	mvhline(centery,centerx-radius*xyscale, ACS_HLINE, 1+2*radius*xyscale);
 	mvvline(centery-radius, centerx, ACS_VLINE, 1+2*radius);
+
 	fillCorner(centery, centerx);
+	
+	Coordinates2D east, west;
+	east.x = centerx + radius*sin(-heading + M_PI_2)*xyscale;
+	east.y = centery - radius*cos(-heading + M_PI_2);
+	west.x = centerx + radius*sin(-heading + M_PI + M_PI_2)*xyscale;
+	west.y = centery - radius*cos(-heading + M_PI + M_PI_2);
+	
+	attron(COLOR_PAIR(2));
+	ln(east, west);
+	attroff(COLOR_PAIR(2));
+	
+	Coordinates2D north, south;
+	north.x = centerx + radius*sin(-heading)*xyscale;
+	north.y = centery - radius*cos(-heading);
+	south.x = centerx + radius*sin(-heading + M_PI)*xyscale;
+	south.y = centery - radius*cos(-heading + M_PI);
+	
+	attron(COLOR_PAIR(3));
+	ln(north, south);
+	attroff(COLOR_PAIR(3));
+	
+	
 
 	// draw title:
 
 	// draw a circle:
 	for (int i = 0; i < 360; i+= 10) {
 		double radian = 3.14159/180.0*(double)i - heading;
-		int x = centerx + radius*sin(radian)*xyscale;
-		int y = centery - radius*cos(radian);
-		mvprintw( y, x, "*" );
+		double x = centerx + radius*sin(radian)*xyscale;
+		double y = centery - radius*cos(radian);
+//		mvprintw( y, x, "*" );
+		drawDotFloat(x, y);
 	}
 	// print scale:
 	for (int i = 0; i < 360; i+= 30) {
@@ -473,19 +537,29 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 		int y = centery - radius*cos(radian);
 		attron(A_BOLD);
 		if (i == 0) {
+			attron(COLOR_PAIR(1));
 			mvprintw( y, x, "N" );
+			attroff(COLOR_PAIR(1));
 		} else if(i == 90) {
+			attron(COLOR_PAIR(3));
 			mvprintw( y, x, "E" );
+			attroff(COLOR_PAIR(3));
 		} else if(i == 180) {
+			attron(COLOR_PAIR(2));
 			mvprintw( y, x, "S" );
+			attroff(COLOR_PAIR(2));
 		} else if(i == 270) {
+			attron(COLOR_PAIR(3));
 			mvprintw( y, x, "W" );
+			attroff(COLOR_PAIR(3));
 		} else {
 			attroff(A_BOLD);
 			mvprintw( y, x-1, "%d", i );
 		}
 		attroff(A_BOLD);
 	}
+	// draw a nice origin
+	mvaddch(centery, centerx, '+');
 	// print satellite data:
 
 	
