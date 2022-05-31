@@ -83,6 +83,9 @@ namespace Panda {
 		
 		std::vector<int> blacklistBus;
 		std::vector<int> blacklistId;
+		
+		std::vector<int> whitelistBus;
+		std::vector<int> whitelistId;
 	protected:
 		/*!
 		 \brief Called on a successful RMC message parse
@@ -107,6 +110,18 @@ namespace Panda {
 		 \param idToBlock The message ID to be blocked
 		 */
 		void addToBlacklistMessageId( const int& idToBlock );
+		
+		
+		/*! \brief Adds a BUS number to the whiteklist
+		 \param busToPass The bus to be passed
+		 */
+		void addToWhiteBus( const int& busToPass );
+		
+		
+		/*! \brief Adds a message ID number to the whitelist
+		 \param idToBlock The message ID to be passed
+		 */
+		void addToWhitelistMessageId( const int& idToPass );
 		
 	};
 

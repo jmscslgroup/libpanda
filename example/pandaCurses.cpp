@@ -73,6 +73,7 @@ void printUsage(const char* binary) {
 	std::cout << "   -g <gpsfile>  : Filename to output GPS CSV file" << std::endl;
 	std::cout << "   -c <csvfile>  : Filename to output CAN in CSV" << std::endl;
 	std::cout << "   -b <id1>[,<id2>,<id3>...]  : Blacklist CAN Message Ids, in decimal" << std::endl;
+	std::cout << "   -w <id1>[,<id2>,<id3>...]  : Whitelist CAN Message Ids, in decimal. All other messages blocked" << std::endl;
 }
 
 int verboseFlag = false;
@@ -86,6 +87,7 @@ static struct option long_options[] =
 	{"gpsfile", required_argument, NULL, 'g'},
 	{"csvfile", required_argument, NULL, 'c'},
 	{"blacklist", required_argument, NULL, 'b'},
+	{"whitelist", required_argument, NULL, 'w'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -116,6 +118,20 @@ std::vector<int> parseBlacklist(char* blacklistString) {
 	return result;
 }
 
+bool validWhiteBlack(char* list) {
+//	char* blacklistChar;
+//	blacklistChar = list;
+	if (*list == 0x00) {
+		return false;
+	}
+	for (; *list != 0x00; list++) {
+		if ((*list < '0' || *list > '9') && *list != ',') {
+			return false;
+		}
+	}
+	return true;
+}
+
 /*
  Main
  */
@@ -128,9 +144,9 @@ int main(int argc, char **argv) {
 	int ch;
 	
 	char* blacklistString = NULL;
-	char* blacklistChar;
+	char* whitelistString = NULL;
 	// loop over all of the options
-	while ((ch = getopt_long(argc, argv, "u:g:c:b:f", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:b:w:f", long_options, NULL)) != -1)
 	{
 		// check to see if a single character or long option came through
 		switch (ch)
@@ -150,16 +166,17 @@ int main(int argc, char **argv) {
 			case 'b':
 				blacklistString = optarg;
 				// Check for a valid format:
-				blacklistChar = blacklistString;
-				if (*blacklistString == 0x00) {
+				if (!validWhiteBlack(blacklistString)) {
 					printUsage(argv[0]);
 					exit(EXIT_FAILURE);
 				}
-				for (; *blacklistChar != 0; cblacklistChar++) {
-					if ((*blacklistChar < '0' || *blacklistChar > '9') && *blacklistChar != ',') {
-						printUsage("");	// HACK
-						exit(EXIT_FAILURE);
-					}
+				break;
+			case 'w':
+				whitelistString = optarg;
+				// Check for a valid format:
+				if (!validWhiteBlack(whitelistString)) {
+					printUsage(argv[0]);
+					exit(EXIT_FAILURE);
 				}
 				break;
 			case 'f':
@@ -183,11 +200,22 @@ int main(int argc, char **argv) {
 	// Buils the main CAN listener for stats tracking:
 	CanFrameStats mCanFrameStats;
 	// Check blacklist:
-	std::vector<int> blacklistIds = parseBlacklist(blacklistString);
-	std::cout << "Blacklist size: " << blacklistIds.size() << std::endl;
-	for (std::vector<int>::iterator it = blacklistIds.begin(); it != blacklistIds.end(); it++) {
-		std::cout << " - " << *it << std::endl;
-		mCanFrameStats.addToBlacklistMessageId(*it);
+	if (blacklistString != NULL) {
+		std::vector<int> blacklistIds = parseBlacklist(blacklistString);
+		std::cout << "Blacklist size: " << blacklistIds.size() << std::endl;
+		for (std::vector<int>::iterator it = blacklistIds.begin(); it != blacklistIds.end(); it++) {
+			std::cout << " - " << *it << std::endl;
+			mCanFrameStats.addToBlacklistMessageId(*it);
+		}
+	}
+	// Check whitelist:
+	if (whitelistString != NULL) {
+		std::vector<int> whitelistIds = parseBlacklist(whitelistString);
+		std::cout << "Whitelist size: " << whitelistIds.size() << std::endl;
+		for (std::vector<int>::iterator it = whitelistIds.begin(); it != whitelistIds.end(); it++) {
+			std::cout << " - " << *it << std::endl;
+			mCanFrameStats.addToWhitelistMessageId(*it);
+		}
 	}
 	
 	

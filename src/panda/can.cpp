@@ -594,7 +594,46 @@ void Panda::CanListener::addToBlacklistMessageId( const int& idToBlock ) {
 	blacklistId.push_back(idToBlock);
 }
 
+void Panda::CanListener::addToWhiteBus( const int& busToPass ) {
+	whitelistBus.push_back(busToPass);
+}
+
+void Panda::CanListener::addToWhitelistMessageId( const int& idToPass ) {
+	whitelistId.push_back(idToPass);
+}
+
+
 void Panda::CanListener::newDataNotificationProxy(CanFrame* canFrame) {
+	bool passMessage = true;
+	
+	if (whitelistId.size() > 0 || whitelistBus.size() > 0) {
+		passMessage = false;
+	}
+	for (std::vector<int>::iterator it=whitelistId.begin();
+		 it != whitelistId.end();
+		 it++) {
+		int& Id = *it;
+		if (canFrame->messageID == Id) {
+			passMessage = true;
+			break;
+		}
+	}
+	if (!passMessage) {
+		return;	// blocked
+	}
+	for (std::vector<int>::iterator it=whitelistBus.begin();
+		 it != whitelistBus.end();
+		 it++) {
+		int& bus = *it;
+		if (canFrame->bus == bus) {
+			passMessage = true;
+			break;
+		}
+	}
+	if (!passMessage) {
+		return;	// blocked
+	}
+	
 	for (std::vector<int>::iterator it=blacklistId.begin();
 		 it != blacklistId.end();
 		 it++) {
@@ -611,5 +650,6 @@ void Panda::CanListener::newDataNotificationProxy(CanFrame* canFrame) {
 			return;	// kill the notification
 		}
 	}
+	
 	newDataNotification(canFrame);
 }
