@@ -72,6 +72,7 @@ void printUsage(const char* binary) {
 	std::cout << "                     i: Isochronous" << std::endl;
 	std::cout << "   -g <gpsfile>  : Filename to output GPS CSV file" << std::endl;
 	std::cout << "   -c <csvfile>  : Filename to output CAN in CSV" << std::endl;
+	std::cout << "   -b <id1>[,<id2>,<id3>...]  : Blacklist CAN Message Ids, in decimal" << std::endl;
 }
 
 int verboseFlag = false;
@@ -84,6 +85,7 @@ static struct option long_options[] =
 	{"usbmode", required_argument, NULL, 'u'},
 	{"gpsfile", required_argument, NULL, 'g'},
 	{"csvfile", required_argument, NULL, 'c'},
+	{"blacklist", required_argument, NULL, 'b'},
 	{NULL, 0, NULL, 0}
 };
 
@@ -94,6 +96,24 @@ static struct option long_options[] =
 static volatile bool keepRunning = true;
 void killPanda(int killSignal) {
 	keepRunning = false;
+}
+/*
+ Blacklist Parsing
+ */
+
+std::vector<int> parseBlacklist(char* blacklistString) {
+	std::vector<int> result;
+	const char* delimiter = ",";
+	char* token = strtok(blacklistString, delimiter);
+	
+	while (token != NULL) {
+	
+		
+		result.push_back(atoi(token));
+		
+		token = strtok(NULL, delimiter);
+	}
+	return result;
 }
 
 /*
@@ -106,8 +126,11 @@ int main(int argc, char **argv) {
 	const char* gpsFilename = NULL;
 	const char* canFilename = NULL;
 	int ch;
+	
+	char* blacklistString = NULL;
+	char* blacklistChar;
 	// loop over all of the options
-	while ((ch = getopt_long(argc, argv, "u:g:c:f", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:b:f", long_options, NULL)) != -1)
 	{
 		// check to see if a single character or long option came through
 		switch (ch)
@@ -123,6 +146,21 @@ int main(int argc, char **argv) {
 				break;
 			case 'c':
 				canFilename = optarg;
+				break;
+			case 'b':
+				blacklistString = optarg;
+				// Check for a valid format:
+				blacklistChar = blacklistString;
+				if (*blacklistString == 0x00) {
+					printUsage(argv[0]);
+					exit(EXIT_FAILURE);
+				}
+				for (; *blacklistChar != 0; cblacklistChar++) {
+					if ((*blacklistChar < '0' || *blacklistChar > '9') && *blacklistChar != ',') {
+						printUsage("");	// HACK
+						exit(EXIT_FAILURE);
+					}
+				}
 				break;
 			case 'f':
 				fakeData = true;
@@ -141,7 +179,18 @@ int main(int argc, char **argv) {
 	std::cout << "Starting " << argv[0] << std::endl;
 	
 	SimpleEverythingObserver myObserver;
+	
+	// Buils the main CAN listener for stats tracking:
 	CanFrameStats mCanFrameStats;
+	// Check blacklist:
+	std::vector<int> blacklistIds = parseBlacklist(blacklistString);
+	std::cout << "Blacklist size: " << blacklistIds.size() << std::endl;
+	for (std::vector<int>::iterator it = blacklistIds.begin(); it != blacklistIds.end(); it++) {
+		std::cout << " - " << *it << std::endl;
+		mCanFrameStats.addToBlacklistMessageId(*it);
+	}
+	
+	
 	UsbStats mUsbStats;
 	mCanFrameStats.start();
 	
