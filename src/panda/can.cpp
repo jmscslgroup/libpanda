@@ -122,6 +122,8 @@ void Can::saveToCsvFile(const char* filename) {
 	FILE* csvDumpTemp = fopen(filename, "w");
 	fprintf(csvDumpTemp, "Time,Bus,MessageID,Message,MessageLength\n");
 	this->csvDump = csvDumpTemp;
+	remove("/etc/libpanda.d/currentCan.csv");
+	symlink(filename,"/etc/libpanda.d/currentCan.csv");
 }
 
 void Can::setUsb( Panda::Usb* usbHandler ) {

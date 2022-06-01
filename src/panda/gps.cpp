@@ -58,6 +58,8 @@ void Gps::saveToCsvFile(const char* filename) {
 	FILE* csvDumpTemp = fopen(filename, "w");
 	fprintf(csvDumpTemp, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP,Systime\n");
 	this->csvDump = csvDumpTemp;
+	remove("/etc/libpanda.d/currentGps.csv");
+	symlink(filename,"/etc/libpanda.d/currentGps.csv");
 }
 void Gps::writeCsvToFile(GpsData& state) {
 	if (csvDump) {
