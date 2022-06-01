@@ -190,12 +190,16 @@ int main(int argc, char **argv) {
 
 	if (gpsFilename != NULL) {
 		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+		remove("/etc/libpanda.d/currentGpsData.csv");
+		symlink(gpsFilename,"/etc/libpanda.d/currentGpsData.csv");
 	}
 	if (nmeaFilename != NULL) {
 		pandaHandler.getGps().saveToFile(nmeaFilename);
 	}
 	if (canCsvFilename != NULL) {
 		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
+		remove("/etc/libpanda.d/currentCanData.csv");
+		symlink(canCsvFilename,"/etc/libpanda.d/currentCanData.csv");
 	}
 	if (canRawFilename != NULL) {
 		pandaHandler.getCan().saveToFile(canRawFilename);
