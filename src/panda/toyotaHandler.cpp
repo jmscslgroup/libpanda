@@ -72,8 +72,8 @@ ToyotaHandler::ToyotaHandler() {
 	brake_pressed = false;
 	
 	// Start the heartbeats to wait for a command
-	heartBeatSteer = TOYOTA_COMMAND_THREAD_RATE;
-	heartBeatAcceleration = TOYOTA_COMMAND_THREAD_RATE;
+//	heartBeatSteer = TOYOTA_COMMAND_THREAD_RATE;
+//	heartBeatAcceleration = TOYOTA_COMMAND_THREAD_RATE;
 	
 	this->setIntervalActionRate(TOYOTA_COMMAND_THREAD_RATE);
 	
@@ -186,32 +186,6 @@ bool ToyotaHandler::checkControlsAllowed(CanFrame* canFrame) {
 
 //void ToyotaHandler::doAction() {
 void ToyotaHandler::intervalAction() {
-//	usleep(1000000.0/TOYOTA_COMMAND_THREAD_RATE);	// run at 600 Hz
-	
-//	auto start = std::chrono::high_resolution_clock::now();
-	
-	// We cannot have integer rollovers here at anytime, so only increase if not already failed
-	if(heartbeatSteeringPass()) {
-		heartBeatSteer++;
-	}
-	if (heartbeatAccelerationPass()) {
-		heartBeatAcceleration++;
-	}
-
-//	if (decimatorHeartbeat++ >= TOYOTA_DECIMATOR_MAX_HEARTBEAT) {	// 1Hz
-//		decimatorHeartbeat = 0;
-//		sendHeartBeat();
-//	}
-	
-//	if (decimatorControlsAllowed++ >= TOYOTA_DECIMATOR_MAX_CA_REPORT) {
-//		decimatorControlsAllowed = 0;
-//		for (std::vector<ToyotaListener*>::iterator it = toyotaObservers.begin();
-//			 it != toyotaObservers.end();
-//			 it++) {
-////			(*it)->newPandaHealthNotification(health);
-//			(*it)->newControlNotification(this);
-//		}
-//	}
 
 	if (hudTwoBeeps) {
 		decimatorLka += 20;	//  increase rate to ensure HUD responds
@@ -235,54 +209,9 @@ void ToyotaHandler::intervalAction() {
 		decimatorAcc = 0;
 		sendAcc();
 	}
-	
-//	auto end = std::chrono::high_resolution_clock::now();
-//	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-//	int durationInMicroseconds = duration.count();
-//
-//	int microsecondsToSleep = (1000000.0/TOYOTA_COMMAND_THREAD_RATE) - durationInMicroseconds;
-//
-//	if (microsecondsToSleep < 0) {
-//		fprintf(stderr, "WARNING! ToyotaHandler::doAction() execution time is too long.  Duration: %d us\n", durationInMicroseconds );
-//		microsecondsToSleep = 0;
-//	} else if ( microsecondsToSleep >= (1000000.0/TOYOTA_COMMAND_THREAD_RATE)) {
-//		microsecondsToSleep = 1000000.0/TOYOTA_COMMAND_THREAD_RATE;
-//	}
-//
-//	usleep(microsecondsToSleep);	// run at 600 Hz
+
 }
 
-bool ToyotaHandler::heartbeatSteeringPass() {
-	return heartBeatSteer < (TOYOTA_COMMAND_THREAD_RATE * TIME_HEARTBEAT_FAIL_STEERING);
-}
-bool ToyotaHandler::heartbeatAccelerationPass() {
-	return heartBeatAcceleration < (TOYOTA_COMMAND_THREAD_RATE * TIME_HEARTBEAT_FAIL_ACCELERATION);
-}
-
-//void ToyotaHandler::sendHeartBeat() {
-////	std::cout << "In ToyotaHandler::sendHeartBeat()" << std::endl;
-//	pandaHandler->getUsb().sendHeartBeat();
-//
-//	// Libpanda should probably automatically do the following:
-//	pandaHandler->getUsb().getHealth(&health);	// this should live in Panda::PandaHandler
-////	if (health.controls_allowed) {
-////		if(!controls_allowed_prior) {
-////			controls_allowed = true;
-////		}
-////	} else {
-////
-////		controls_allowed = false;
-////	}
-//
-////	controls_allowed_prior = health.controls_allowed;
-//
-//	for (std::vector<ToyotaListener*>::iterator it = toyotaObservers.begin();
-//		 it != toyotaObservers.end();
-//		 it++) {
-//		(*it)->newPandaHealthNotification(health);
-//		//(*it)->newControlNotification(this);
-//	}
-//}
 
 void ToyotaHandler::sendLka() {
 //	Panda::CanFrame frame = buildLdaAlert(hudLdaAlert || !heartbeatSteeringPass(), hudLeftLane, hudRightLane, hudBarrier);
@@ -432,9 +361,9 @@ void ToyotaHandler::setHudMiniCar( bool enable ) {
 /* The comma.ai panda code has the following limits for steeerTorque:
 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
  */
-void ToyotaHandler::setSteerTorque( int steerTorque ) {	// units are unknown, valid range is -1500:1500
+void ToyotaHandler::handleSetSteerTorque( int steerTorque ) {	// units are unknown, valid range is -1500:1500
 	this->steerTorqueControl = steerTorque;
-	heartBeatSteer = 0;
+//	heartBeatSteer = 0;
 }
 
 /* The comma.ai panda code has the following limits for acceleration:
@@ -446,9 +375,9 @@ const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
 
  DBC range states: -20:20
  */
-void ToyotaHandler::setAcceleration( double acceleration ) {	// units are m/s2, valid range is -3.0:1.5
+void ToyotaHandler::handleSetAcceleration( double acceleration ) {	// units are m/s2, valid range is -3.0:1.5
 	this->accelerationControl = acceleration;
-	heartBeatAcceleration = 0;
+//	heartBeatAcceleration = 0;
 }
 
 //bool ToyotaHandler::getIgnitionOn() {

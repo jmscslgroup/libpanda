@@ -11,6 +11,8 @@
 #include "panda.h"
 
 #define PANDA_RATE_HEARTBEAT (2.0)	// Hz
+#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
+#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
 #define CONTROLLER_RATE_CA_REPORT (1.0)	// This is for notifications of controls_allowed
 
@@ -42,6 +44,9 @@ private:
 	int decimatorTotalControlsAllowed;
 	int decimatorControlsAllowedCounter;
 	
+	int heartBeatSteer;
+	int heartBeatAcceleration;
+	
 	// Overloaded from Mogi::Thread.
 	// This will enable the required power save mode for vehicle control.
 	void entryAction();
@@ -62,6 +67,8 @@ protected:
 	
 	void sendHeartBeat();
 	
+	bool heartbeatSteeringPass();
+	bool heartbeatAccelerationPass();
 	
 	// This will get called at regular intervals
 	// Overlaod this, then decimate for CAN message generation
@@ -71,6 +78,11 @@ protected:
 	
 	// For use within intervalAction()
 	void sendCan(CanFrame& frame);
+	
+	
+	virtual void handleSetSteerTorque( int steerTorque ) = 0;
+	
+	virtual void handleSetAcceleration( double acceleration ) = 0;
 	
 public:
 	virtual ~Controller() = 0;
@@ -93,13 +105,13 @@ public:
 	 \brief Sends a steering torque to the steering wheel, if supported.
 	 \param steerTorque The steering torque to be sent.
 	 */
-	virtual void setSteerTorque( int steerTorque ) {};
+	void setSteerTorque( int steerTorque );
 	
 	/*!
 	 \brief Sends acceleration to the cruise controller, in units of m/s^2 (if supported)
 	 \param acceleration The acceleration to be sent. Units are m/s^2.
 	 */
-	virtual void setAcceleration( double acceleration ) {};
+	void setAcceleration( double acceleration );
 	
 	
 	Panda::Handler* getPandaHandler();

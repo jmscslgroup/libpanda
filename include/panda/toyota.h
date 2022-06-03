@@ -32,8 +32,8 @@
 #include "panda.h"
 #include "panda/controller.h"
 
-#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
-#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
+//#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
+//#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
 #define TOYOTA_COMMAND_THREAD_RATE (200.0)	// Defines the rate of the thread, not for any particular command to be sent.
 //#define TOYOTA_RATE_HEARTBEAT (2.0)			// This is for the panda in general, not Toyota specific
@@ -43,7 +43,7 @@
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
 #define TOYOTA_RATE_ACC (30.0)				// Rate of the ACC_CONTROL command
 
-#define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
+//#define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
 //#define TOYOTA_DECIMATOR_MAX_CA_REPORT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_CA_REPORT)
 #define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
 #define TOYOTA_DECIMATOR_MAX_TRACK_B (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_TRACK_B)
@@ -202,8 +202,8 @@ private:
 	// These will pass if a command was sent within the corresponding defined times:
 	// TIME_HEARTBEAT_FAIL_STEERING
 	// TIME_HEARTBEAT_FAIL_ACCELERATION
-	bool heartbeatSteeringPass();
-	bool heartbeatAccelerationPass();
+//	bool heartbeatSteeringPass();
+//	bool heartbeatAccelerationPass();
 	
 //	Panda::Handler* pandaHandler;
 //	PandaHealth health;
@@ -244,8 +244,8 @@ private:
 	int cancelRequestSpamCount;
 	
 	// Safety management, only send control commands if they are continuously updated
-	int heartBeatSteer;
-	int heartBeatAcceleration;
+//	int heartBeatSteer;
+//	int heartBeatAcceleration;
 	
 	// These are read directly from teh CAN bus:
 	bool gas_released; // message ID 466

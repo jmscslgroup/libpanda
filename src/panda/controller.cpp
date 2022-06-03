@@ -64,6 +64,13 @@ void Controller::sendHeartBeat() {
 	}
 }
 
+bool Controller::heartbeatSteeringPass() {
+	return heartBeatSteer < (intervalActionRate * TIME_HEARTBEAT_FAIL_STEERING);
+}
+bool Controller::heartbeatAccelerationPass() {
+	return heartBeatAcceleration < (intervalActionRate * TIME_HEARTBEAT_FAIL_ACCELERATION);
+}
+
 void Controller::addObserver( ControllerListener* observer ) {
 	controllerObservers.push_back(observer);
 }
@@ -84,6 +91,17 @@ void Controller::newDataNotification(CanFrame* canFrame) {
 
 bool Controller::getControlsAllowed() {
 	return controls_allowed;
+}
+
+
+void Controller::setSteerTorque( int steerTorque ) {
+	heartBeatSteer = 0;
+	handleSetSteerTorque(steerTorque);
+}
+
+void Controller::setAcceleration( double acceleration ) {
+	heartBeatAcceleration = 0;
+	handleSetAcceleration(acceleration);
 }
 
 
@@ -123,6 +141,13 @@ void Controller::doAction() {
 	// Sample start time
 	auto start = std::chrono::high_resolution_clock::now();
 	
+	if(heartbeatSteeringPass()) {
+		heartBeatSteer++;
+	}
+	if (heartbeatAccelerationPass()) {
+		heartBeatAcceleration++;
+	}
+	
 	if (decimatorControlsAllowedCounter++ >= decimatorTotalControlsAllowed) {
 		decimatorControlsAllowedCounter = 0;
 		for (std::vector<ControllerListener*>::iterator it = controllerObservers.begin();
@@ -156,6 +181,9 @@ void Controller::doAction() {
 
 void Controller::setIntervalActionRate( double rate ) {
 	this->intervalActionRate = rate;
+	
+	heartBeatSteer = rate;	// produces a 1-second heartbeat
+	heartBeatAcceleration = rate;
 	
 	decimatorTotalControlsAllowed = intervalActionRate/CONTROLLER_RATE_CA_REPORT;
 }
