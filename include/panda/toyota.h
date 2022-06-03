@@ -269,6 +269,36 @@ protected:
 	 \brief Construction must be done with a Panda::Handler
 	 */
 	ToyotaHandler();
+	
+	/*!
+	 \brief Sends a steering torque to the steering wheel (non-working).
+	 \par
+	 The comma.ai panda code has the following limits for steerTorque:
+	 \par
+	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
+	 */
+	void handleSetSteerTorque( int steerTorque );
+	
+	/*!
+	 \brief Sends acceleration to the cruise controller, in units of m/s^2
+	 \par
+	 The comma.ai panda code has the following limits for acceleration:
+	 \par
+	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
+	 \par
+	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
+	 \par
+	  The following limits can be achieved by setting the panda into "unsafe" mode:
+	 \par
+	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
+	 \par
+	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
+	 \par
+	 The DBC file however has a different supported range of -20:20
+	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
+	 */
+	void handleSetAcceleration( double acceleration );
 public:
 	
 	
@@ -327,35 +357,7 @@ public:
 	 */
 	void setHudCruiseCancelRequest( bool enable );
 	
-	/*!
-	 \brief Sends a steering torque to the steering wheel (non-working).
-	 \par
-	 The comma.ai panda code has the following limits for steerTorque:
-	 \par
-	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
-	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
-	 */
-	void setSteerTorque( int steerTorque );
 	
-	/*!
-	 \brief Sends acceleration to the cruise controller, in units of m/s^2
-	 \par
-	 The comma.ai panda code has the following limits for acceleration:
-	 \par
-	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
-	 \par
-	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
-	 \par
-	  The following limits can be achieved by setting the panda into "unsafe" mode:
-	 \par
-	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
-	 \par
-	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
-	 \par
-	 The DBC file however has a different supported range of -20:20
-	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
-	 */
-	void setAcceleration( double acceleration );
 	
 	/*!
 	 \brief Returns the Panda report for whether the ignition is on (line).

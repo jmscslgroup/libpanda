@@ -14,6 +14,14 @@ void NissanController::intervalAction() {
 	
 }
 
+void NissanController::handleSetSteerTorque( int steerTorque ) {
+	
+}
+
+void NissanController::handleSetAcceleration( double acceleration ) {
+	
+}
+
 bool NissanController::checkControlsAllowed(Panda::CanFrame* frame) {
 	return false;
 }

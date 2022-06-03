@@ -23,6 +23,11 @@ private:
 	// Overloaded from Panda::controller
 	bool checkControlsAllowed(Panda::CanFrame* frame);
 	
+
+	void handleSetSteerTorque( int steerTorque );
+	
+	void handleSetAcceleration( double acceleration );
+	
 protected:
 	NissanController();
 };
