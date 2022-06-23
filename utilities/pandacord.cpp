@@ -200,6 +200,8 @@ int main(int argc, char **argv) {
 	if (canRawFilename != NULL) {
 		pandaHandler.getCan().saveToFile(canRawFilename);
 	}
+	
+	pandaHandler.getUsb().setGmlanOrObdCanMode(0x00);	// 1 will set the Panda to CAN_MODE_OBD_CAN2, otherwise CAN_MODE_NORMAL
 
 	std::cout << "Time is synced with GPS!" << std::endl;
 	std::cout << std::endl << "Press ctrl-c to exit" << std::endl;

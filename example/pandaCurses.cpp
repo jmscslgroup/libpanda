@@ -240,6 +240,9 @@ int main(int argc, char **argv) {
 	
 	pandaHandler.initialize();
 	
+	
+	pandaHandler.getUsb().setGmlanOrObdCanMode(0x00);	// 1 will set the Panda to CAN_MODE_OBD_CAN2, otherwise CAN_MODE_NORMAL
+	
 	// faking can data for debugging, if enabled
 	Panda::CanFrame newFrame;
 	int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0;
