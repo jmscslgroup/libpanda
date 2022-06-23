@@ -16,7 +16,7 @@ cd panda/board
 ./get_sdk.sh
 cd ..
 scons -j4
-cd ../..
+cd ..
 echo "Panda firmware version:"
 cat panda/board/obj/version
 echo ""
