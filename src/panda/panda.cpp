@@ -62,12 +62,35 @@ void Handler::initialize() {
 	mCan.startParsing();
 	
 	requestVin();
+	
+	if (getVehicleManufacturer() == VEHICLE_MANUFACTURE_NISSAN &&
+		mUsb.getHardware() == HARDWARE_RED_PANDA) {
+		
+		std::cout << "This is a RED Panda on a Nissan, adjusting CAN:" << std::endl;
+		std::cout << "  |- Multiplexing CAN bus 1 from OBD to Harness CAN 1" << std::endl;
+		mUsb.setGmlanOrObdCanMode(0x00);	// 1 will set the Panda to CAN_MODE_OBD_CAN2, otherwise CAN_MODE_NORMAL
+		std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
+		mUsb.setCanFdBaud(0, 20000);
+		std::cout << "  |- Setting baudrate of bus 1 to CAN FD speeds" << std::endl;
+		mUsb.setCanFdBaud(1, 20000);
+		std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
+		mUsb.setCanFdBaud(2, 20000);
+	}
 }
 
 void Handler::requestVin() {
+	mUsb.sendHeartBeat();
 	// Read the VIN here:
 	usleep(200000);
 	std::cout << " - Attempting to read the VIN:" << std::endl;
+	std::cout << " - Setting Safety to ELM327:" << std::endl;
+	 mUsb.setSafetyMode(SAFETY_ELM327, 0);	// OBD II port
+//	std::cout << "  |- Multiplexing CAN bus 1 to OBD connector" << std::endl;
+	
+	   mUsb.setGmlanOrObdCanMode(0x01);	// 1 will set the Panda to CAN_MODE_OBD_CAN2, otherwise CAN_MODE_NORMAL
+	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
+	mUsb.setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+	usleep(100000);
 	
 	int vinAttempts = 0;
 	bool extended = true;	// HACK
@@ -117,6 +140,7 @@ void Handler::requestVin() {
 		}
 		
 	}
+	
 	
 	std::cout << " - Setting Safety to SAFETY_NOOUTPUT:" << std::endl;
 	mUsb.setSafetyMode(SAFETY_NOOUTPUT, 0);	// OBD II port

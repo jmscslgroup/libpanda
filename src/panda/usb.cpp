@@ -151,13 +151,23 @@ void Usb::initialize() {
 	// Void function:
 	libusb_free_device_list(devices, 1);
 	
+	
+	PandaHealth healthPacket;
+	getHealth(&healthPacket);
+	
+	std::cout << " - Current Panda Health:" << std::endl;
+	printPandaHealth(healthPacket);
+	
+
+	
 //	std::cout << " - Setting power mode to POWER_SAVE_STATUS_DISABLED:" << std::endl;
 //	setPowerSaveEnable(POWER_SAVE_STATUS_DISABLED);
+//	setPowerSaveEnable(POWER_SAVE_STATUS_ENABLED);
 
-	std::cout << " - Setting Safety to ELM327:" << std::endl;
-//	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
-//	std::cout << " - Setting Safety elm327:" << std::endl;
-	setSafetyMode(SAFETY_ELM327, 0);	// OBD II port
+//	std::cout << " - Setting Safety to ELM327:" << std::endl;
+////	setSafetyMode(SAFETY_TOYOTA);	// OBD II port
+////	std::cout << " - Setting Safety elm327:" << std::endl;
+//	setSafetyMode(SAFETY_ELM327, 0);	// OBD II port
 //		std::cout << " - Setting Safety ALL_OUTPUT:" << std::endl;
  //	setSafetyMode(SAFETY_ALLOUTPUT);	// OBD II port
 //
@@ -197,10 +207,17 @@ void Usb::initialize() {
 		case HARDWARE_RED_PANDA:
 			hasGps = false;
 			std::cout << " |-- This is a RED PANDA, no built-in GPS" << std::endl;
-			std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
-			setCanFdBaud(0, 20000);
-			std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
-			setCanFdBaud(2, 20000);
+			std::cout << " |-- CAN Bus FD information (only valid on Red Panda):" << std::endl;
+			bool fdEnabled, brsEnabled;
+			for (int i = 0; i < 3; i++) {
+				getCanFdEnabled(i, &fdEnabled, &brsEnabled);
+				std::cout << " |---- Bus " << i << " FD is " << (fdEnabled ? " ENABLED" : "DISABLED") << " BRS is " << (brsEnabled ? " ENABLED" : "DISABLED") << " - Setting Baud to 500kbs" << std::endl;
+				setCanFdBaud(i, 500);
+			}
+//			std::cout << "  |- Setting baudrate of bus 0 to CAN FD speeds" << std::endl;
+//			setCanFdBaud(0, 20000);
+//			std::cout << "  |- Setting baudrate of bus 2 to CAN FD speeds" << std::endl;
+//			setCanFdBaud(2, 20000);
 			
 			break;
 

@@ -74,9 +74,9 @@ void ObdPidRequest::request( unsigned char mode, unsigned char pid, bool extende
 	vinRequest.bus = 1;
 	// Following https://m0agx.eu/2017/12/27/reading-obd2-data-without-elm327-part-1-can/
 	if (extended) {
-		vinRequest.messageID = 0x18DB33F1;
+		vinRequest.messageID = 0x18DB33F1; // AKA 417018865
 	} else {
-		vinRequest.messageID = 0x7DF;	// broadcast message
+		vinRequest.messageID = 0x7DF;	// broadcast message aka 2015
 	}
 	vinRequest.data[0] = 0x02;	// designates length, unsure if this is a sub-protocol of the data
 	vinRequest.data[1] = mode;	// Mode
@@ -301,7 +301,22 @@ void ObdPidRequest::doAction() {
 
 void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 	// Useful table of responses here: https://community.carloop.io/t/handling-29-bit-extended-format/239/16
-	
+	if ( canFrame->rejected &&
+		(canFrame->bus & ~CAN_MESSAGE_REJECT) == 1) {
+		std::cout << "ObdPidRequest::newDataNotification(): Request was rejected by panda: " << (int)canFrame->bus << std::endl;
+		std::cout << "                                    : messageID: " << (int)canFrame->messageID << std::endl;
+		std::cout << "                                    : dataLength: " << (int)canFrame->dataLength << std::endl;
+		return;
+	}
+	if ( canFrame->returned &&
+		(canFrame->bus & ~CAN_MESSAGE_RETURNED) == 1) {
+		// We should expect to get here, since "returned" is effectively a confirmaiton of a sent message
+		// This also means there is nothing to do
+//		std::cout << "ObdPidRequest::newDataNotification() Request was returned by panda: " << (int)canFrame->bus << std::endl;
+//		std::cout << "                                    : messageID: " << (int)canFrame->messageID << std::endl;
+//		std::cout << "                                    : dataLength: " << (int)canFrame->dataLength << std::endl;
+		return;
+	}
 	if (canFrame->messageID <= 0x0800) {	// 11-bit address
 		if ( (assignedId == (canFrame->messageID - 8)) || // in 11-bit, this "-8" regards addressing handshcke between the ECU and external device
 			(assignedId == -1 &&
@@ -315,7 +330,7 @@ void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 			
 			resume();
 		} else {
-//			std::cout << "Looks like we got something uninteresting?" << std::endl;
+			std::cout << "Looks like we got something uninteresting?" << std::endl;
 		}
 	} else {	// 29-bit address
 		if ( (canFrame->messageID & ~OBD_PID_EXTENDED_ID_MASK) == OBD_PID_EXTENDED_RESPONSE  &&	// all 29-bit pid request should follow this
@@ -331,7 +346,7 @@ void ObdPidRequest::newDataNotification( CanFrame* canFrame ) {
 			
 			resume();
 		} else {
-//			std::cout << "Looks like we got something uninteresting?" << std::endl;
+			std::cout << "Looks like we got something uninteresting?" << std::endl;
 		}
 	}
 }

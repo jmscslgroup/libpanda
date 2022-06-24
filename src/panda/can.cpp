@@ -104,11 +104,11 @@ void Can::initialize() {
 	unsigned char healthVersion;
 	unsigned char canVersion;
 	usbHandler->getHealthAndCanVersions(&healthVersion, &canVersion);
-	std::cout << " --- Panda CAN Version: " << (int)canVersion << std::endl;
+	std::cout << " --- Panda CAN Version: " << (int)canVersion <<  " Health version: " << (int)healthVersion << std::endl;
 	this->pandaCanVersion = canVersion;
 	
 	std::cout << " - Purging ring buffers" << std::endl;
-	usbHandler->canPurge();
+//	usbHandler->canPurge();
 	
 	
 	std::cout << " - CAN Done." << std::endl;
@@ -410,10 +410,12 @@ CanFrame Panda::bufferToCanFrame(char* buffer, int bufferLength, int pandaCanVer
 		memcpy(canFrame.data, &buffer[0 + PANDA_CAN_PACKET_HEAD_SIZE], canFrame.dataLength);
 		
 		if (canFrame.returned) {
-			canFrame.bus += 128;
+//			canFrame.bus += 128;
+			canFrame.bus |= CAN_MESSAGE_RETURNED;
 		}
 		if (canFrame.rejected) {
-			canFrame.bus += 192;
+//			canFrame.bus += 192;
+			canFrame.bus |= CAN_MESSAGE_REJECT;
 		}
 		//}
 #ifdef CAN_VERBOSE

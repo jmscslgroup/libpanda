@@ -26,6 +26,9 @@
 #ifndef PANDA_DEFINITIONS_H
 #define PANDA_DEFINITIONS_H
 
+#define CAN_MESSAGE_REJECT (192)
+#define CAN_MESSAGE_RETURNED (128)
+
 #define CAN_DEVICE_RX (0xFFFF)	// for clearing CAN ring buffer
 #define CAN_DEVICE_TX_1 (0x0000)	// for clearing CAN ring buffer
 #define CAN_DEVICE_TX_2 (0x0001)	// for clearing CAN ring buffer

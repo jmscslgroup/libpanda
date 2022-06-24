@@ -145,7 +145,7 @@ namespace Panda {
 		void getHealthAndCanVersions( unsigned char* healthVersion, unsigned char* canVersion); // Determines struct types
 		
 		void setCanBitrate(  int bus, int baud );       // Maybe not for CAN FD
-		void setAlternativeExperience( int alternativeExperience );  // no idea
+		void setAlternativeExperience( int alternativeExperience );  // no idea (unsafe mode)
 		
 		void requestUartData(); // This really shouldn't be a control transfer, but I've thrown it into the asynch mix anyway
 		void setUartBaud(int uart, int baud);           //  This fits higher bauds by dividing baud request by 300 to fit within uint16_t

@@ -156,6 +156,19 @@ if(${CURSES_FOUND})
                                         cursesgfx )
 endif()
 
+add_executable(nissanTest	example/nissanTest.cpp
+				example/device.h
+				example/deviceTypes.h
+				example/joystick.cpp
+				example/joystickState.cpp
+				example/joystickState.h
+				example/device.cpp
+				example/mouse.cpp )
+target_link_libraries(nissanTest	${LIBS}
+									${LIBNAME}
+									mogithread
+									NMEAParserLib )
+									
 add_executable(simpleSend	example/simpleSend.cpp
 				example/device.h
 				example/deviceTypes.h
