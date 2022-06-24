@@ -614,6 +614,9 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			case SORT_UNIQUE_DATA_COUNT:
 				canFrameStats.highlightUniqueCount(valueToHighlight);
 				break;
+			case SORT_ID_BUS:
+				canFrameStats.highlightBus(valueToHighlight);
+				break;
 			default:
 				break;
 		}
@@ -681,9 +684,15 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	} else {
 		snprintf(formatStringMsgId, 16, "%%%dd", msgIdLength);
 	}
+	
+	const char msgBus[] = "Bus:";
+	int msgBusCol = msgIdCol + msgIdLength + 3;
+	int msgBusLength = strlen(msgBus);
+	char formatStringMsgBus[16];
+	snprintf(formatStringMsgBus, 16, "%%%dd", msgBusLength);
 
 	const char msgCnt[] = "Count:";
-	int msgCntCol = msgIdCol + msgIdLength + 3;
+	int msgCntCol = msgBusCol + msgBusLength + 3;
 	int msgCntLength = strlen(msgCnt);
 	char formatStringMsgCnt[16];
 	snprintf(formatStringMsgCnt, 16, "%%%dd", msgCntLength);
@@ -716,15 +725,29 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgIdCol, msgId);
 			attroff(A_STANDOUT);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = msgIdCol + msgIdLength;
 			break;
+		case SORT_ID_BUS:
+			canFrameStats.sortByBus();
+			mvprintw(titleRow, msgIdCol, msgId);
+			attron(A_STANDOUT);
+			mvprintw(titleRow, msgBusCol, msgBus);
+			attroff(A_STANDOUT);
+			mvprintw(titleRow, msgCntCol, msgCnt);
+			mvprintw(titleRow, msgRateCol, msgRate);
+			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
+			reverseColumn = msgBusCol + msgBusLength;
+			break;
 		case SORT_ID_COUNT:
 			canFrameStats.sortByIdCount();
 			mvprintw(titleRow, msgIdCol, msgId);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			attroff(A_STANDOUT);
@@ -737,6 +760,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			canFrameStats.sortByIdRate();
 			mvprintw(titleRow, msgIdCol, msgId);
 			mvprintw(titleRow, msgCntCol, msgCnt);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			attroff(A_STANDOUT);
@@ -749,6 +773,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			mvprintw(titleRow, msgIdCol, msgId);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			mvprintw(titleRow, msgRateCol, msgRate);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			attroff(A_STANDOUT);
@@ -779,6 +804,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
+			mvprintw(row, msgBusCol, formatStringMsgBus, idStats->bus);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
@@ -813,6 +839,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
+			mvprintw(row, msgBusCol, formatStringMsgBus, idStats->bus);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
@@ -905,6 +932,14 @@ char CursesHandler::getUserInput( )
 				reverseSortEnable = !reverseSortEnable;
 			}
 			canSortMode = SORT_UNIQUE_DATA_COUNT;
+			break;
+			
+		case 'b':
+		case 'B':
+			if (canSortMode == SORT_ID_BUS) {
+				reverseSortEnable = !reverseSortEnable;
+			}
+			canSortMode = SORT_ID_BUS;
 			break;
 			
 		case 'x':

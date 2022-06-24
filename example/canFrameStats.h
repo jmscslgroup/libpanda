@@ -43,6 +43,7 @@ typedef struct _DataInfo {
 typedef struct _IdInfo {
 	int count = 0;	// total messages sent with this message ID
 	int ID = -1;
+	char bus;
 	double priorTime = 0;
 	double currentRate = 1;
 	bool highlight = false;
@@ -68,6 +69,7 @@ public:
 	void sortByIdCount();
 	void sortByIdRate();
 	void sortByUniqueMessageCount();
+	void sortByBus();
 
 
 	void resetUniqueCount();
@@ -75,6 +77,7 @@ public:
 	void highlightMessageId(int idToHighlight);
 	void highlightCount(int countToHighlight);
 	void highlightRate(int rateToHighlight);
+	void highlightBus(char busToHighlight);
 
 	void newDataNotification(Panda::CanFrame* canFrame);
 
