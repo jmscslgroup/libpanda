@@ -10,20 +10,7 @@ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 git submodule init
 git submodule update
 
-echo "=================================="
-echo "Installing Panda Firmware SDK"
-cd panda/board
-./get_sdk.sh
-cd ..
-scons -j4
-cd ..
-echo "Panda firmware version:"
-cat panda/board/obj/version
-echo ""
-echo "Done installing Panda Firmware SDK"
-echo "=================================="
-
-declare -a depencencies=( bmon )
+declare -a depencencies=( bmon scons )
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -42,6 +29,21 @@ then
 	sudo apt-get update
 	sudo apt-get install -y ${toInstall[@]}
 fi
+
+echo "=================================="
+echo "Installing Panda Firmware SDK"
+cd panda/board
+./get_sdk.sh
+cd ..
+scons -j4
+cd ..
+echo "Panda firmware version:"
+cat panda/board/obj/version
+echo ""
+echo "Done installing Panda Firmware SDK"
+echo "=================================="
+
+
 
 if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
