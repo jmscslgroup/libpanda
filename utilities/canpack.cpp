@@ -3,6 +3,22 @@
 #include "panda.h"
 #include "panda/vin.h"
 
+
+#include "panda/nissan.h"
+
+void printCanFrame(Panda::CanFrame& frame) {
+	fprintf(stderr, " - Message ID: %04x\n", frame.messageID);
+	fprintf(stderr, " - BUS       : %d\n", frame.bus);
+	fprintf(stderr, " - Data Received: ");
+	
+	for (int i = 0; i < frame.dataLength; i++) {
+		fprintf(stderr, "0x%02x ", frame.data[i]);
+	}
+	fprintf(stderr, "\n");
+	
+}
+
+
 class CanPrint : public Panda::CanListener {
 public:
 	CanPrint() {};
@@ -234,6 +250,181 @@ int main(int argc, char **argv) {
 	
 	testCan.stopParsing();
 	std::cout << "Done." << std::endl;
+	
+	
+	
+	
+	
+	std::cout << "\n------------- Checking Nissan 303 -------------" << std::endl;
+	//	1350645 	1656362686.4646 	1.0000 	303.0000 	00012f07a160260d260f9600 	12.0000
+	//	1350674 	1656362686.4747 	1.0000 	303.0000 	00012f079070260d2a0f9e00 	12.0000
+	//	1350697 	1656362686.4850 	1.0000 	303.0000 	00012f07ba80260d420fae00 	12.0000
+	//	1350726 	1656362686.4949 	1.0000 	303.0000 	00012f07c090260d360fb400 	12.0000
+	//
+	//	torque = [841, 842, 848, 845]
+	//	that's starting at bit 59
+	//
+	//	s = [997, 999, 1003, 1005]
+	//	that's starting at bit 75
+	//	the actual speed value is about x/20
+	
+	
+	printf("Test data:2,303,00 01 2f 07 a1 60 26 0d 26 0f 96 00  << torque = 0xd24\n");
+	
+	frame = Panda::buildCanThreeOhThree(841, 997);
+	printf("Result   :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+//	printCanFrame(frame);
+	
+	frame.data[11] = 0x00;
+	frame.data[10] = 0x96;
+	frame.data[9] = 0x0f;
+	frame.data[8] = 0x26;
+	frame.data[7] = 0x0d;
+	frame.data[6] = 0x26;
+	frame.data[5] = 0x60;
+	frame.data[4] = 0xa1;
+	frame.data[3] = 0x07;
+	frame.data[2] = 0x2f;
+	frame.data[1] = 0x01;
+	frame.data[0] = 0x00;
+	
+	int speed, torque;
+	Panda::nissanParseThreeOhThree( frame, &torque, &speed  );
+	printf("torque = %d, speed = %d\n", torque, speed);
+	
+	Panda::replaceCanThreeOhThree(&frame, 841, 997);
+	printf("Replaced :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	Panda::replaceCanThreeOhThree(&frame, 842, 999);
+	printf("Replaced :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	
+	
+	
+	
+	
+	printf("\nTest data:2,303,00 01 2f 07 90 70 26 0d 2a 0f 9e 00  << torque = 0xd28\n");
+	
+	frame = Panda::buildCanThreeOhThree(842, 999);
+	printf("Result   :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	frame.data[11] = 0x00;
+	frame.data[10] = 0x9e;
+	frame.data[9] = 0x0f;
+	frame.data[8] = 0x2a;
+	frame.data[7] = 0x0d;
+	frame.data[6] = 0x26;
+	frame.data[5] = 0x70;
+	frame.data[4] = 0x90;
+	frame.data[3] = 0x07;
+	frame.data[2] = 0x2f;
+	frame.data[1] = 0x01;
+	frame.data[0] = 0x00;
+	Panda::nissanParseThreeOhThree( frame, &torque, &speed  );
+	printf("torque = %d, speed = %d\n", torque, speed);
+	
+	Panda::replaceCanThreeOhThree(&frame, 842, 999);
+	printf("Replaced :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	Panda::replaceCanThreeOhThree(&frame, 841, 997);
+	printf("Replaced :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	printf("\nTest data:2,303,00 01 2f 07 ba 80 26 0d 42 0f ae 00  << torque = 0xd40\n");
+	
+	frame = Panda::buildCanThreeOhThree(848, 1003);
+	printf("Result   :");
+//	printf("%d.%06d,", (unsigned int)frame.sysTime.tv_sec, (int)frame.sysTime.tv_usec);
+	//		for (int i = 0; i < bufLength; i++) {
+	//			fprintf(csvDump, "%02x", converted[i]);
+	//		}
+	
+	printf("%d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	Panda::nissanParseThreeOhThree( frame, &torque, &speed  );
+	printf("torque = %d, speed = %d\n", torque, speed);
+	
+	testCan.stopParsing();
+	std::cout << "Done." << std::endl;
+	
 	
 	return 0;
 }

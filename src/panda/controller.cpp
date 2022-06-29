@@ -14,6 +14,8 @@
 using namespace Panda;
 
 Controller::Controller( ) {
+	controls_allowed = false;
+	controls_allowed_prior = false;
 	pandaHandler = NULL;
 	
 	setIntervalActionRate(200);
@@ -77,6 +79,7 @@ void Controller::addObserver( ControllerListener* observer ) {
 
 
 void Controller::newDataNotification(CanFrame* canFrame) {
+//	printf("In Controller::newDataNotification()\n");
 	controls_allowed_prior = controls_allowed;
 	controls_allowed = checkControlsAllowed(canFrame);
 	
@@ -87,6 +90,9 @@ void Controller::newDataNotification(CanFrame* canFrame) {
 			(*it)->newControlNotification(this);
 		}
 	}
+	
+	newCanNotification(canFrame);
+	
 }
 
 bool Controller::getControlsAllowed() {

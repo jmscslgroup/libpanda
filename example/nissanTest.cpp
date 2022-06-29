@@ -16,14 +16,31 @@
 
 class ExampleControllerListener : public Panda::ControllerListener {
 private:
+	
+	
 	void newPandaHealthNotification(const PandaHealth& pandaHealth) {
-		Panda::printPandaHealth(pandaHealth);
+//		Panda::printPandaHealth(pandaHealth);
+		printf("Panda reports controls_allowed as: %d and safetyModel as %s\n", pandaHealth.controls_allowed, Panda::safetyModelToString(pandaHealth.safety_mode));
 	};
 	
 	
 	void newControlNotification(Panda::Controller* controller) {
-		std::cout << "ExampleControllerListener::newControlNotification() controls_allowed: " << controller->getControlsAllowed() << std::endl;
+		std::cout << "ExampleControllerListener::newControlNotification() controls_allowed: " << (int)controller->getControlsAllowed() << std::endl;
 	};
+	
+public:
+	
+};
+
+
+class ExampleCheckCanSendSuccess : public Panda::CanListener {
+	void newDataNotification(Panda::CanFrame* frame) {
+		if (frame->rejected) {
+			std::cout << "Found a rejected attempt to send CAN message:" << std::endl;
+		} else if (frame->returned) {
+			std::cout << "Success in sending CAN message with ID :" << std::endl;
+		}
+	}
 };
 
 
@@ -54,10 +71,13 @@ int main(int argc, char **argv) {
 	Panda::NissanController* controllerAsNissanController = NULL;
 	
 	
+//	ExampleCheckCanSendSuccess myExampleCheckCanSendSuccess;
+//	pandaHandler.getCan().addObserver(&myExampleCheckCanSendSuccess);
 //	pandaHandler.getCan().addObserver(&toyotaHandler);
 	
 	// Let's roll
 	pandaHandler.initialize();
+	
 	
 	// initialize gets the VIN, now we can build a controller:
 	Panda::ControllerClient* pandaController = new Panda::ControllerClient(pandaHandler);
@@ -89,12 +109,34 @@ int main(int argc, char **argv) {
 	}
 	
 	ExampleControllerListener myExampleControllerListener;
+//	myExampleControllerListener.controller = controllerAsNissanController;	// Hard coding
 	pandaController->getController()->addObserver(&myExampleControllerListener);
 	pandaController->getController()->start();
 	
 	
+	// More hardcoding:
+//	pandaHandler.getUsb().setSafetyMode(SAFETY_ALLOUTPUT, 0);
+	
 //	int printPandaHealthDecimator = 0;
 	
+	Panda::CanFrame frame;
+	frame.data[11] = 0x00;
+	frame.data[10] = 0x96;
+	frame.data[9] = 0x0f;
+	frame.data[8] = 0x26;
+	frame.data[7] = 0x0d;
+	frame.data[6] = 0x26;
+	frame.data[5] = 0x60;
+	frame.data[4] = 0xa1;
+	frame.data[3] = 0x07;
+	frame.data[2] = 0x2f;
+	frame.data[1] = 0x01;
+	frame.data[0] = 0x00;
+	frame.bus = 0;
+	frame.messageID = 303;
+	frame.dataLength = 12;
+	
+//	pandaHandler.getUsb().setSafetyMode(SAFETY_ALLOUTPUT, 1);
 	while(keepRunning) {
 		usleep(1000000.0/10.0);	// run at ~10 Hz
 
@@ -103,7 +145,10 @@ int main(int argc, char **argv) {
 			pandaController->getController()->setSteerTorque(0);
 		
 		
+
 		
+		// Fake a message:
+//		pandaController->getController()->newDataNotification(&frame);
 	}
 	
 	

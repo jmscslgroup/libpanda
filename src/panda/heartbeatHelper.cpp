@@ -16,6 +16,7 @@ void HeartbeatHelper::doAction() {
 	usleep(1000000.0/PANDA_RATE_HEARTBEAT);	// ~2 Hz
 	
 	if (mController != NULL) {
+		printf("Sending heartbeat...\n");
 		mController->sendHeartBeat();
 	}
 }

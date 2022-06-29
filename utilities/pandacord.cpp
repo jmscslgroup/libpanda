@@ -212,6 +212,7 @@ int main(int argc, char **argv) {
 	int gpsHeartbeat = 0;
 	while (keepRunning == true) {
 		// GPS status checking:
+		pandaHandler.getUsb().sendHeartBeat();
 		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
 			std::cerr << ".";
 			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;

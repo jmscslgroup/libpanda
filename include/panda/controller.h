@@ -56,8 +56,6 @@ private:
 	// This handles the constant updates.
 	void doAction();
 	
-	// Overload from Panda::CanListener
-	void newDataNotification(CanFrame* canFrame);
 	
 	
 protected:
@@ -83,6 +81,8 @@ protected:
 	virtual void handleSetSteerTorque( int steerTorque ) = 0;
 	
 	virtual void handleSetAcceleration( double acceleration ) = 0;
+	
+	virtual void newCanNotification(CanFrame* canFrame) {};
 	
 public:
 	virtual ~Controller() = 0;
@@ -115,6 +115,11 @@ public:
 	
 	
 	Panda::Handler* getPandaHandler();
+	
+	
+	// HACK HACK HACK
+	// Overload from Panda::CanListener
+	void newDataNotification(CanFrame* canFrame);
 };
 
 /*!
