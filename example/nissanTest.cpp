@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
 
 	// Initialize panda and toyota handlers
 	Panda::Handler pandaHandler;
+	pandaHandler.getCan().saveToCsvFile("nissanTest.csv");
 //	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
 //	Panda::ToyotaHandler toyotaHandler();
 	Panda::NissanController* controllerAsNissanController = NULL;

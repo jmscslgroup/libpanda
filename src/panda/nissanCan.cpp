@@ -102,7 +102,7 @@ void Panda::replaceCanThreeOhThree( CanFrame* frame, int WHEEL_TORQUE, int speed
 
 CanFrame Panda::buildCanThreeOhThree( int WHEEL_TORQUE, int speed ) {
 	CanFrame frame;
-	frame.bus = 2;	// This is with a custom connector
+	frame.bus = 0;	// This is with a custom connector
 	frame.busTime = 0;
 	frame.dataLength = 12;
 	frame.messageID = 303;

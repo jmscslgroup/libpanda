@@ -46,7 +46,7 @@ void NissanController::newCanNotification(CanFrame* canFrame) {
 		int torque, speed;
 		nissanParseThreeOhThree(*canFrame, &torque, &speed);
 		
-		if (canFrame->bus == 0 &&
+		if (canFrame->bus == 2 &&
 			canFrame->dataLength == 12) {
 			
 			std::cout << "Got a valid 303 on bus 0, length 12, with torque " << torque << " speed " << speed << " <- replacing with 0s for bus 2" << std::endl;
@@ -56,7 +56,7 @@ void NissanController::newCanNotification(CanFrame* canFrame) {
 			
 			// Replacing the torque and speed data with 0:
 			replaceCanThreeOhThree(&frameCopy, 0, 0);
-			frameCopy.bus = 2;
+			frameCopy.bus = 0;
 			
 			nissanParseThreeOhThree(frameCopy, &torque, &speed);
 //			std::cout << " - Created message 303 for bus 2, length 12, with torque " << torque << " speed " << speed << std::endl;
