@@ -64,12 +64,12 @@ void NissanController::newCanNotification(CanFrame* canFrame) {
 			sendCan(frameCopy);
 			
 		} else if (canFrame->rejected ) {
-			std::cout << " |- The attempt to send message 303 was REJECTED" << std::endl;
+			std::cout << " |- The attempt to send message 303 was REJECTED bus result: " << (int)canFrame->bus << std::endl;
 			
 		} else if (canFrame->returned) {
-			std::cout << " |- The attempt to send message 303 was SUCCESS" << std::endl;
+			std::cout << " |- The attempt to send message 303 was SUCCESS bus result: " << (int)canFrame->bus << " length:" << (int) canFrame->dataLength << std::endl;
 		} else {
-			std::cout << "Got a valid 303 on WRONG bus of " << (int)canFrame->bus << " with torque " << torque << " speed " << speed << std::endl;
+			std::cout << "Got a valid 303 on WRONG bus of " << (int)canFrame->bus << " length:" << (int) canFrame->dataLength << " with torque " << torque << " speed " << speed << std::endl;
 			
 		}
 	}
