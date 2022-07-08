@@ -73,8 +73,9 @@ private:
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] -[f] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
 	std::cout << "   -v          : Verbose mode" << std::endl;
+	std::cout << "   -f          : Forces Nissan VIN in configuration for Panda CAN FD" << std::endl;
 	std::cout << "   -u usbmode  : USB operating mode:" << std::endl;
 	std::cout << "                   a: Asynchronous" << std::endl;
 	std::cout << "                   s: Synchronous" << std::endl;
@@ -86,10 +87,12 @@ void printUsage(const char* binary) {
 }
 
 int verboseFlag = false;
+int forceNissan = false;
 
 static struct option long_options[] =
 {
 	{"verbose",    no_argument, &verboseFlag, 0},
+	{"forcenissan",    no_argument, &forceNissan, 0},
 	{"usbmode",    required_argument, NULL, 'u'},
 	{"gpsfile",    required_argument, NULL, 'g'},
 	{"gpscsvfile",    required_argument, NULL, 'n'},
@@ -113,7 +116,7 @@ int main(int argc, char **argv) {
 	const char* canCsvFilename = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:vf", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -127,6 +130,7 @@ int main(int argc, char **argv) {
 			case 'n':   nmeaFilename = optarg; break;
 			case 'c': canCsvFilename = optarg; break;
 			case 'r': canRawFilename = optarg; break;
+			case 'f':  forceNissan = true; break;
 			default:
 				printUsage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -161,7 +165,11 @@ int main(int argc, char **argv) {
 	pandaHandler.addGpsObserver(mGpsTracker);
 
 	// Let's roll
-	pandaHandler.initialize();
+	if (forceNissan) {
+		pandaHandler.initialize((const unsigned char*)"JN8AT3CB9MW240939");
+	} else {
+		pandaHandler.initialize();
+	}
 
 	writeToFileThenClose(filenameGpsStatus, "0\n");	// state 0: on but time not set
 

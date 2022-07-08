@@ -67,8 +67,9 @@ namespace Panda {
 		~Handler();
 
 		/*! \brief Start up USB, GPS, and decoding threads
+		 \param forceVin If supplied, uses the supplied string instead of reading the VIN throug the OBD port
 		 */
-		void initialize();
+		void initialize(const unsigned char* forceVin = NULL);
 
 		/*! \brief Stop USB, GPS, and decoding threads
 		 This should be called after initialize() when done with data collection.

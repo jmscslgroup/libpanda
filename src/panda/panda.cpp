@@ -52,7 +52,7 @@ Handler::~Handler() {
 	//stop();	// just to be safe
 }
 
-void Handler::initialize() {
+void Handler::initialize(const unsigned char* forceVin) {
 	mUsb.initialize();
 	mCan.initialize();
 	mGps.initialize();
@@ -61,7 +61,11 @@ void Handler::initialize() {
 	mGps.startParsing();
 	mCan.startParsing();
 	
-	requestVin();
+	if (forceVin == NULL) {
+		requestVin();
+	} else {
+		forceSetVin(forceVin);
+	}
 	
 	if (getVehicleManufacturer() == VEHICLE_MANUFACTURE_NISSAN &&
 		mUsb.getHardware() == HARDWARE_RED_PANDA) {
