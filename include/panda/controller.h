@@ -10,7 +10,7 @@
 
 #include "panda.h"
 
-#define PANDA_RATE_HEARTBEAT (2.0)	// Hz
+//#define PANDA_RATE_HEARTBEAT (2.0)	// Hz
 #define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 #define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
@@ -23,15 +23,15 @@ namespace Panda {
 
 class ControllerClient;
 class ControllerListener;
-class HeartbeatHelper;
+//class HeartbeatHelper;
 
-class Controller : public Mogi::Thread, public Panda::CanListener {
+class Controller : public Mogi::Thread, public Panda::CanListener, public Panda::HeartbeatHelperListener {
 	friend class ControllerClient;
-	friend class HeartbeatHelper;
+//	friend class HeartbeatHelper;
 	friend class ControllerListener;
 	
 private:
-	HeartbeatHelper* mHeartbeatHelper;
+//	HeartbeatHelper* mHeartbeatHelper;
 	Panda::Handler* pandaHandler;
 	
 	PandaHealth health;
@@ -56,6 +56,8 @@ private:
 	// This handles the constant updates.
 	void doAction();
 	
+	// Overload from Panda::HeartbeatHelperListener
+	void notificationHeartbeat(const PandaHealth& health);
 	
 	
 protected:
@@ -63,7 +65,7 @@ protected:
 	
 	static Controller* create( Panda::Handler& handler );
 	
-	void sendHeartBeat();
+//	void sendHeartBeat();
 	
 	bool heartbeatSteeringPass();
 	bool heartbeatAccelerationPass();
@@ -121,23 +123,26 @@ public:
 	// Overload from Panda::CanListener
 	void newDataNotification(CanFrame* canFrame);
 };
-
-/*!
- @class PandaHeartbeatHelper
- \brief A helper thread class for clearing
- \par
- Invokes messages in ToyotaHandler at an asynchronous rate
- */
-class HeartbeatHelper : public Mogi::Thread {
-private:
-	Controller* mController;
-	
-	void doAction();
-	
-public:
-	HeartbeatHelper(Controller* handler);
-	
-};
+//
+///*!
+// @class PandaHeartbeatHelper
+// \brief A helper thread class for clearing
+// \par
+// Invokes messages in ToyotaHandler at an asynchronous rate
+// */
+//class HeartbeatHelper : public Mogi::Thread {
+//private:
+////	Controller* mController;
+//	Handler* mHandler;
+//	
+//	void doAction();
+//	
+//public:
+////	HeartbeatHelper(Controller* handler);
+//	HeartbeatHelper(Handler* handler);
+//
+//	
+//};
 
 
 

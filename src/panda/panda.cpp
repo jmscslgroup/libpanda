@@ -46,14 +46,19 @@ Handler::Handler()
 	
 	mUsb.addObserver(&mCan);
 	mUsb.addObserver(&mGps);
+	
+	mHeartbeatHelper = new HeartbeatHelper(this);
 }
 
 Handler::~Handler() {
 	//stop();	// just to be safe
+	mHeartbeatHelper->stop();
+	delete mHeartbeatHelper;
 }
 
 void Handler::initialize(const unsigned char* forceVin) {
 	mUsb.initialize();
+	mHeartbeatHelper->start();
 	mCan.initialize();
 	mGps.initialize();
 
@@ -183,6 +188,10 @@ void Handler::addCanObserver(CanListener& can) {
 
 void Handler::addUsbObserver(UsbListener& usb) {
 	mUsb.addObserver(&usb);
+}
+
+void Handler::addHeartbeatObserver( HeartbeatHelperListener& heartbeatListener ) {
+	mHeartbeatHelper->addObserver(&heartbeatListener);
 }
 
 Gps& Handler::getGps() {

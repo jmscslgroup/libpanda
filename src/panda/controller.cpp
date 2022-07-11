@@ -21,13 +21,13 @@ Controller::Controller( ) {
 	setIntervalActionRate(200);
 	decimatorControlsAllowedCounter = 0;
 	
-	mHeartbeatHelper = new HeartbeatHelper(this);
-	mHeartbeatHelper->start();
+//	mHeartbeatHelper = new HeartbeatHelper(this);
+//	mHeartbeatHelper->start();
 }
 
 Controller::~Controller() {
-	mHeartbeatHelper->stop();
-	delete mHeartbeatHelper;
+//	mHeartbeatHelper->stop();
+//	delete mHeartbeatHelper;
 }
 
 Controller*  Controller::create( Panda::Handler& handler ) {
@@ -47,22 +47,31 @@ Controller*  Controller::create( Panda::Handler& handler ) {
 	if (result != NULL) {
 		result->pandaHandler = &handler;
 		result->pandaHandler->getCan().addObserver(result);
+		result->pandaHandler->addHeartbeatObserver(*result);
 	}
 	
 	return result;
 }
 
-void Controller::sendHeartBeat() {
-//	std::cout << "In Controller::sendHeartBeat()" << std::endl;
-	pandaHandler->getUsb().sendHeartBeat();
-	
-	pandaHandler->getUsb().getHealth(&health);	// this should live in Panda::PandaHandler
+//void Controller::sendHeartBeat() {
+////	std::cout << "In Controller::sendHeartBeat()" << std::endl;
+//	pandaHandler->getUsb().sendHeartBeat();
+//
+//	pandaHandler->getUsb().getHealth(&health);	// this should live in Panda::PandaHandler
+//
+//	for (std::vector<ControllerListener*>::iterator it = controllerObservers.begin();
+//		 it != controllerObservers.end();
+//		 it++) {
+//		(*it)->newPandaHealthNotification(health);
+//
+//	}
+//}
 
+void Controller::notificationHeartbeat(const PandaHealth& health) {
 	for (std::vector<ControllerListener*>::iterator it = controllerObservers.begin();
 		 it != controllerObservers.end();
 		 it++) {
 		(*it)->newPandaHealthNotification(health);
-
 	}
 }
 

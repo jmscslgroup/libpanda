@@ -69,6 +69,19 @@ private:
 };
 
 
+// A simple concrete instance of a GPS listener
+class SimpleHealthObserver : public Panda::HeartbeatHelperListener {
+private:
+	int notificationCount = 0;
+	void notificationHeartbeat(const PandaHealth& health)  {
+		notificationCount++;
+		if(notificationCount > 2) {
+			std::cerr << "h";
+			notificationCount = 0;
+		}
+	}
+};
+
 /*
  Argument setup
  */
@@ -150,6 +163,7 @@ int main(int argc, char **argv) {
 
 	SimpleCanObserver canObserver;
 	SimpleGpsObserver myGpsObserver;
+	SimpleHealthObserver mySimpleHealthObserver;
 
 	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
 	Panda::SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
@@ -163,6 +177,7 @@ int main(int argc, char **argv) {
 	pandaHandler.addGpsObserver(myGpsObserver);
 //	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 	pandaHandler.addGpsObserver(mGpsTracker);
+	pandaHandler.addHeartbeatObserver(mySimpleHealthObserver);
 
 	// Let's roll
 	if (forceNissan) {
@@ -215,6 +230,7 @@ int main(int argc, char **argv) {
 	std::cout << " - Each \'c\' represents 1000 CAN notifications received." << std::endl;
 	std::cout << " - Each \'.\' represents 100 NMEA messages received." << std::endl;
 	std::cout << " - Each \'g\' represents 10 GPS notifications received." << std::endl;
+	std::cout << " - Each \'h\' represents 2 Heartbeat/Health notifications received." << std::endl;
 
 	int priorCanCount = 0;
 	int gpsHeartbeat = 0;
