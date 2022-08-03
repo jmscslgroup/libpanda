@@ -196,6 +196,12 @@ target_link_libraries(pandaObd ${LIBS}
 									mogithread
 									NMEAParserLib)
 
+add_executable(buttonTest	example/buttonTest.cpp )
+target_link_libraries(buttonTest ${LIBS}
+									${LIBNAME}
+									mogithread
+									NMEAParserLib)
+
 add_subdirectory(utilities)
 
 
