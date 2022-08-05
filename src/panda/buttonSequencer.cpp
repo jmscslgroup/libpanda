@@ -51,45 +51,88 @@ unsigned int nissanButtonToDigitalPot( NissanButton& button ) {
 
 void initializeRelayGpio() {
 	int fd = open("/sys/class/gpio/export", O_WRONLY);
-		if (fd == -1) {
-			perror("Unable to open /sys/class/gpio/export");
-//			exit(1);
-		}
-
-		if (write(fd, "21", 2) != 2) {
-			perror("Error writing to /sys/class/gpio/export");
-//			exit(1);
-		}
-
-		close(fd);
+	if (fd == -1) {
+		perror("Unable to open /sys/class/gpio/export");
+		//			exit(1);
+	}
+	
+	if (write(fd, "21", 2) != 2) {
+		perror("Error writing to /sys/class/gpio/export");
+		//			exit(1);
+	}
+	
+	close(fd);
+	
+	fd = open("/sys/class/gpio/export", O_WRONLY);
+	if (fd == -1) {
+		perror("Unable to open /sys/class/gpio/export");
+		//			exit(1);
+	}
+	
+	if (write(fd, "20", 2) != 2) {
+		perror("Error writing to /sys/class/gpio/export");
+		//			exit(1);
+	}
+	
+	close(fd);
 	
 	// Set the pin to be an output by writing "out" to /sys/class/gpio/gpio21/direction
-
-		fd = open("/sys/class/gpio/gpio21/direction", O_WRONLY);
-		if (fd == -1) {
-			perror("Unable to open /sys/class/gpio/gpio21/direction");
-//			exit(1);
-		}
-
-		if (write(fd, "out", 3) != 3) {
-			perror("Error writing to /sys/class/gpio/gpio21/direction");
-//			exit(1);
-		}
-
-		close(fd);
+	
+	fd = open("/sys/class/gpio/gpio21/direction", O_WRONLY);
+	if (fd == -1) {
+		perror("Unable to open /sys/class/gpio/gpio21/direction");
+		//			exit(1);
+	}
+	
+	if (write(fd, "out", 3) != 3) {
+		perror("Error writing to /sys/class/gpio/gpio21/direction");
+		//			exit(1);
+	}
+	
+	close(fd);
+	
+	fd = open("/sys/class/gpio/gpio20/direction", O_WRONLY);
+	if (fd == -1) {
+		perror("Unable to open /sys/class/gpio/gpio20/direction");
+		//			exit(1);
+	}
+	
+	if (write(fd, "out", 3) != 3) {
+		perror("Error writing to /sys/class/gpio/gpio20/direction");
+		//			exit(1);
+	}
+	
+	close(fd);
 }
 
 void closeRelayGpio() {
 	int fd = open("/sys/class/gpio/unexport", O_WRONLY);
 	if (fd == -1) {
 		perror("Unable to open /sys/class/gpio/unexport");
-//		exit(1);
+		//		exit(1);
 	}
 	
 	if (write(fd, "21", 2) != 2) {
 		perror("Error writing to /sys/class/gpio/unexport");
-//		exit(1);
+		//		exit(1);
 	}
+	
+	
+	
+	close(fd);
+	
+	fd = open("/sys/class/gpio/unexport", O_WRONLY);
+	if (fd == -1) {
+		perror("Unable to open /sys/class/gpio/unexport");
+		//		exit(1);
+	}
+	
+	if (write(fd, "20", 2) != 2) {
+		perror("Error writing to /sys/class/gpio/unexport");
+		//		exit(1);
+	}
+	
+	
 	
 	close(fd);
 }
@@ -101,7 +144,7 @@ ButtonSequence::ButtonSequence() {
 	{
 		//ERROR HANDLING: you can check errno to see what went wrong
 		printf("Failed to open the i2c bus");
-		return;
+		//		return;
 	}
 	
 	int addr = 0x28;          //<<<<<The I2C address of the slave
@@ -115,8 +158,17 @@ ButtonSequence::ButtonSequence() {
 	file_gpio = open("/sys/class/gpio/gpio21/value", O_WRONLY);
 	if (file_gpio == -1) {
 		perror("Unable to open /sys/class/gpio/gpio21/value");
-//		exit(1);
+		//		exit(1);
 	}
+	
+	file_gpio_d20 = open("/sys/class/gpio/gpio20/value", O_WRONLY);
+	if (file_gpio_d20 == -1) {
+		perror("Unable to open /sys/class/gpio/gpio20/value");
+		//		exit(1);
+	}
+	
+	setGpio(0);
+	setGpioD20(0);
 }
 
 
@@ -127,9 +179,19 @@ ButtonSequence::~ButtonSequence() {
 void ButtonSequence::addButtonPress( NissanButton button ) {
 	unsigned int resistance = nissanButtonToDigitalPot(button);
 	events.push_back({BUTTON_TYPE_POTENTIOMETER, resistance, TIME_PER_POTENTIOMETER_SET});
-	events.push_back( { BUTTON_TYPE_GPIO, 1, TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
-//	addTimeDelay( 1000 );
-	events.push_back( { BUTTON_TYPE_GPIO, 0, TIME_PER_BUTTON_RELEASE + TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
+	
+	if (button == NISSAN_BUTTON_RES) {
+		events.push_back( { BUTTON_TYPE_GPIO, 1, TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
+	 //	addTimeDelay( 1000 );
+			events.push_back( { BUTTON_TYPE_GPIO, 0, TIME_PER_BUTTON_RELEASE + TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
+	} else if (button == NISSAN_BUTTON_SET) {
+		events.push_back( { BUTTON_TYPE_GPIO_D20, 1, TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
+	 //	addTimeDelay( 1000 );
+			events.push_back( { BUTTON_TYPE_GPIO_D20, 0, TIME_PER_BUTTON_RELEASE + TIME_PER_BUTTON_PRESS + TIME_PER_POTENTIOMETER_SET} );
+		
+	} else {
+		printf("Error! Button %s unsupported!\n", nissanButtonToStr(button));
+	}
 }
 
 void ButtonSequence::addButtonHold( NissanButton button ) {
@@ -151,12 +213,27 @@ void ButtonSequence::setGpio( bool value ) {
 	if (value != 0) {
 		if (write(file_gpio, "1", 1) != 1) {
 			perror("Error writing to /sys/class/gpio/gpio21/value");
-//			exit(1);
+			//			exit(1);
 		}
 	} else {
 		if (write(file_gpio, "0", 1) != 1) {
 			perror("Error writing to /sys/class/gpio/gpio21/value");
-//			exit(1);
+			//			exit(1);
+		}
+	}
+	
+}
+
+void ButtonSequence::setGpioD20( bool value ) {
+	if (value != 0) {
+		if (write(file_gpio_d20, "1", 1) != 1) {
+			perror("Error writing to /sys/class/gpio/gpio20/value");
+			//			exit(1);
+		}
+	} else {
+		if (write(file_gpio_d20, "0", 1) != 1) {
+			perror("Error writing to /sys/class/gpio/gpio20/value");
+			//			exit(1);
 		}
 	}
 	
@@ -167,27 +244,24 @@ void ButtonSequence::setDigialPotentiometer( unsigned int value ) {
 	
 	buffer[0] = 0x00;
 	buffer[1] = (unsigned char)value;
+	printf("Sending digital pot setting of %d\n", value);
 	int length = 2;
 	if (write(file_i2c, buffer, length) != length)
 	{
 		printf("Failed to set the digital potentimeter on the i2c bus.\n");
 	}
-
+	
 }
 
 
 void ButtonSequence::applyEvent(ButtonEvent& event) {
 	switch (event.type) {
 		case Panda::BUTTON_TYPE_GPIO:
-//			if (event.data != 0) {
-//				
-//				printf("Button ON\n");
-//			} else {
-//				printf("Button OFF\n");
-//				
-//			}
-				
 			setGpio(event.data != 0);
+			break;
+			
+		case Panda::BUTTON_TYPE_GPIO_D20:
+			setGpioD20(event.data != 0);
 			break;
 			
 		case Panda::BUTTON_TYPE_POTENTIOMETER:
@@ -216,7 +290,7 @@ void ButtonSequence::send() {
 		while(!done) {
 			// Send ASAP then check next event:
 			if (event.time <= runningTimeInMicroseconds) {
-//				dualshock->applyEvent( &event );
+				//				dualshock->applyEvent( &event );
 				applyEvent(event);
 				
 				done = true;

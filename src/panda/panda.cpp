@@ -167,6 +167,9 @@ void Handler::forceSetVin(const unsigned char* vin) {
 
 
 void Handler::stop() {
+	std::cout << "Stopping Heartbeat...";
+	mHeartbeatHelper->stop();
+	std::cout << "Done." << std::endl;
 	std::cout << "Stopping GPS...";
 	mGps.stopParsing();
 	std::cout << "Done." << std::endl;
