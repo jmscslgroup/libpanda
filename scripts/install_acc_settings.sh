@@ -18,7 +18,7 @@ fi
 cd catkin_ws/src
 
 # The following are repositories under jmscslgroup:
-declare -a repositories=(can_to_ros transfer_pkg  ghostfollower ghostfollower_max velocity_controller ghost_mode velocityramp setpointreader acc_accel)
+declare -a repositories=(can_to_ros transfer_pkg  ghostfollower ghostfollower_max velocity_controller ghost_mode velocityramp setpointreader acc_settings)
 
 for repository in "${repositories[@]}"
 do
@@ -38,7 +38,7 @@ catkin_make
 
 source devel/setup.sh
 rosrun robot_upstart uninstall can
-rosrun robot_upstart install transfer_pkg/launch/acc_accel.launch --user root
+rosrun robot_upstart install transfer_pkg/launch/acc_settings.launch --user root
 
 
 
