@@ -11,6 +11,8 @@ echo "Installing/Updating Vandertest ROS packages"
 
 source ~/.bashrc
 
+sh uninstallRobotUpstart.sh
+
 cd ~
 if [ ! -d catkin_ws/src ]; then
 	mkdir -p catkin_ws/src
@@ -33,11 +35,12 @@ do
 done
 
 
+
 cd ~/catkin_ws
 catkin_make
 
 source devel/setup.sh
-rosrun robot_upstart uninstall can
+#rosrun robot_upstart uninstall can
 rosrun robot_upstart install can_to_ros/launch/acc_settings.launch --user root
 
 
