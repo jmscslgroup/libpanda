@@ -52,6 +52,8 @@ cd ../gps-tracker
 sudo ./install.sh
 cd ../experiments
 ./install.sh
+cd ../live-tracker-raspberry-pi
+sudo ./install.sh
 cd ../..
 
 sudo systemctl enable ssh
