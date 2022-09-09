@@ -24,7 +24,7 @@ then
 	apt-get install -y ${toInstall_apt[@]}
 fi
 
-pip3 install strymread-lite
+pip3 install strymread-lite==0.4.17.rc0
 cp live-tracker.py /usr/local/sbin/live-tracker
 chmod +x /usr/local/sbin/live-tracker
 mkdir -p /var/panda/CyverseData/JmscslgroupData/live_tracker_temporary_files/
