@@ -5,7 +5,6 @@
 # example:
 # curl -k https://engr-sprinkle01s.catnet.arizona.edu:8080/rest.php?circles,LT3MWRFVXLW056972,1615416836.2,1615416835.18839,-86.6058302,36.0252845,213.1,V
 
-
 HEADER="http://ransom.isis.vanderbilt.edu/GPS_REST_API/rest.php?circles"
 
 VIN_FILE="/etc/libpanda.d/vin"
