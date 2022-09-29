@@ -52,9 +52,11 @@ cd ../gps-tracker
 sudo ./install.sh
 cd ../experiments
 ./install.sh
-cd ../live-tracker-raspberry-pi
-sudo ./install.sh
-cd ../..
+# not installing live tracker python version
+# cd ../live-tracker-raspberry-pi
+# sudo ./install.sh
+# cd ../..
+cd ../
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
