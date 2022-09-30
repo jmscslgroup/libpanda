@@ -8,7 +8,7 @@
 # example:
 # 
 
-BASEURL="http://ransom.isis.vanderbilt.edu:5000/inrix/api/target"
+BASEURL="http://ransom.isis.vanderbilt.edu:80/inrix/api/target.php"
 
 VIN_FILE="/etc/libpanda.d/vin"
 SPEEDPLANNER_FILE="/etc/libpanda.d/speed_planner.json"
