@@ -23,5 +23,8 @@ do
 	FULL_COMMAND="curl --connect-timeout 10 -k ${BASEURL}"
 	echo "Performing command: ${FULL_COMMAND}"
 	$(${FULL_COMMAND} > ${SPEEDPLANNER_FILE})
+
+	# now that we have a new file, re-calculate our speed
+	/usr/local/sbin/publish-speed-plan.py
 	
 done

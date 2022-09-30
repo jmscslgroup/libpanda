@@ -28,6 +28,11 @@ fi
 cp speed-planner.sh /usr/local/sbin/speed-planner
 chmod +x /usr/local/sbin/speed-planner
 
+cp publish-speed-plan.py /usr/local/sbin/publish-speed-plan.py
+chmod +x /usr/local/sbin/publish-speed-plan.py
+
+cp i24_geo.json /etc/libpanda.d/i24_geo.json
+
 cp circlesplanner.service.txt  /etc/systemd/system/circlesplanner.service
 chmod 655 /etc/systemd/system/circlesplanner.service
 

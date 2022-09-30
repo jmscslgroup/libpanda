@@ -20,7 +20,7 @@ fi
 cd catkin_ws/src
 
 # The following are repositories under jmscslgroup:
-declare -a repositories=(can_to_ros  ghostfollower ghostfollower_max velocity_controller ghost_mode velocityramp setpointreader acc_settings)
+declare -a repositories=(can_to_ros )
 
 for repository in "${repositories[@]}"
 do
@@ -45,7 +45,7 @@ fi
 cd algos-stack
 #git checkout swil_rahul
 #git checkout setpoint_rahul
-git checkout rl-cruise
+git checkout rl-blind-cruise
 
 
 cd ~/catkin_ws
@@ -53,7 +53,7 @@ catkin_make
 
 source devel/setup.sh
 #rosrun robot_upstart uninstall can
-rosrun robot_upstart install can_to_ros/launch/rl_cruise_planner_readonly.launch --user root
+rosrun robot_upstart install can_to_ros/launch/rl_blind_cruise_planner_readonly.launch --user root
 
 
 
