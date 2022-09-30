@@ -116,7 +116,7 @@ if __name__ == "__main__":
     # TODO: make these cmd line params but use these as defaults
     gpsfile = '/etc/libpanda.d/latest_gps'
     i24_geo_file = '/etc/libpanda.d/i24_geo.json'
-    circles_planner_file = '/etc/libpanda.d/circles_speed_planner.json'
+    circles_planner_file = '/etc/libpanda.d/speed_planner.json'
     if len(sys.argv) > 2:
         myLat = float(sys.argv[1])
         myLong = float(sys.argv[2])
