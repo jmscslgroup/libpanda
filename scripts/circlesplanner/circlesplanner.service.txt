@@ -1,0 +1,11 @@
+[Unit]
+Description=Manages the speed planner and other circles planner services.
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/sbin/speed-planner
+
+
+[Install]
+WantedBy=multi-user.target
