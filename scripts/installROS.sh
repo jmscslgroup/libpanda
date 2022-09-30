@@ -20,7 +20,7 @@ sudo -E apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6
 sudo apt-get update
 sudo apt-get upgrade -y
 
-sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake
+sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python3-yaml python3-rospkg
 #sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python-setuptools catkin # python3-catkin python3-empy python3-catkin-pkg python3-yaml
 
 sudo rosdep init
