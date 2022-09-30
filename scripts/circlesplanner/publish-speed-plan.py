@@ -87,9 +87,15 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0:
         target_speed = 30
     else:
-        speed_planner = json.load(open(circles_planner_file))
-        profile_0 = speed_planner['position']
-        profile_1 = speed_planner['speed']
+        speed_planner = open(circles_planner_file).read()
+        pos_list = json.loads(speed_planner)['position'].replace('\n', '').replace(' ', ', ')
+        speed_list = json.loads(speed_planner)['speed'].replace('\n', '').replace(' ', ', ')
+        print('got pos_list=',pos_list)
+        import ast
+        profile_0 = ast.literal_eval(pos_list)
+        profile_1 = ast.literal_eval(speed_list)
+        #profile_0 = speed_planner['position']
+        #profile_1 = speed_planner['speed']
         target_speed = get_target_by_position( [ profile_0, profile_1 ], xpos )
         print('target speed is ', target_speed)
     
