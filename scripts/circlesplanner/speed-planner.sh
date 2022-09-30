@@ -8,7 +8,7 @@
 # example:
 # 
 
-BASEURL="http://ransom.isis.vanderbilt.edu/GPS_REST_API/rest.php?circles"
+BASEURL="http://ransom.isis.vanderbilt.edu:5000/inrix/api/target"
 
 VIN_FILE="/etc/libpanda.d/vin"
 SPEEDPLANNER_FILE="/etc/libpanda.d/speed_planner.json"
@@ -23,6 +23,8 @@ do
 	FULL_COMMAND="curl --connect-timeout 10 -k ${BASEURL}"
 	echo "Performing command: ${FULL_COMMAND}"
 	$(${FULL_COMMAND} > ${SPEEDPLANNER_FILE})
+	
+	source /opt/ros/melodic/setup.bash
 
 	# now that we have a new file, re-calculate our speed
 	/usr/local/sbin/publish-speed-plan.py

@@ -81,11 +81,33 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     xpos = getXposFromGPS(lat,long,i24_geo_file)
     print('xposition=', xpos)
     import json
-    speed_planner = json.load(open(circles_planner_file))
-    profile_0 = speed_planner['position']
-    profile_1 = speed_planner['speed']
-    target_speed = get_target_by_position( [ profile_0, profile_1 ], xpos )
-    print('target speed is ', target_speed)
+    import os
+    # TODO read from array
+    target_max_headway = 1
+    if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0:
+        target_speed = 30
+    else:
+        speed_planner = json.load(open(circles_planner_file))
+        profile_0 = speed_planner['position']
+        profile_1 = speed_planner['speed']
+        target_speed = get_target_by_position( [ profile_0, profile_1 ], xpos )
+        print('target speed is ', target_speed)
+    
+    import subprocess
+
+#    bashCommand_speed = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
+#    bashCommand_headway = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( target_max_headway )
+#    bashCommand_speed = "/opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
+#    bashCommand_headway = "/opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( target_max_headway )
+#    print('bashCommand_speed=', bashCommand_speed )
+#    print('bashCommand_headway=', bashCommand_headway)
+#    process = subprocess.Popen(bashCommand_speed.split(), stdout=subprocess.PIPE)
+#    output, error = process.communicate()
+#    process = subprocess.Popen(bashCommand_headway.split(), stdout=subprocess.PIPE)
+#    output, error = process.communicate()
+    import rospy
+    rospy.set_param('SP_TARGET_SPEED', target_speed )
+    rospy.set_param('SP_MAX_HEADWAY', target_max_headway )
 
 if __name__ == "__main__":
     # TODO: make these cmd line params but use these as defaults
