@@ -88,17 +88,14 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
         target_speed = 30
     else:
         speed_planner = open(circles_planner_file).read()
-        pos_list = json.loads(speed_planner)['position'].replace('\n', '').replace(' ', ', ')
-        speed_list = json.loads(speed_planner)['speed'].replace('\n', '').replace(' ', ', ')
-        print('got pos_list=',pos_list)
+        speed_planner = json.loads(speed_planner.replace('\n', '').replace('   ', ' ').replace('  ', ' ').replace(' ', ', '))[0]
+        print('got pos_list=',speed_planner['position'])
         import ast
-        profile_0 = ast.literal_eval(pos_list)
-        profile_1 = ast.literal_eval(speed_list)
-        #profile_0 = speed_planner['position']
-        #profile_1 = speed_planner['speed']
+        postion[0] = ast.literal_eval(speed_planner['position'])
+        postion[1] = ast.literal_eval(speed_planner['speed'])
         target_speed = get_target_by_position( [ profile_0, profile_1 ], xpos )
         print('target speed is ', target_speed)
-    
+
     import subprocess
 
 #    bashCommand_speed = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
