@@ -12,6 +12,11 @@ if [[ $EUID == 0 ]];
   exit
 fi
 
+# uninstall the current installations
+source ~/.bashrc
+sh uninstallRobotUpstart.sh
+
+
 # run the update script
 ./${UPDATE_SCRIPT}
 
