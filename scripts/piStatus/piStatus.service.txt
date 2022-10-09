@@ -1,0 +1,11 @@
+[Unit]
+Description=Creates and updates status JSON reporting wlan0 HWAddr, wlan0 IP, eth0 IP, vin, and external power to Ransom.
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /usr/local/sbin/getPiStatus.sh
+
+
+[Install]
+WantedBy=multi-user.target
