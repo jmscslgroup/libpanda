@@ -24,7 +24,7 @@ do
 
   JSON='{"wlan0_mac":"%s","update_time":"%d","wlan0_ip":"%s","eth0_ip":"%s","vin":"%s","external_power":"%d","free_ram":"%s","available_ram":"%s","total_ram":"%s","total_memory_available":"%s","total_memory":"%s","total_memory_used_percent":"%s","cpu_load_1min":"%.2f","cpu_load_5min":"%.2f","cpu_load_15min":"%.2f"}'
   JSON=$(printf "$JSON" "$WLAN0_MAC" "$UPDATE_TIME" "$WLAN0_IP" "$ETH0_IP" "$VIN" "$EXTERNAL_POWER" "$FREE_RAM" "$AVAILABLE_RAM" "$TOTAL_RAM" "$TOTAL_MEMORY_AVAILABLE" "$TOTAL_MEMORY" "$TOTAL_MEMORY_USED_PERCENT" "$CPU_USAGE_1MIN" "$CPU_USAGE_5MIN" "$CPU_USAGE_15MIN")
-  ENDPOINT="http://ransom.isis.vanderbilt.edu/LIVE_VIEWER_SITE/piStatusRest.php?PASS=circles&DATA='%s'"
+  ENDPOINT="http://ransom.isis.vanderbilt.edu/LIVE_VIEWER_SITE/piStatusRest.php?PASS=circles&DATA=%s"
   ENDPOINT=$(printf "$ENDPOINT" "$JSON")
   echo $JSON > /etc/libpanda.d/piStatus.json
   echo $ENDPOINT
