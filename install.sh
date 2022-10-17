@@ -31,6 +31,18 @@ then
 fi
 
 echo "=================================="
+echo "Installing libWiringPi for Digital Potentiometer"
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+git pull origin
+./build
+
+echo "Done installing libWiringPi, result of \$ gpio readall
+:"
+gpio readall
+echo "=================================="
+
+echo "=================================="
 echo "Installing Panda Firmware SDK"
 cd panda/board
 ./get_sdk.sh
