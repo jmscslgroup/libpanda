@@ -3,8 +3,8 @@
 # This simply invokes a safe-shutdown signal by faking a button press
 
 #BUTTON=18 # x725
-BUTTON=13 # x728
-BUTTONTWO=26 # x728 v2
+BUTTON=13 # x728 first versions
+BUTTONTWO=26 # x728 v2.0 and higher
 
 echo "$BUTTON" > /sys/class/gpio/export;
 echo "out" > /sys/class/gpio/gpio$BUTTON/direction

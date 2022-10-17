@@ -4,7 +4,7 @@
 echo "========================="
 echo "Installing x725monitor   "
 
-declare -a depencencies=(python-smbus)
+declare -a depencencies=(python3-smbus)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
