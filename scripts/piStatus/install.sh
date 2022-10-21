@@ -4,7 +4,7 @@
 echo "========================="
 echo "Installing pi-status "
 
-declare -a depencencies=( )
+declare -a depencencies=(ifstat)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
