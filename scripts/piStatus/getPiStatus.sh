@@ -13,7 +13,7 @@ do
   WLAN0_MAC=$(ifconfig wlan0 | grep -Eo 'ether (addr:)?([0-9a-f]*\:){5}[0-9a-f]*' | grep -Eo '([0-9a-f]*\:){5}[0-9a-f]*')
   VIN=$(cat /etc/libpanda.d/vin)
   BATTERY_VOLTAGE=$(cat /etc/libpanda.d/x725batteryvoltage | tr -d '\r')
-  if [ -z "$BATTERY_VOLTAGE"]
+  if [ -z "$BATTERY_VOLTAGE" ]
   then
      BATTERY_VOLTAGE="0.0"
   fi
