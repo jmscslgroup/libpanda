@@ -19451,14 +19451,22 @@ You are welcome to use this library for commercial purposes. For attribution, we
 </devicesets>
 </library>
 <library name="40xx" urn="urn:adsk.eagle:library:80">
-<description>&lt;b&gt;CMOS Logic Devices, 4000 Series&lt;/b&gt;&lt;p&gt;
-Based on the following sources:
-&lt;ul&gt;
-&lt;li&gt;Motorola &lt;i&gt;CMOS LOGIC DATA&lt;/i&gt;; book, 02/88, DL131 REV 1
-&lt;li&gt;http://www.elexp.com
-&lt;li&gt;http://www.intersil.com
-&lt;li&gt;http://www.ls3c.com.tw/product/1/COMOS.html
-&lt;/ul&gt;
+<description>&lt;b&gt;CMOS Logic Devices, 4000 Series&lt;/b&gt;&lt;p&gt;
+
+Based on the following sources:
+
+&lt;ul&gt;
+
+&lt;li&gt;Motorola &lt;i&gt;CMOS LOGIC DATA&lt;/i&gt;; book, 02/88, DL131 REV 1
+
+&lt;li&gt;http://www.elexp.com
+
+&lt;li&gt;http://www.intersil.com
+
+&lt;li&gt;http://www.ls3c.com.tw/product/1/COMOS.html
+
+&lt;/ul&gt;
+
 &lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
 <packages>
 <package name="DIL16" urn="urn:adsk.eagle:footprint:917/1" library_version="7">

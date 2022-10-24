@@ -20058,11 +20058,11 @@ Blue: Vf = 3.2v</text>
 <instance part="GND1" gate="1" x="472.44" y="-48.26" smashed="yes">
 <attribute name="VALUE" x="469.9" y="-50.8" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY3" gate="G$1" x="406.4" y="-15.24" smashed="yes">
-<attribute name="VALUE" x="406.4" y="-12.446" size="1.778" layer="96" align="bottom-center"/>
+<instance part="SUPPLY3" gate="G$1" x="406.4" y="-22.86" smashed="yes" rot="R270">
+<attribute name="VALUE" x="409.194" y="-22.86" size="1.778" layer="96" rot="R270" align="bottom-center"/>
 </instance>
-<instance part="SUPPLY4" gate="G$1" x="497.84" y="-15.24" smashed="yes">
-<attribute name="VALUE" x="497.84" y="-12.446" size="1.778" layer="96" align="bottom-center"/>
+<instance part="SUPPLY4" gate="G$1" x="497.84" y="-22.86" smashed="yes" rot="R90">
+<attribute name="VALUE" x="495.046" y="-22.86" size="1.778" layer="96" rot="R90" align="bottom-center"/>
 </instance>
 <instance part="GND2" gate="1" x="480.06" y="-40.64" smashed="yes">
 <attribute name="VALUE" x="477.52" y="-43.18" size="1.778" layer="96"/>
@@ -20874,6 +20874,10 @@ Blue: Vf = 3.2v</text>
 <pinref part="J13" gate="G$1" pin="SSTXN1"/>
 <label x="416.56" y="-15.24" size="1.778" layer="95"/>
 </segment>
+<segment>
+<wire x1="508" y1="-33.02" x2="492.76" y2="-33.02" width="0.1524" layer="91"/>
+<label x="497.84" y="-33.02" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAN0_H" class="0">
 <segment>
@@ -20889,6 +20893,10 @@ Blue: Vf = 3.2v</text>
 <wire x1="431.8" y1="-12.7" x2="416.56" y2="-12.7" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="SSTXP1"/>
 <label x="416.56" y="-12.7" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="508" y1="-35.56" x2="492.76" y2="-35.56" width="0.1524" layer="91"/>
+<label x="497.84" y="-35.56" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$3" class="0">
@@ -20960,6 +20968,10 @@ Blue: Vf = 3.2v</text>
 <pinref part="J13" gate="G$1" pin="SSRXP2"/>
 <label x="416.56" y="-35.56" size="1.778" layer="95"/>
 </segment>
+<segment>
+<wire x1="508" y1="-12.7" x2="492.76" y2="-12.7" width="0.1524" layer="91"/>
+<label x="495.3" y="-12.7" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAN1_L" class="0">
 <segment>
@@ -20975,6 +20987,10 @@ Blue: Vf = 3.2v</text>
 <wire x1="431.8" y1="-33.02" x2="416.56" y2="-33.02" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="SSRXN2"/>
 <label x="416.56" y="-33.02" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="508" y1="-15.24" x2="492.76" y2="-15.24" width="0.1524" layer="91"/>
+<label x="495.3" y="-15.24" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="CAN2_H" class="0">
@@ -20992,6 +21008,10 @@ Blue: Vf = 3.2v</text>
 <pinref part="J13" gate="G$1" pin="SSTXP2"/>
 <label x="482.6" y="-12.7" size="1.778" layer="95"/>
 </segment>
+<segment>
+<wire x1="396.24" y1="-35.56" x2="414.02" y2="-35.56" width="0.1524" layer="91"/>
+<label x="396.24" y="-35.56" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAN2_L" class="0">
 <segment>
@@ -21007,6 +21027,10 @@ Blue: Vf = 3.2v</text>
 <wire x1="472.44" y1="-15.24" x2="490.22" y2="-15.24" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="SSTXN2"/>
 <label x="482.6" y="-15.24" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="396.24" y1="-33.02" x2="414.02" y2="-33.02" width="0.1524" layer="91"/>
+<label x="396.24" y="-33.02" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="CAN3_H" class="0">
@@ -21024,6 +21048,10 @@ Blue: Vf = 3.2v</text>
 <pinref part="J13" gate="G$1" pin="SSRXP1"/>
 <label x="482.6" y="-35.56" size="1.778" layer="95"/>
 </segment>
+<segment>
+<wire x1="396.24" y1="-12.7" x2="414.02" y2="-12.7" width="0.1524" layer="91"/>
+<label x="396.24" y="-12.7" size="1.778" layer="95"/>
+</segment>
 </net>
 <net name="CAN3_L" class="0">
 <segment>
@@ -21039,6 +21067,10 @@ Blue: Vf = 3.2v</text>
 <wire x1="472.44" y1="-33.02" x2="490.22" y2="-33.02" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="SSRXN1"/>
 <label x="482.6" y="-33.02" size="1.778" layer="95"/>
+</segment>
+<segment>
+<wire x1="396.24" y1="-15.24" x2="414.02" y2="-15.24" width="0.1524" layer="91"/>
+<label x="396.24" y="-15.24" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="CAN_STBY_2" class="0">
@@ -21292,7 +21324,7 @@ Blue: Vf = 3.2v</text>
 <pinref part="SUPPLY3" gate="G$1" pin="VIN"/>
 <wire x1="406.4" y1="-30.48" x2="406.4" y2="-17.78" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="VBUSA1"/>
-<wire x1="406.4" y1="-17.78" x2="406.4" y2="-15.24" width="0.1524" layer="91"/>
+<wire x1="406.4" y1="-17.78" x2="406.4" y2="-22.86" width="0.1524" layer="91"/>
 <wire x1="431.8" y1="-17.78" x2="406.4" y2="-17.78" width="0.1524" layer="91"/>
 <junction x="406.4" y="-17.78"/>
 </segment>
@@ -21300,7 +21332,7 @@ Blue: Vf = 3.2v</text>
 <pinref part="J13" gate="G$1" pin="VBUSB1"/>
 <pinref part="SUPPLY4" gate="G$1" pin="VIN"/>
 <wire x1="472.44" y1="-17.78" x2="497.84" y2="-17.78" width="0.1524" layer="91"/>
-<wire x1="497.84" y1="-17.78" x2="497.84" y2="-15.24" width="0.1524" layer="91"/>
+<wire x1="497.84" y1="-17.78" x2="497.84" y2="-22.86" width="0.1524" layer="91"/>
 <pinref part="J13" gate="G$1" pin="VBUSB2"/>
 <wire x1="472.44" y1="-30.48" x2="497.84" y2="-30.48" width="0.1524" layer="91"/>
 <wire x1="497.84" y1="-30.48" x2="497.84" y2="-17.78" width="0.1524" layer="91"/>
