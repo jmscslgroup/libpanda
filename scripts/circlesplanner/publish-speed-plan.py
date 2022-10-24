@@ -2,6 +2,7 @@
 
 #import scipy.interpolate as spi
 import sys
+from datetime import datetime, timezone
 
 def getGPSLocation(filename):
     """Returns lat,long as a pair. If fix is not A, then return None"""
@@ -10,7 +11,7 @@ def getGPSLocation(filename):
     lat = None
     long = None
     vals = gpsstring.split(',')
-    if vals[-1] == 'A': 
+    if vals[-1] == 'A':
         lat = float(vals[2])
         long = float(vals[3])
     return lat,long
@@ -48,8 +49,15 @@ def interpolation(d, x):
     output = d[0][1] + (x - d[0][0]) * ((d[1][1] - d[0][1])/(d[1][0] - d[0][0]))
     return output
 
-def get_target_by_position(profile, x_pos, dtype=float):
-    """Get target speed by position."""
+def get_target_by_position(profile, x_pos,
+                           time_pub,
+                           dtype=float):
+    """
+    Get target speed by position.
+    Oct/24/21 Update:
+     time_pub - UTC timestamp of the publish time of the speed plan profile,
+                included as "generated_at" in the response of "http://ransom.isis.vanderbilt.edu/inrix/api/target.php"
+    """
     prop_speed = 4.2
     if dtype == bool:
         kind = "previous"
@@ -68,7 +76,9 @@ def get_target_by_position(profile, x_pos, dtype=float):
         return profile[1][0]
     else:
         interArray = [ [ profile[0][index], profile[1][index]] , [ profile[0][index+1], profile[1][index+1] ] ]
-    result = interpolation(interArray, x_pos)
+    time_curr = int(datetime.timestamp(datetime.now(timezone.utc)))
+    time_offset = time_pub - time_curr
+    result = interpolation(interArray, x_pos - time_offset * prop_speed)
     return result
 
 def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
