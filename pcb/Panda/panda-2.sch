@@ -20647,7 +20647,7 @@ Diodes Incorporated
 <part name="C1" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="4.7uF"/>
 <part name="C2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="100nF"/>
 <part name="GND67" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
-<part name="R26" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-US_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="220k"/>
+<part name="R26" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-US_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="DNP"/>
 <part name="R32" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-US_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="2.4k"/>
 <part name="GND68" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="GND69" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
@@ -21347,8 +21347,8 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <attribute name="NAME" x="238.76" y="223.52" size="1.778" layer="95" font="vector"/>
 <attribute name="VALUE" x="238.76" y="220.98" size="1.778" layer="96" font="vector"/>
 </instance>
-<instance part="R34" gate="G$1" x="223.52" y="220.98" smashed="yes" rot="R180">
-<attribute name="NAME" x="229.87" y="219.4814" size="1.778" layer="95" rot="R180"/>
+<instance part="R34" gate="G$1" x="220.98" y="220.98" smashed="yes" rot="R180">
+<attribute name="NAME" x="219.71" y="224.5614" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="227.33" y="224.282" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="GND70" gate="1" x="236.22" y="215.9" smashed="yes">
@@ -23001,7 +23001,7 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 </net>
 <net name="BOOT_DRIVE" class="0">
 <segment>
-<label x="220.98" y="205.74" size="1.778" layer="95"/>
+<label x="215.9" y="205.74" size="1.778" layer="95"/>
 <pinref part="R33" gate="G$1" pin="2"/>
 <pinref part="IC2" gate="A" pin="Q7"/>
 <wire x1="215.9" y1="205.74" x2="231.14" y2="205.74" width="0.1524" layer="91"/>
@@ -23031,17 +23031,18 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <segment>
 <pinref part="Q12" gate="NMOS" pin="G"/>
 <pinref part="R34" gate="G$1" pin="1"/>
+<wire x1="226.06" y1="220.98" x2="228.6" y2="220.98" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="RST_DRIVE" class="0">
 <segment>
 <pinref part="R34" gate="G$1" pin="2"/>
-<wire x1="218.44" y1="215.9" x2="218.44" y2="220.98" width="0.1524" layer="91"/>
-<wire x1="218.44" y1="215.9" x2="228.6" y2="215.9" width="0.1524" layer="91"/>
-<label x="220.98" y="215.9" size="1.778" layer="95"/>
+<wire x1="215.9" y1="215.9" x2="215.9" y2="220.98" width="0.1524" layer="91"/>
+<wire x1="215.9" y1="215.9" x2="226.06" y2="215.9" width="0.1524" layer="91"/>
+<label x="218.44" y="215.9" size="1.778" layer="95"/>
 <wire x1="213.36" y1="195.58" x2="213.36" y2="215.9" width="0.1524" layer="91"/>
-<wire x1="218.44" y1="215.9" x2="213.36" y2="215.9" width="0.1524" layer="91"/>
-<junction x="218.44" y="215.9"/>
+<wire x1="215.9" y1="215.9" x2="213.36" y2="215.9" width="0.1524" layer="91"/>
+<junction x="215.9" y="215.9"/>
 <pinref part="IC4" gate="G$1" pin="3Y"/>
 <wire x1="213.36" y1="195.58" x2="205.74" y2="195.58" width="0.1524" layer="91"/>
 </segment>
@@ -23052,20 +23053,22 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <label x="218.44" y="198.12" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="N$46" class="0">
+<net name="BOARD_BOOT0" class="0">
 <segment>
 <pinref part="Q11" gate="G$1" pin="C"/>
 <pinref part="J7" gate="G$1" pin="1"/>
 <wire x1="246.38" y1="200.66" x2="281.94" y2="200.66" width="0.1524" layer="91"/>
 <wire x1="281.94" y1="200.66" x2="281.94" y2="203.2" width="0.1524" layer="91"/>
+<label x="259.08" y="200.66" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="N$47" class="0">
+<net name="BOARD_NRST" class="0">
 <segment>
 <pinref part="Q12" gate="NMOS" pin="D"/>
 <pinref part="J7" gate="G$1" pin="2"/>
 <wire x1="236.22" y1="228.6" x2="281.94" y2="228.6" width="0.1524" layer="91"/>
 <wire x1="281.94" y1="228.6" x2="281.94" y2="218.44" width="0.1524" layer="91"/>
+<label x="259.08" y="228.6" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="VHAX" class="0">

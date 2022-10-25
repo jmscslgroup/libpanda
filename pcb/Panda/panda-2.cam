@@ -127,6 +127,7 @@
                     "layers": [
                         30
                     ],
+                    "milling": false,
                     "name": "Soldermask Bottom",
                     "polarity": "positive",
                     "type": "gerber_layer"
