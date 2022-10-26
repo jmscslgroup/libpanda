@@ -1,0 +1,11 @@
+[Unit]
+Description=The Circles GPS and CAN Publisher
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=python3 /usr/local/sbin/live-tracker
+
+
+[Install]
+WantedBy=multi-user.target

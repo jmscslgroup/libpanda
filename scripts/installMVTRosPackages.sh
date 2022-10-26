@@ -18,7 +18,7 @@ fi
 cd catkin_ws/src
 
 # The following are repositories under jmscslgroup:
-declare -a repositories=(can_to_ros transfer_pkg followerstopperth margin ghostfollower ghostfollower_max micromodel micromodelv2 followerstopperth4rl followerstoppermax velocity_controller ghost_mode velocityramp setpointreader followerstoppermax4rl live_tracker)
+declare -a repositories=(can_to_ros setpointreader live_tracker)
 
 for repository in "${repositories[@]}"
 do
@@ -52,23 +52,22 @@ done
 #cd ..
 
 # this requires credentials:
-if [ -d algos-stack ]; then
-	cd algos-stack
-	git pull
-	cd ..
-else
-	git clone https://github.com/CIRCLES-consortium/algos-stack
-fi
-cd algos-stack
-#git checkout swil_rahul
-git checkout setpoint_rahul
+# if [ -d algos-stack ]; then
+# 	cd algos-stack
+# 	git pull
+# 	cd ..
+# else
+# 	git clone https://github.com/CIRCLES-consortium/algos-stack
+# fi
+# cd algos-stack
+# git checkout setpoint_rahul
 
 
 cd ~/catkin_ws
 catkin_make
 
 source devel/setup.sh
-rosrun robot_upstart install can_to_ros/launch/vehicle_control.launch --user root
+rosrun robot_upstart install can_to_ros/launch/vehicle_interface.launch --user root
 
 
 
