@@ -324,7 +324,6 @@ doStuff ()
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
 		ethernetConnected=true
-		echo "1" > /etc/libpanda.d/hasphonetether
 		echo "0" > /etc/libpanda.d/isapclient
 #		haveIpOnDevice eth0
 #		if [ $? -eq 1 ]; then
@@ -334,7 +333,6 @@ doStuff ()
 #		fi
 	else
 		echoBad "Disconnected"
-		echo "0" > /etc/libpanda.d/hasphonetether
 #		setupDhcpServer
 	fi
 	
@@ -343,11 +341,13 @@ doStuff ()
 	havePhoneTether
 	if [ $? -eq 1 ]; then
 		echoGood "Connected"
+		echo "1" > /etc/libpanda.d/hasphonetether
 		phoneConnected=true
 		# Ensure wifi is up to host AP
 		bringupWlan
 	else
 		echoBad "Disconnected"
+		echo "0" > /etc/libpanda.d/hasphonetether
 	fi
 
 	# Only attempt to connect to ground station AP if phone no connected:

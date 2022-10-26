@@ -30,20 +30,21 @@
 #include "mogi/thread.h"
 
 #include "panda.h"
+#include "panda/controller.h"
 
-#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
-#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
+//#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
+//#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
 #define TOYOTA_COMMAND_THREAD_RATE (200.0)	// Defines the rate of the thread, not for any particular command to be sent.
-#define TOYOTA_RATE_HEARTBEAT (2.0)			// This is for the panda in general, not Toyota specific
-#define TOYOTA_RATE_CA_REPORT (1.0)	// This is for notifications of controls_allowed
+//#define TOYOTA_RATE_HEARTBEAT (2.0)			// This is for the panda in general, not Toyota specific
+//#define TOYOTA_RATE_CA_REPORT (1.0)	// This is for notifications of controls_allowed
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
 #define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
 #define TOYOTA_RATE_ACC (30.0)				// Rate of the ACC_CONTROL command
 
-#define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
-#define TOYOTA_DECIMATOR_MAX_CA_REPORT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_CA_REPORT)
+//#define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
+//#define TOYOTA_DECIMATOR_MAX_CA_REPORT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_CA_REPORT)
 #define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
 #define TOYOTA_DECIMATOR_MAX_TRACK_B (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_TRACK_B)
 #define TOYOTA_DECIMATOR_MAX_STEER (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_STEER)
@@ -109,55 +110,55 @@ CanFrame buildDSU_CRUISE(unsigned char SET_SPEED);
 uint8_t toyotaChecksum(Panda::CanFrame& frame);
 
 /*!
- \brief This funciton is helpful for debugging but should either not live in toyota.h or shoul dbe removed:
+ \brief This funciton is helpful for debugging but should either not live in toyota.h or should be removed:
  \param frame The frame to be printed to the console
  */
 void printFrame( Panda::CanFrame frame );
 
-class ToyotaHandler;
+//class ToyotaHandler;
 
-/*!
- @class ToyotaListener
- \brief An abstract class for listening to notifications from a ToyotaHandler
- \par
- This reports the Panda::Health messages immediately, along with others at a future poiint
- */
-class ToyotaListener {
-private:
-	friend class ToyotaHandler;
-	
-protected:
-	/*!
-	 \brief Called on a new panda health request
-	 Overload this to get instant updates from the panda health update on each poll
-	 \param pandaHealth The most recent PandaHealth.
-	 */
-	virtual void newPandaHealthNotification(const PandaHealth& pandaHealth) = 0;
-	
-	
-   virtual void newControlNotification(ToyotaHandler* toyotaHandler) = 0;
-	
-public:
-	
-	virtual ~ToyotaListener() { };
-};
+///*!
+// @class ToyotaListener
+// \brief An abstract class for listening to notifications from a ToyotaHandler
+// \par
+// This reports the Panda::Health messages immediately, along with others at a future poiint
+// */
+//class ToyotaListener {
+//private:
+//	friend class ToyotaHandler;
+//
+//protected:
+//	/*!
+//	 \brief Called on a new panda health request
+//	 Overload this to get instant updates from the panda health update on each poll
+//	 \param pandaHealth The most recent PandaHealth.
+//	 */
+//	virtual void newPandaHealthNotification(const PandaHealth& pandaHealth) = 0;
+//
+//
+//   virtual void newControlNotification(ToyotaHandler* toyotaHandler) = 0;
+//
+//public:
+//
+//	virtual ~ToyotaListener() { };
+//};
 
-/*!
- @class PandaHeartbeatHelper
- \brief A helper thread class for clearing
- \par
- Invokes messages in ToyotaHandler at an asynchronous rate
- */
-class HeartbeatHelper : public Mogi::Thread {
-private:
-	ToyotaHandler* toyotaHandler;
-	
-	void doAction();
-	
-public:
-	HeartbeatHelper(ToyotaHandler* handler);
-	
-};
+///*!
+// @class PandaHeartbeatHelper
+// \brief A helper thread class for clearing
+// \par
+// Invokes messages in ToyotaHandler at an asynchronous rate
+// */
+//class HeartbeatHelper : public Mogi::Thread {
+//private:
+//	ToyotaHandler* toyotaHandler;
+//
+//	void doAction();
+//
+//public:
+//	HeartbeatHelper(ToyotaHandler* handler);
+//
+//};
 
 
 /*!
@@ -166,20 +167,26 @@ public:
  \par
  This is the intended methodology for sending control commands for a toyota with TSS2.0.  Tested on a RAV4 2019.
  */
-class ToyotaHandler : public Mogi::Thread, public Panda::CanListener {
-friend class HeartbeatHelper;
+//class ToyotaHandler : public Mogi::Thread, public Panda::CanListener {
+class ToyotaHandler : public Panda::Controller {
+//friend class HeartbeatHelper;
+friend class Panda::Controller;
 	
 private:
-	HeartbeatHelper* mHeartbeatHelper;
+//	HeartbeatHelper* mHeartbeatHelper;
 	
 	// Overloaded from Mogi::Thread.
 	// This will enable the required power save mode for vehicle control.
-	void entryAction();
-	void exitAction();
+//	void entryAction();
+//	void exitAction();
+//
+//	// Overloaded from Mogi::Thread.
+//	// This handles the constant updates.
+//	void doAction();
 	
-	// Overloaded from Mogi::Thread.
-	// This handles the constant updates.
-	void doAction();
+	// Overloaded from Panda::controller
+	// This is called at regular fast intervals, where we decimate the interval and send CAN messages
+	void intervalAction();
 	
 	// All of the following are called from doAction()
 //	void sendHeartBeat();
@@ -195,17 +202,17 @@ private:
 	// These will pass if a command was sent within the corresponding defined times:
 	// TIME_HEARTBEAT_FAIL_STEERING
 	// TIME_HEARTBEAT_FAIL_ACCELERATION
-	bool heartbeatSteeringPass();
-	bool heartbeatAccelerationPass();
+//	bool heartbeatSteeringPass();
+//	bool heartbeatAccelerationPass();
 	
-	Panda::Handler* pandaHandler;
-	PandaHealth health;
-	bool controls_allowed_prior;
-	bool controls_allowed;
+//	Panda::Handler* pandaHandler;
+//	PandaHealth health;
+//	bool controls_allowed_prior;
+//	bool controls_allowed;
 	int controls_allowed_delay_counter;
 	
 	int decimatorHeartbeat;
-	int decimatorControlsAllowed;
+//	int decimatorControlsAllowed;
 	int decimatorLka;
 	int decimatorTrackB;
 	int decimatorSteer;
@@ -237,8 +244,8 @@ private:
 	int cancelRequestSpamCount;
 	
 	// Safety management, only send control commands if they are continuously updated
-	int heartBeatSteer;
-	int heartBeatAcceleration;
+//	int heartBeatSteer;
+//	int heartBeatAcceleration;
 	
 	// These are read directly from teh CAN bus:
 	bool gas_released; // message ID 466
@@ -247,23 +254,55 @@ private:
 	unsigned char cruise_state;
 	
 	// For event notification observers:
-	std::vector<ToyotaListener*> toyotaObservers;
+//	std::vector<ToyotaListener*> toyotaObservers;
 	
 	// listend to CAN information for state handling:
-	void newDataNotification(CanFrame* canFrame);
+//	void newDataNotification(CanFrame* canFrame);
 	
+	// Overlaod from Panda::Controller
+	bool checkControlsAllowed(CanFrame* canFrame);
 	
+//protected:
+//	void sendHeartBeat();
 protected:
-	void sendHeartBeat();
-	
-public:
-	
 	/*!
 	 \brief Construction must be done with a Panda::Handler
-	 \param handler The active interface for the Panda.  The handler should be initialed with Panda::Handler::initialize() before Toyota::Handler::start() is called.
 	 */
-	ToyotaHandler(Panda::Handler* handler);
-	~ToyotaHandler();
+	ToyotaHandler();
+	
+	/*!
+	 \brief Sends a steering torque to the steering wheel (non-working).
+	 \par
+	 The comma.ai panda code has the following limits for steerTorque:
+	 \par
+	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
+	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
+	 */
+	void handleSetSteerTorque( int steerTorque );
+	
+	/*!
+	 \brief Sends acceleration to the cruise controller, in units of m/s^2
+	 \par
+	 The comma.ai panda code has the following limits for acceleration:
+	 \par
+	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
+	 \par
+	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
+	 \par
+	  The following limits can be achieved by setting the panda into "unsafe" mode:
+	 \par
+	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
+	 \par
+	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
+	 \par
+	 The DBC file however has a different supported range of -20:20
+	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
+	 */
+	void handleSetAcceleration( double acceleration );
+public:
+	
+	
+//	~ToyotaHandler();
 	
 	/*!
 	 \brief Tells the driver to grab the steering wheel
@@ -318,45 +357,17 @@ public:
 	 */
 	void setHudCruiseCancelRequest( bool enable );
 	
-	/*!
-	 \brief Sends a steering torque to the steering wheel (non-working).
-	 \par
-	 The comma.ai panda code has the following limits for steerTorque:
-	 \par
-	 const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
-	 \param steerTorque The steering torque to be sent.  Valid range is -1500:1500
-	 */
-	void setSteerTorque( int steerTorque );
 	
-	/*!
-	 \brief Sends acceleration to the cruise controller, in units of m/s^2
-	 \par
-	 The comma.ai panda code has the following limits for acceleration:
-	 \par
-	 const int TOYOTA_MAX_ACCEL = 1500;        // 1.5 m/s^2
-	 \par
-	 const int TOYOTA_MIN_ACCEL = -3000;        // -3.0 m/s^2
-	 \par
-	  The following limits can be achieved by setting the panda into "unsafe" mode:
-	 \par
-	 const int TOYOTA_ISO_MAX_ACCEL = 2000;        // 2.0 m/s^2
-	 \par
-	 const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s^2
-	 \par
-	 The DBC file however has a different supported range of -20:20
-	 \param acceleration The acceleration to be sent. Units are m/s^2, valid range is always -3.0:1.5
-	 */
-	void setAcceleration( double acceleration );
 	
 	/*!
 	 \brief Returns the Panda report for whether the ignition is on (line).
 	 
-	 \par
-	 Note: The Panda also reports "ignition_can but appears to always be off in the RAV4.
-	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT.
-	 \return Whether the ignition is turned on or off.
-	 */
-	bool getIgnitionOn();
+//	 \par
+//	 Note: The Panda also reports "ignition_can but appears to always be off in the RAV4.
+//	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT.
+//	 \return Whether the ignition is turned on or off.
+//	 */
+//	bool getIgnitionOn();
 	
 	/*!
 	 \brief Returns the Panda health report for whether controls are allowed.
@@ -393,22 +404,22 @@ public:
 	 This only gets updated at 1Hz from TOYOTA_RATE_HEARTBEAT
 	 \return Whether the Panda will allow controls to be sent to the vehicle.
 	 */
-	bool getPandaControlsAllowed();
-	bool getControlsAllowed();
+//	bool getPandaControlsAllowed();
+//	bool getControlsAllowed();
 //	bool getCarCruiseReadyForCommands();
 	unsigned char getCarCruiseState();	// from message 466
 	
-	/*!
-	 \brief Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
-	 \return The last read state of the panda's state
-	 */
-	const PandaHealth& getPandaHealth() const;
+//	/*!
+//	 \brief Returns the full Panda Health state.  controls_allowed and ignition_line can be read form this
+//	 \return The last read state of the panda's state
+//	 */
+//	const PandaHealth& getPandaHealth() const;
 	
-	/*!
-	 \brief Adds an observer to event notifications
-	 \param observer The observer for notification subscription
-	 */
-	void addObserver( ToyotaListener* observer );
+//	/*!
+//	 \brief Adds an observer to event notifications
+//	 \param observer The observer for notification subscription
+//	 */
+//	void addObserver( ToyotaListener* observer );
 };
 
 }

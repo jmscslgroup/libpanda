@@ -37,8 +37,10 @@
 #include "pandadefinitions.h"
 
 #define TIMEOUT (0)	// For libusb, in ms
-#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
-#define BYTES_PER_CAN_PACKET (16)
+//#define NUM_CAN_PACKETS_PER_TRANSFER (4)	// I've had luck with a value of 4, but failure at 3 or less
+//#define BYTES_PER_CAN_PACKET (16)
+#define NUM_CAN_PACKETS_PER_TRANSFER (256)	// I've had luck with a value of 4, but failure at 3 or less
+#define BYTES_PER_CAN_PACKET (64)
 #define BYTES_PER_UART_TRANSFER (64)
 
 namespace Panda {
@@ -55,6 +57,7 @@ namespace Panda {
 	const char* faultStatusToString( int fault_status);
 	std::string faultsToString( int faults );
 	const char* usbPowerModeToString( int usb_power_mode );
+	const char* hardwareTypeToString( PandaHardwareType hardwareType );
 	void printPandaHealth( const PandaHealth& health );
 
 	class UsbListener {
@@ -97,34 +100,98 @@ namespace Panda {
 		int sendCanData( unsigned char* buffer, int length);
 		// Invokes a read request for CAN data:
 		void requestCanData();
-		void requestUartData();
 
 		// uart write and read, for GPS
 		bool hasGpsSupport();
 		void uartWrite(const char* buffer, int length);
 //		int uartRead(unsigned char* buffer);
-		void uartPurge();
-		void canPurge();
-		void setUartBaud(int uart, int baud);
-		void setUartParity(int uart, int parity);
+		
 
-		// Panda device handling:
-		void setEspPower(bool enable);
-		void espReset(int uart, int bootmode=0);
-		void getPandaSerial(unsigned char* serial16);
-		void setCanLoopback( int enable );
-		void getFirmware(unsigned char* firmware128 );
-		unsigned char getHardware();
-		struct tm getRtc();
-		void setSafetyMode(uint16_t mode);
-		void sendHeartBeat();  // Call more that 0.5 Hz to geet talking to panda
-		void setPowerSaveEnable( bool enable );
+		// Panda USB control requests.  These involve comma.ai/panda/board/usb_comms.h data transfers
+		PandaRtcTimestamp getRtc(); 				// Neither the Red nor Black Panda have an RTC battery
+		void setRtcYear( int n );
+		void setRtcMonth( int n );
+		void setRtcDay( int n );
+		void setRtcWeekday( int n );
+		void setRtcHour( int n );
+		void setRtcMinute( int n );
+		void setRtcSeconds( int n);
+		
+		void setIrPower(bool enable);                   // Unused on Red and Black
+		void setFanPower(int power);                    // Unused on Red and Black
+		uint16_t getFanRpm();                           // Unused on Red and Black
+		void setPhonePower(bool enable);                // Unused on Red and Black
+		void getCanDebug();                             // I think this invokes debug info through a separate UART/debug console
+		
+		PandaHardwareType getHardware();                // Whether this is  aRed, Black, White, Grey, Uno, Dos or Pedal
+		void getPandaSerial(unsigned char* serial16);   // This is different than the USB serial
+		void enterBootloaderMode( unsigned char mode ); // Making this for the sake of completeness, but will go unimplemented. 0 for bootloader (debug firmware build only), 1 for softloader
+		
+		void getHealth( PandaHealth* health );          // Reports a bunch of things, see printPandaHealth()
+		void getFirmware(unsigned char* firmware128 );  // This is also called a signature, generated on compile time
+		
+		void getGitVersion( unsigned char* version );   // This responds with the firmware's git version
+		void systemReset();                             // Calls same function after flashing so this must be a true system reset
+		
+		void setEspPower(bool enable);                  // This is for GPS power, unsused on Red
+		void espReset(int uart, int bootmode=0);        // GPS reset (with optional boot mode)
+		void setGmlanOrObdCanMode(unsigned char gmlan); // "set GMLAN (white/grey) or OBD CAN (black) multiplexing mode"
+		
+		/*! \brief Sets the low-level CAN message blocking and state handling inside the panda itself
+		 \param mode The particular safety mode for vehicle model.  See macros SAFETY_* for this field
+		 \param params This value is sent to the the particular safety mode's init function, to configure state handling if needed
+		 */
+		void setSafetyMode(uint16_t mode, uint16_t params);
+		void getHealthAndCanVersions( unsigned char* healthVersion, unsigned char* canVersion); // Determines struct types
+		
+		void setCanBitrate(  int bus, int baud );       // Maybe not for CAN FD
+		void setAlternativeExperience( int alternativeExperience );  // no idea (unsafe mode)
+		
+		void requestUartData(); // This really shouldn't be a control transfer, but I've thrown it into the asynch mix anyway
+		void setUartBaud(int uart, int baud);           //  This fits higher bauds by dividing baud request by 300 to fit within uint16_t
+		void setUartParity(int uart, int parity);       // GPS module is by defualt 8N1, so always set to 0
+		void setUartBaudSmall(int uart, int baud);	    // Only usefulr for bauds that fit in uint16_t, use other
+		
+		void setCanLoopback( int enable );              // This is for debugging purposes
+		
+		void setUsbPowerMode( unsigned char mode );     // For working with EON charging or self-power
+		void setPowerSaveEnable( bool enable );         // Places
+		
+		void setKLlineWakupPulse( unsigned char KL );   // Specific for some vehicle makes
+		
+		void canPurge();                                // Clear ring buffers
+		void uartPurge();                               // Clear ring buffers
+		
+		void sendHeartBeat();                           // Call more than 0.5 Hz to keep talking to panda
+		
+		void setKLlineFiveBaudInit( int config, int baud );
+		void setClockSourceMode( int mode );	// non-functional in Pandas (see Uno and Dos)
+		void setSiren( bool enable );
+		void setGreenLed( bool enable );
+		void disableHeartbeat(); // only functional in debug firmware builds
+		
+		/*! \brief This sets the CAN FD baudrate for individual CAN busses
+		 This sets can_data_speed in the CAN config in the panda.
+		 
+		 FD enabled:
+		 For busses 0-2, if the value "baud" is >= 5000, then the corresponding canfd_enabled will become true.
+		 For bus 3, if the value "baud" is >= 333, then the corresponding canfd_enabled will become true.
+		 
+		 BRS enabled:
+		 For busses 0-2, if the value "baud" is > 5000, then the corresponding brs_enabled will become true
+		 For bus 3, if the value "baud" is > 333, then the corresponding brs_enabled will become true.
+		 
+		 \param bus The Panda's bus designation.  If setting 0, then 2 should be set similarly for the passthrough
+		 \param baud The baudrate for the bus, in units of 100bps.  For 2Mbps, set to 20000
+		 */
+		void setCanFdBaud( int bus, int baud ); // unsure on units
+		void getCanFdEnabled( int bus, bool* fdEnabled, bool* brsEnabled ); // byte 0 is if FD enabled, byte 1 is if BRS enabled
+		void enterDeepSleep(); // Unsure how to wake up
 
 		// The standard getters/setters:
 		void setOperatingMode(UsbMode mode);
 		const char* getModeAsString() const;
 		std::string getUsbSerialNumber() { return serialNumber; };
-		void getHealth( PandaHealth* health );
 
 		// Begin the USB data transfering, for reading:
 		void startRecording();
@@ -146,13 +213,14 @@ namespace Panda {
 //		struct libusb_transfer *uartTransfer;
 
 		unsigned char bufferSynchronousCan[BYTES_PER_CAN_PACKET*NUM_CAN_PACKETS_PER_TRANSFER];	// I think Rahul wanted this at 16, which seems a bit small...
+//		unsigned char bufferSynchronousCan[72*4];	// Packet version 2 are 72 bytes each
 		unsigned char bufferSynchronousUart[BYTES_PER_UART_TRANSFER];
 		unsigned int bufferLengthSynchronousUart;
 
 		//void asyncControlTransferUart();
 		void sendModedUart();
 
-		// Opens the panda, a USB device with manufacture string "comma.ai"
+		// Opens the panda, a USB device with manufacture string "circles"
 		int openDeviceByManufacturer(libusb_device **devs, const char* manufacturerName);
 
 		// Functions called by callbacks for completed transfer processing
@@ -178,8 +246,8 @@ namespace Panda {
 
 
 		// Simple handling layers:
-		void sendPandaHardwareSimple(uint8_t requestType, uint8_t request, uint16_t value, uint16_t index);
-		void readPandaHardwareSimple(uint8_t requestType, uint8_t request, unsigned char* buffer, uint16_t length);
+		void sendPandaHardwareSimple(uint8_t request, uint16_t value, uint16_t index);
+		int readPandaHardwareSimple(uint8_t request, unsigned char* buffer, uint16_t length, uint16_t value=0, uint16_t index=0);
 
 	};
 

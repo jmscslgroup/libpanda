@@ -5,7 +5,12 @@ if [[ $EUID == 0 ]];
   exit
 fi
 
-declare -a depencencies=( bmon )
+sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+
+git submodule init
+git submodule update
+
+declare -a depencencies=( bmon scons )
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -24,6 +29,33 @@ then
 	sudo apt-get update
 	sudo apt-get install -y ${toInstall[@]}
 fi
+
+echo "=================================="
+echo "Installing libWiringPi for Digital Potentiometer"
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+git pull origin
+./build
+
+echo "Done installing libWiringPi, result of \$ gpio readall
+:"
+gpio readall
+echo "=================================="
+
+echo "=================================="
+echo "Installing Panda Firmware SDK"
+cd panda/board
+./get_sdk.sh
+cd ..
+scons -j4
+cd ..
+echo "Panda firmware version:"
+cat panda/board/obj/version
+echo ""
+echo "Done installing Panda Firmware SDK"
+echo "=================================="
+
+
 
 if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
@@ -113,7 +145,7 @@ if [ ! -d ~/irods-icommands-debs ]; then
 	# the following needs to run AFTER installing irods commands
 	sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
 else
-	echo "irods icommands already isntalled."
+	echo "irods icommands already installed."
 fi
 
 # enable persisten journalctl logging:

@@ -20,6 +20,11 @@ function( new_install LIBNAME )
 		DESTINATION include
 		COMPONENT headers
 		)
+		
+	install( FILES ${GENERATED_HEADERS}
+		DESTINATION include
+		COMPONENT headers
+		)
 
 	message("-- Install Directory ${LIBNAME}: lib${LIB_SUFFIX}")
 	message("-- Install Directory ${LIBNAME}-static: lib${LIB_SUFFIX}")
@@ -37,6 +42,25 @@ set(CMAKE_SKIP_BUILD_RPATH false)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH false)
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib64")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
+
+execute_process(COMMAND git rev-parse --short=8 HEAD
+                OUTPUT_VARIABLE LIBPANDA_GIT_REV
+                ERROR_QUIET
+                OUTPUT_STRIP_TRAILING_WHITESPACE )
+message("Libpanda git version: ${LIBPANDA_GIT_REV}")
+
+execute_process(COMMAND git -C ${CMAKE_SOURCE_DIR}/panda rev-parse --short=8 HEAD
+                OUTPUT_VARIABLE PANDA_GIT_REV
+                ERROR_QUIET 
+                OUTPUT_STRIP_TRAILING_WHITESPACE )
+message("Panda git version: ${PANDA_GIT_REV}")
+
+    include_directories( ${CMAKE_CURRENT_BINARY_DIR}
+                         ${CMAKE_CURRENT_SOURCE_DIR} )
+    configure_file(include/panda_version_i.h.in "${CMAKE_CURRENT_BINARY_DIR}/panda_version_i.h" @ONLY)
+    set(GENERATED_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/panda_version_i.h)
+
+
 
 if(APPLE)
 	set(CMAKE_MACOSX_RPATH 1)
@@ -67,8 +91,8 @@ add_subdirectory( NMEAParser/Software )
 
 file(GLOB_RECURSE ${LIBNAME}_SOURCES "src/*.cpp")
 file(GLOB_RECURSE ${LIBNAME}_HEADERS "include/*.h")
-set(c_sources     ${${LIBNAME}_SOURCES} ${${LIBNAME}_HEADERS})
-set(c_headers     ${${LIBNAME}_HEADERS})
+set(c_sources     ${${LIBNAME}_SOURCES} ${${LIBNAME}_HEADERS} ${GENERATED_HEADERS})
+set(c_headers     ${${LIBNAME}_HEADERS} ${GENERATED_HEADERS}/)
 
 # Dependencies:
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
@@ -100,21 +124,23 @@ set_target_properties(${LIBNAME} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 set_target_properties(${LIBNAME}-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 target_link_libraries(${LIBNAME}    ${LIBUSB_1_LIBRARIES}
                                 mogithread
-                                NMEAParserLib )
+                                NMEAParserLib
+                                wiringPi )
 
-set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread )
-
-add_library(strym     src/strym.cpp
-                      include/strym.h )
-target_link_libraries(strym    ${LIBUSB_1_LIBRARIES}
-                               mogithread
-                               ${LIBNAME} )
+set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread wiringPi )
 
 new_install( ${LIBNAME} )
 new_install( mogithread )
 
 # Test executables:
 if(${CURSES_FOUND})
+     add_library(cursesgfx example/curses/cursesGfx.cpp
+                           example/curses/curses-gfx.h
+                           example/curses/cursesClock.cpp
+                           example/curses/curses-clock.h )
+     target_link_libraries(cursesgfx ncurses )
+	 include_directories(example/curses)
+
      add_executable(pandaCurses  example/pandaCurses.cpp
                                  example/cursesHandler.cpp
                                  example/cursesHandler.h
@@ -126,11 +152,24 @@ if(${CURSES_FOUND})
      target_link_libraries(pandaCurses  ${LIBS}
                                         ${LIBNAME}
                                         mogithread
-                                        strym
                                         NMEAParserLib
-                                        ncurses )
+                                        ncurses 
+                                        cursesgfx )
 endif()
 
+add_executable(nissanTest	example/nissanTest.cpp
+				example/device.h
+				example/deviceTypes.h
+				example/joystick.cpp
+				example/joystickState.cpp
+				example/joystickState.h
+				example/device.cpp
+				example/mouse.cpp )
+target_link_libraries(nissanTest	${LIBS}
+									${LIBNAME}
+									mogithread
+									NMEAParserLib )
+									
 add_executable(simpleSend	example/simpleSend.cpp
 				example/device.h
 				example/deviceTypes.h
@@ -144,21 +183,24 @@ add_executable(simpleSend	example/simpleSend.cpp
 target_link_libraries(simpleSend	${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
 									NMEAParserLib )
 
 add_executable(pandaVin		example/pandaVin.cpp )
 target_link_libraries(pandaVin ${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
 									NMEAParserLib)
 
 add_executable(pandaObd		example/pandaObd.cpp )
 target_link_libraries(pandaObd ${LIBS}
 									${LIBNAME}
 									mogithread
-									strym
+									NMEAParserLib)
+
+add_executable(buttonTest	example/buttonTest.cpp )
+target_link_libraries(buttonTest ${LIBS}
+									${LIBNAME}
+									mogithread
 									NMEAParserLib)
 
 add_subdirectory(utilities)

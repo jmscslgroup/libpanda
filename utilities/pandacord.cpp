@@ -69,12 +69,26 @@ private:
 };
 
 
+// A simple concrete instance of a GPS listener
+class SimpleHealthObserver : public Panda::HeartbeatHelperListener {
+private:
+	int notificationCount = 0;
+	void notificationHeartbeat(const PandaHealth& health)  {
+		notificationCount++;
+		if(notificationCount > 2) {
+			std::cerr << "h";
+			notificationCount = 0;
+		}
+	}
+};
+
 /*
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] -[f] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
 	std::cout << "   -v          : Verbose mode" << std::endl;
+	std::cout << "   -f          : Forces Nissan VIN in configuration for Panda CAN FD" << std::endl;
 	std::cout << "   -u usbmode  : USB operating mode:" << std::endl;
 	std::cout << "                   a: Asynchronous" << std::endl;
 	std::cout << "                   s: Synchronous" << std::endl;
@@ -86,10 +100,12 @@ void printUsage(const char* binary) {
 }
 
 int verboseFlag = false;
+int forceNissan = false;
 
 static struct option long_options[] =
 {
 	{"verbose",    no_argument, &verboseFlag, 0},
+	{"forcenissan",    no_argument, &forceNissan, 0},
 	{"usbmode",    required_argument, NULL, 'u'},
 	{"gpsfile",    required_argument, NULL, 'g'},
 	{"gpscsvfile",    required_argument, NULL, 'n'},
@@ -113,7 +129,7 @@ int main(int argc, char **argv) {
 	const char* canCsvFilename = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:vf", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -127,6 +143,7 @@ int main(int argc, char **argv) {
 			case 'n':   nmeaFilename = optarg; break;
 			case 'c': canCsvFilename = optarg; break;
 			case 'r': canRawFilename = optarg; break;
+			case 'f':  forceNissan = true; break;
 			default:
 				printUsage(argv[0]);
 				exit(EXIT_FAILURE);
@@ -146,6 +163,7 @@ int main(int argc, char **argv) {
 
 	SimpleCanObserver canObserver;
 	SimpleGpsObserver myGpsObserver;
+	SimpleHealthObserver mySimpleHealthObserver;
 
 	double epsilon = 0.2;	// If system time is off from GPS time by this amount, update time.
 	Panda::SetSystemTimeObserver mSetSystemTimeObserver(epsilon);
@@ -157,28 +175,40 @@ int main(int argc, char **argv) {
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
-	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
+//	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 	pandaHandler.addGpsObserver(mGpsTracker);
+	pandaHandler.addHeartbeatObserver(mySimpleHealthObserver);
 
 	// Let's roll
-	pandaHandler.initialize();
+	if (forceNissan) {
+		pandaHandler.initialize((const unsigned char*)"JN8AT3CB9MW240939");
+	} else {
+		pandaHandler.initialize();
+	}
 
 	writeToFileThenClose(filenameGpsStatus, "0\n");	// state 0: on but time not set
 
-
-	std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
-	std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
 	int lastNmeaMessageCount = 0;
-	while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
-		   keepRunning == true ) {
-		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
-			std::cerr << ".";
-			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+//	if (pandaHandler.getUsb().hasGpsSupport()) {
+	if (pandaHandler.getGps().available()) {
+		pandaHandler.addGpsObserver(mSetSystemTimeObserver);
+		std::cout << "Waiting to acquire satellites to set system time..." << std::endl;
+		std::cout << " - Each \'.\' represents 100 NMEA messages received:" << std::endl;
+		
+		while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
+			   keepRunning == true ) {
+			if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
+				std::cerr << ".";
+				lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
+			}
+			usleep(10000);
 		}
-		usleep(10000);
+		writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
+		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
+	} else {
+		std::cout << "This system does not have a GPS, continuing to log data without time synchronization" << std::endl;
+		writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 	}
-	writeToFileThenClose(filenameGpsStatus, "1\n");	// GPS time sync done
-	writeToFileThenClose(filenamePandaStatus, "0\n"); // Recording should now start
 
 
 	if (gpsFilename != NULL) {
@@ -193,17 +223,20 @@ int main(int argc, char **argv) {
 	if (canRawFilename != NULL) {
 		pandaHandler.getCan().saveToFile(canRawFilename);
 	}
+	
 
 	std::cout << "Time is synced with GPS!" << std::endl;
 	std::cout << std::endl << "Press ctrl-c to exit" << std::endl;
 	std::cout << " - Each \'c\' represents 1000 CAN notifications received." << std::endl;
 	std::cout << " - Each \'.\' represents 100 NMEA messages received." << std::endl;
 	std::cout << " - Each \'g\' represents 10 GPS notifications received." << std::endl;
+	std::cout << " - Each \'h\' represents 2 Heartbeat/Health notifications received." << std::endl;
 
 	int priorCanCount = 0;
 	int gpsHeartbeat = 0;
 	while (keepRunning == true) {
 		// GPS status checking:
+		pandaHandler.getUsb().sendHeartBeat();
 		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
 			std::cerr << ".";
 			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;

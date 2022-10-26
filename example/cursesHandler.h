@@ -52,15 +52,18 @@ private:
 
 	typedef enum _CanSortMode {
 		SORT_ID = 0,
-		SORT_ID_COUNT = 1,
-		SORT_ID_RATE = 2,
-		SORT_UNIQUE_DATA_COUNT = 3,
-		SORT_COUNT = 4
+		SORT_ID_BUS = 1,
+		SORT_ID_COUNT = 2,
+		SORT_ID_RATE = 3,
+		SORT_UNIQUE_DATA_COUNT = 4,
+		SORT_COUNT = 5
 	} CanSortMode;
 
 	DisplayMode displayMode;
 	CanSortMode canSortMode;
 	volatile bool reverseSortEnable;
+	
+	bool messageIdAsHex = false;
 
 	bool resetUniqueData;
 
@@ -69,6 +72,8 @@ private:
 	bool highlightEnter = false;
 	bool highlightCurrent = false;
 	//int highlight = -1;
+	
+	double heading;	// This is heavily filtered
 
 public:
 	// Singleton:

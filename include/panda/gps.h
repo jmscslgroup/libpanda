@@ -29,6 +29,8 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <queue>
+//#include <array>
 
 #include "NMEAParser.h"
 #include "mogi/thread.h"
@@ -38,7 +40,49 @@
 #include "panda/gpsdata.h"
 
 namespace Panda {
+
+enum GPS_CONFIG_STATE {
+	GPS_CONFIG_IDLE,
+	GPS_CONFIG_START,
+	GPS_CONFIG_SEND,
+	GPS_CONFIG_WAIT,
+	GPS_CONFIG_ACK,
+	GPS_CONFIG_NACK,
+	GPS_CONFIG_SUCCESS,
+	GPS_CONFIG_FAIL,
+	GPS_CONFIG_COMPLETE
+};
+
+enum UBX_CLASS {
+	UBX_CLASS_NAV = 0x01,
+	UBX_CLASS_ACK = 0x05,
+	UBX_CLASS_CFG = 0x06,
+	UBX_CLASS_MON = 0x0A
+};
+
+enum UBX_ID_ACK {
+	UBX_ID_ACK_ACK  = 0x01,
+	UBX_ID_ACK_NACK = 0x00
+};
+
+enum UBX_ID_CFG {
+	UBX_ID_CFG_PRT  = 0x00,
+	UBX_ID_CFG_RST  = 0x04,
+	UBX_ID_CFG_RATE = 0x08,
+	UBX_ID_CFG_ODO  = 0x1e,
+	UBX_ID_CFG_NAV5 = 0x24
+};
+
+enum UBX_ID_MON {
+	UBX_ID_MON_VER  = 0x04
+};
+
+std::string ubxClassIdToString( char mClass, char mId);
 	
+	void setUbxChecksum(char* packet);
+	int makeUbx(char* dst, char mClass, char mId, unsigned short payloadLength, char* payload);
+	unsigned short getUbxLength(const char* ubx);
+
 	class Gps;
 
 	/*!
@@ -110,6 +154,11 @@ namespace Panda {
 		 \return true is ready, flase if not ready.
 		 */
 		bool isReady();
+		
+		/*! \brief Checks if a gps device is available, whether in panda or through external USB
+		 \return true if one is conencted, flase otherwise.
+		 */
+		bool available();
 
 		/*! \brief Starts a reading and parsing thread.
 		 A valid and initialized USB handler is needed to be set for success.
@@ -120,9 +169,23 @@ namespace Panda {
 		 Called after startParsing() when done with GPS data
 		 */
 		void stopParsing();
-
+		
+		// Send a string to the GPS module's raw serial port
+		void gpsSend(const char* data, int length);
+		
+		// Sends a command and checks that it's received
+		void sendUbxCommand(char mClass, char mId, unsigned short payloadLength, char* payload);
+		
+		// Returns true is UBX commands are eing processed
+		bool busyUbx();
+		
+		// Returns the result of the latest successul UBX read
+		int getUbxResponse(char* result);
+		
 	private:
 		GpsData state;
+		int fidGps; // This is for external GPS devices
+		bool usingExternalGps = false;
 
 		bool currentlyReceiving = false;
 
@@ -139,11 +202,32 @@ namespace Panda {
 
 		// Overload frum UsbListener
 		void notificationUartRead(char* buffer, size_t bufferLength);
+		
+		void processUart(char* buffer, int bufferLength);
 
+		// Called when a UBX is received
+		int parseUbx(unsigned char* buffer, int length);
+		void notificationUbxMessage(char mClass, char mId, short length, unsigned char* payload);
+		
+		char ubxLastSentClass;
+		char ubxLastSentId;
+		unsigned short responseLength;
+		char responsePayload[256];	// this could all be a struct...
+		
+		GPS_CONFIG_STATE gpsConfigState;
+		int configurationWaitCounter = 0;
+		int ubxSendAttempt = 0;
+		void handleConfiguration();
+		
+		std::queue<std::string> ubxCommands;
+		std::string ubxCurrentCommand;
+		
 		// NMEAParser overload:
 		virtual void OnError(CNMEAParserData::ERROR_E nError, char *pCmd);
 		// NMEAPArser overload:
 		virtual CNMEAParserData::ERROR_E ProcessRxCommand(char *pCmd, char *pData);
+		
+		
 	};
 
 }

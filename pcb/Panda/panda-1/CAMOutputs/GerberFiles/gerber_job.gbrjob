@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2022-09-29T19:22:01Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.6.2"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "panda"
+        },
+        "Owner": "Matt Bunting <matthew.r.bunting@vanderbilt.edu>",
+        "Size": {
+            "X": 85.09,
+            "Y": 56.134
+        }
+    }
+}

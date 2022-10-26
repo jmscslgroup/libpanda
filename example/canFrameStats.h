@@ -28,6 +28,7 @@
 
 #include <map>
 #include <vector>
+#include <array>
 #include <list>
 
 #include "panda.h"
@@ -42,13 +43,16 @@ typedef struct _DataInfo {
 typedef struct _IdInfo {
 	int count = 0;	// total messages sent with this message ID
 	int ID = -1;
+	char bus;
 	double priorTime = 0;
 	double currentRate = 1;
 	bool highlight = false;
+	
+	Panda::CanFrame latest;
 
 	// mapping of individual 64-bit data messages to data informaiton (count, bus)
-	// The size of thie corresponds to the number of unique data sent under the parent message ID (see canStats below)
-	std::map<unsigned long long int,DataInfo> data;
+	// The size of this corresponds to the number of unique data sent under the parent message ID (see canStats below)
+	std::map<std::array<unsigned char, CAN_DATA_MAX_LENGTH>,DataInfo> data;
 } IdInfo;
 
 
@@ -65,6 +69,7 @@ public:
 	void sortByIdCount();
 	void sortByIdRate();
 	void sortByUniqueMessageCount();
+	void sortByBus();
 
 
 	void resetUniqueCount();
@@ -72,6 +77,7 @@ public:
 	void highlightMessageId(int idToHighlight);
 	void highlightCount(int countToHighlight);
 	void highlightRate(int rateToHighlight);
+	void highlightBus(char busToHighlight);
 
 	void newDataNotification(Panda::CanFrame* canFrame);
 

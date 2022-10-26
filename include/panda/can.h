@@ -35,6 +35,8 @@
 #include "panda/usb.h"
 #include "panda/candata.h"
 
+#define PANDA_CAN_PACKET_HEAD_SIZE (0x5)
+
 namespace Panda {
 
 	/*!
@@ -43,14 +45,29 @@ namespace Panda {
 	 \param bufferLength The number of bytes in the buffer.  Should be 8-16
 	 \return A constructed CanFrame, populated witht eh bufffer data
 	 */
-	CanFrame bufferToCanFrame( char* buffer, int bufferLength);
+	CanFrame bufferToCanFrame( char* buffer, int bufferLength, int pandaCanVersion);
 
 	/*!
 	 \brief Converts a CanFrame into a buffer for sending to the Panda
 	 \param frame The CAN frame of data to be sent
 	 \param buffer The array of data to be sent.  Should be 16 bytes in length.
+	 \return The length of the packet
 	 */
-	void canFrameToBuffer( CanFrame& frame, unsigned char* buffer);
+	int canFrameToBuffer( CanFrame& frame, unsigned char* buffer, int pandaCanVersion);
+
+	/*!
+	 \brief Converts an encoded data length (0-16) to a data length (0,1,2,3,4,5,7,8,12,16,20,24,32,48,64)
+	 \param dlc The data length code to be converted into data length
+	 \return The data length, or 0xFF on error
+	 */
+	unsigned char dataLengthCodeToDataLength( unsigned char dlc );
+
+	/*!
+	\brief Converts an data length (0,1,2,3,4,5,7,8,12,16,20,24,32,48,64) to a data length code (0-16)
+	\param dlc The data length to be converted into data length code
+	\return The data length code, or 0xFF on error
+	*/
+	unsigned char dataLengthToDataLengthCode( unsigned char dl );
 
 	class Can;
 
@@ -66,6 +83,9 @@ namespace Panda {
 		
 		std::vector<int> blacklistBus;
 		std::vector<int> blacklistId;
+		
+		std::vector<int> whitelistBus;
+		std::vector<int> whitelistId;
 	protected:
 		/*!
 		 \brief Called on a successful RMC message parse
@@ -90,6 +110,18 @@ namespace Panda {
 		 \param idToBlock The message ID to be blocked
 		 */
 		void addToBlacklistMessageId( const int& idToBlock );
+		
+		
+		/*! \brief Adds a BUS number to the whiteklist
+		 \param busToPass The bus to be passed
+		 */
+		void addToWhiteBus( const int& busToPass );
+		
+		
+		/*! \brief Adds a message ID number to the whitelist
+		 \param idToBlock The message ID to be passed
+		 */
+		void addToWhitelistMessageId( const int& idToPass );
 		
 	};
 
@@ -149,8 +181,13 @@ namespace Panda {
 		 */
 		void sendMessage( CanFrame& frame );
 
+		
+		
+		void notificationCanRead(char* buffer, size_t bufferLength);	// HACK
 	private:
 		bool currentlyReceiving = false;
+		
+		int pandaCanVersion;
 		
 		std::list<CanFrame> canFrames;
 
@@ -163,8 +200,8 @@ namespace Panda {
 		void writeCsvToFile(CanFrame* frame, unsigned char* buffer, int bufLength);
 		void writeRawToFile(char* buffer, size_t length);
 
-		// Overload frum UsbListener
-		void notificationCanRead(char* buffer, size_t bufferLength);
+//		// Overload frum UsbListener
+//		void notificationCanRead(char* buffer, size_t bufferLength);
 
 		// Overload from Mogi::Thread
 		void doAction();

@@ -32,6 +32,10 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2021-08-05.img.tar.gz](https://drive.google.com/file/d/1gY0HUJqwlm0UU3zjo45wSHIOra53bO6r/view?usp=sharing)
+	Configured for experiments on the following day of 08/06/2021.  Major change involves a reorganization of a few ROS topics and a new safety node that disengages the cruise controller automatically on hard commanded decelerations when another vehicle cuts in front of the follower vehicle.
+
+
 - [circles-raspbian-2021-08-03.img.tar.gz](https://drive.google.com/file/d/1qzAEcrjQiwb_Wua2KYKJBU9ndoJN0AGD/view?usp=sharing)
 	Changes:
 	- - Cruise control message loop throttling to send messages more consistently based on CPU load

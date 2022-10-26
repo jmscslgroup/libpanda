@@ -27,10 +27,10 @@
 #define VIN_H
 
 
-#include <unistd.h>	// usleep()
-#include <cstring> // memcpy
+//#include <unistd.h>	// usleep()
+//#include <cstring> // memcpy
 
-#include "panda.h"
+//#include "panda.h"
 //#include "panda/obd-pid.h"
 
 //#define CAN_FRAME_TYPE_MASK (0xF0)
@@ -44,7 +44,65 @@ namespace Panda {
 //	CAN_FRAME_FLOW_CONTROL = 0x03
 //};
 
+enum VehicleManufacturer {
+	VEHICLE_MANUFACTURE_OTHER,
+	VEHICLE_MANUFACTURE_TOYOTA,
+	VEHICLE_MANUFACTURE_HONDA,
+	VEHICLE_MANUFACTURE_NISSAN,
+	VEHICLE_MANUFACTURE_GM
+};
 
+enum VehicleRegion {
+	VEHICLE_REGION_OTHER,
+	VEHICLE_REGION_USA,
+	VEHICLE_REGION_CANADA,
+	VEHICLE_REGION_JAPAN
+};
+
+
+enum VehicleModel {
+	VEHICLE_MODEL_OTHER,
+	VEHICLE_MODEL_TOYOTA_RAV4,
+	VEHICLE_MODEL_HONDA_PILOT,
+	VEHICLE_MODEL_NISSAN_ROGUE,
+	VEHICLE_MODEL_GM_CADIALLC_XT5
+};
+
+/*! \brief Retreives the year, only for VIN in vehicles made after 2000
+	\param vin The VIN
+	\return The vehicle's year
+ */
+int vinToYear( const unsigned char* vin);
+
+
+/*! \brief Retreives the manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
+	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
+	\param vin The VIN
+	\return The vehicle's manufacturer, as only recognizable by libpanda
+ */
+VehicleManufacturer vinToManufacturer( const unsigned char* vin );
+
+
+/*! \brief Retreives the region of manufacturer, but expects vehicles most liekly to be found in USA or maybe Japan
+	\param vin The VIN
+	\return The vehicle's manufacturer region, as only recognizable by libpanda
+ */
+VehicleRegion vinToRegion( const unsigned char* vin );
+
+/*! \brief Retreives the model (and thus manufacture).  This is emprically based on the 3rd digit of the VIN with a super small sample of vehicles
+	see https://en.wikibooks.org/wiki/Vehicle_Identification_Numbers_(VIN_codes)/World_Manufacturer_Identifier_(WMI)
+	\param vin The VIN
+	\return The vehicle's model, as only recognizable by libpanda
+ */
+VehicleModel vinToModel( const unsigned char* vin );
+
+const char* vehicleManufacturerToString( const VehicleManufacturer vm );
+const char* vehicleModelToString( const VehicleModel vm );
+const char* vehicleRegionToString( const VehicleRegion vr );
+
+void printVin( const unsigned char* vin);
+
+/*
 class VinReader : public CanListener {
 public:
 	
@@ -56,9 +114,8 @@ public:
 	void setPandaHandler(Handler& handler);
 	void requestVin();
 	
-	/*
-	 Will save the VIN to a file when discovered:
-	 */
+	//Will save the VIN to a file when discovered:
+	
 	void saveToFile(const char* filename);
 	
 private:
@@ -76,7 +133,7 @@ private:
 	void sendFlowControl();
 	void newDataNotification( CanFrame* canFrame );
 };
-
+*/
 }
 
 #endif

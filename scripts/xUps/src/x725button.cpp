@@ -34,12 +34,15 @@
 #define X725_BOOT (17)
 
 #define X728_SHUTDOWN (5)
-#define X728_BUTTON (13)
+//#define X728_BUTTON (13)	// Version 1.x
+#define X728_BUTTON (26)	// Starting with version 2.0
 #define X728_BOOT (12)
+#define X728_BUZZER (20)	// Starting with version 2.1
 
 #define X_BUTTON X728_BUTTON
 #define X_SHUTDOWN X728_SHUTDOWN
 #define X_BOOT X728_BOOT
+#define X_BUZZER X728_BUZZER
 
 int main(int argc, char **argv)
 {
@@ -68,6 +71,8 @@ int main(int argc, char **argv)
 	setOutput( gpio, X_BOOT ); // BOOT
 	setGpio(gpio, 1 << X_BOOT);
 
+	setOutput( gpio, X_BUZZER ); // BUZZER
+	clearGpio(gpio, 1 << X_BUZZER);
 
 
 	setInput( gpio, X_SHUTDOWN);	// x725 power button
@@ -96,6 +101,13 @@ int main(int argc, char **argv)
 			if (totalTime >= 600) {
 				totalTime = 0;
 				fprintf(stderr,"Shutting system down now...\n");
+				
+				fprintf(stderr," - Buzzer notification...\n");
+				setGpio(gpio, 1 << X_BUZZER);
+				usleep(25000);
+				clearGpio(gpio, 1 << X_BUZZER);
+				usleep(500000);
+				
 #ifdef POWERCTL
 				system("poweroff");
 				exit(0);

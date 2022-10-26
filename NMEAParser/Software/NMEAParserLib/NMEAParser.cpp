@@ -49,6 +49,12 @@ void CNMEAParser::ResetData(void)
 	m_GNGGA.ResetData();
 	m_GNRMC.ResetData();
 	m_GNZDA.ResetData(); // added by Bunting
+	m_GNVTG.ResetData(); // added by Bunting
+	m_GPVTG.ResetData(); // added by Bunting
+	m_GNTXT.ResetData(); // added by Bunting
+	m_GPTXT.ResetData(); // added by Bunting
+	m_GNGLL.ResetData(); // added by Bunting
+	m_GPGLL.ResetData(); // added by Bunting
 	m_GLGSV.ResetData();
 	m_GLGSA.ResetData();
 	m_QZGSV.ResetData();
@@ -119,6 +125,54 @@ CNMEAParserData::ERROR_E CNMEAParser::GetGNZDA(CNMEAParserData::ZDA_DATA_T & sen
 {
 	DataAccessSemaphoreLock();
 	sentenseData = m_GNZDA.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGNVTG(CNMEAParserData::VTG_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GNVTG.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGPVTG(CNMEAParserData::VTG_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GPVTG.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGNTXT(CNMEAParserData::TXT_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GNTXT.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGPTXT(CNMEAParserData::TXT_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GPTXT.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGNGLL(CNMEAParserData::GLL_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GNGLL.GetSentenceData();
+	DataAccessSemaphoreUnlock();
+	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGPGLL(CNMEAParserData::GLL_DATA_T & sentenseData)	// Added by Bunting
+{
+	DataAccessSemaphoreLock();
+	sentenseData = m_GPGLL.GetSentenceData();
 	DataAccessSemaphoreUnlock();
 	return CNMEAParserData::ERROR_OK;
 }
@@ -267,6 +321,36 @@ CNMEAParserData::ERROR_E CNMEAParser::ProcessRxCommand(char * pCmd, char * pData
 		m_GNZDA.ProcessSentence(pCmd, pData);
 		DataAccessSemaphoreUnlock();
 	}
+	else if (strcmp(pCmd, "GNVTG") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GNVTG.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
+	else if (strcmp(pCmd, "GPVTG") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GPVTG.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
+	else if (strcmp(pCmd, "GNTXT") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GNTXT.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
+	else if (strcmp(pCmd, "GPTXT") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GPTXT.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
+	else if (strcmp(pCmd, "GNGLL") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GNGLL.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
+	else if (strcmp(pCmd, "GPGLL") == 0) {	// this elsif() Added by Bunting
+		DataAccessSemaphoreLock();
+		m_GPGLL.ProcessSentence(pCmd, pData);
+		DataAccessSemaphoreUnlock();
+	}
 	else if (strcmp(pCmd, "GAGGA") == 0) {
 		DataAccessSemaphoreLock();
 		m_GAGGA.ProcessSentence(pCmd, pData);
@@ -298,6 +382,11 @@ CNMEAParserData::ERROR_E CNMEAParser::ProcessRxCommand(char * pCmd, char * pData
 		m_GLGSV.ProcessSentence(pCmd, pData);
 		DataAccessSemaphoreUnlock();
 	}
+	else if (strcmp(pCmd, "GPGSV") == 0) {	// HACK
+	 DataAccessSemaphoreLock();
+	 m_GLGSV.ProcessSentence(pCmd, pData);
+	 DataAccessSemaphoreUnlock();
+ }
     else if (strcmp(pCmd, "GLGSA") == 0) {
 		DataAccessSemaphoreLock();
 		m_GLGSA.ProcessSentence(pCmd, pData);

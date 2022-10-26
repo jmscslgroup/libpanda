@@ -200,6 +200,50 @@ namespace CNMEAParserData {
 	} GSV_DATA_T;
 
 	///
+	/// Positioning system mode indicator Status field
+	///
+	enum POS_MODE_IND_E {
+		POS_MODE_IND_AUTONOMOUS = 'A',
+		POS_MODE_IND_DIFFERENTIAL = 'D',
+		POS_MODE_IND_ESTIMATED = 'E',
+		POS_MODE_IND_MANUAL = 'M',
+		POS_MODE_IND_INVALID = 'N',
+	};
+
+   ///	This datatype added by Bunting
+   ///
+   ///
+   typedef struct _VTG_DATA_T {
+	   double                               m_trackTrue;                        ///< Track made good, degrees True
+	   double                               m_trackMag;                         ///< Track made good, degrees Magnetic
+	   double                               m_speedKn;                          ///< Speed over ground, knots
+	   double                               m_speedKm;                          ///< Speed over ground, kilometers/hour
+	   POS_MODE_IND_E                       m_posModeInd;                       ///< Positioning system mode indicator
+	   
+   } VTG_DATA_T;
+
+
+///
+   /// Positioning system mode indicator Status field
+   ///
+   enum TXT_IDENTIFIER_E {
+	   TXT_IDENTIFIER_ERROR = 00,
+	   TXT_IDENTIFIER_WARNING = 01,
+	   TXT_IDENTIFIER_NOTICE = 02,
+	   TXT_IDENTIFIER_USER = 07
+   };
+
+	///	This datatype added by Bunting
+	///
+	///
+	typedef struct _TXT_DATA_T {
+		int                               m_numMsgs;                       ///< Total number of messages
+		int                               m_msgNum;                        ///< Message number in this transmission
+		TXT_IDENTIFIER_E                  m_txtIdentifier;                 ///< Message type
+		char                              m_txt[256];                      ///< Message
+	
+	} TXT_DATA_T;
+	///
 	/// GNSS DOP and active satellites
 	///
 	typedef struct _GSA_DATA_T {
@@ -260,4 +304,21 @@ namespace CNMEAParserData {
 		int				m_nYear;												///< Year
 
 	} ZDA_DATA_T;
+
+	///
+	/// \brief GLL Data (by Bunting)
+	///
+	typedef struct _GLL_DATA_T {
+		double			m_dLatitude;											///< Latitude (Decimal degrees, S < 0 > N)
+//		char 			m_dLatitudeDirection;									///< Latitude Direction, Latitude direction (N = North, S = South)
+		double			m_dLongitude;											///< Longitude (Decimal degrees, W < 0 > E)
+//		char 			m_dLongitudeDirection;									///< Longitude direction (E = East, W = West)
+		int				m_nHour;												///< hour
+		int				m_nMinute;												///< Minute
+		int				m_nSecond;												///< Second
+		int				m_nMilliSecond;											///< Millisecond
+		RMC_STATUS_E		m_nStatus;												///< Status
+		POS_MODE_IND_E                       m_posModeInd;                       ///< Positioning system mode indicator
+	} GLL_DATA_T;
+
 };

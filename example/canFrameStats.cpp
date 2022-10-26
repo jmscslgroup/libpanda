@@ -28,6 +28,7 @@
 #include <cstring>
 #include <algorithm>
 #include <unistd.h>
+#include <cassert>
 
 CanFrameStats::CanFrameStats() {
 }
@@ -56,6 +57,9 @@ bool sortIdRate(const IdInfo *i, const IdInfo *j) {
 bool sortUniqueMessageCount(const IdInfo *i, const IdInfo *j) {
 	return i->data.size() < j->data.size() || ((i->data.size() == j->data.size()) && sortId(i, j));
 }
+bool sortBus(const IdInfo *i, const IdInfo *j) {
+	return i->bus < j->bus;
+}
 
 void CanFrameStats::sortById() {
 	lock();
@@ -75,6 +79,11 @@ void CanFrameStats::sortByIdRate() {
 void CanFrameStats::sortByUniqueMessageCount() {
 	lock();
 	std::sort(canStatsSorted.begin(), canStatsSorted.end(), sortUniqueMessageCount);
+	unlock();
+}
+void CanFrameStats::sortByBus() {
+	lock();
+	std::sort(canStatsSorted.begin(), canStatsSorted.end(), sortBus);
 	unlock();
 
 }
@@ -122,12 +131,21 @@ void CanFrameStats::highlightUniqueCount(int countToHighlight) {
 		}
 	}
 }
+void CanFrameStats::highlightBus(char busToHighlight) {
+	for (std::map<unsigned int, IdInfo>::iterator it = canStats.begin(); it != canStats.end(); it++) {
+		if (it->second.bus == busToHighlight) {
+			it->second.highlight = true;
+		} else {
+			it->second.highlight = false;
+		}
+	}
+}
 
 void CanFrameStats::doAction() {
 	if (canFrameFifo.size() > 0) {
 
-
-		unsigned long long int data = 0;
+		std::array<unsigned char, CAN_DATA_MAX_LENGTH> data;
+		data.fill(0x00);
 		// For packet rate:
 		struct timeval sysTime;
 		gettimeofday(&sysTime, NULL);
@@ -137,12 +155,15 @@ void CanFrameStats::doAction() {
 		lock();
 		Panda::CanFrame* canFrame = canFrameFifo.front();
 		canFrameFifo.pop_front();
-		memcpy(&data, canFrame->data, canFrame->dataLength);
+		assert(canFrame->dataLength <= CAN_DATA_MAX_LENGTH);
+		memcpy(data.data(), canFrame->data, canFrame->dataLength);
 		IdInfo* messageStats = &canStats[canFrame->messageID];
 		DataInfo* dataStats = &messageStats->data[data];
 
 		messageStats->ID = canFrame->messageID;
+		messageStats->bus = canFrame->bus;
 		messageStats->count++;
+		messageStats->latest = *canFrame;
 
 		dataStats->count++;
 		dataStats->length = canFrame->dataLength;

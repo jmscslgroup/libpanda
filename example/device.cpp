@@ -45,6 +45,11 @@ void Device::addObserver(DeviceObserver* observer) {
 
 void Device::doAction() {
 	//printf("Read: " );
+	if (file == NULL) {
+		stop();
+		return;
+	}
+	
 	for (int i = 0; i < bytesPerFrame; i++) {
 		buffer[i] = fgetc( file );
 		//printf("%d ", (int)buffer[i]);

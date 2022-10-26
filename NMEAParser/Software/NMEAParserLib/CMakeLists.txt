@@ -38,8 +38,14 @@ add_library(NMEAParserLib SHARED	# Bunting: all below headers have been moved to
 	include/NMEASentenceBase.h
 	NMEASentenceGGA.cpp
 	include/NMEASentenceGGA.h
+	NMEASentenceGLL.cpp
+	include/NMEASentenceGLL.h
 	NMEASentenceGSV.cpp
 	include/NMEASentenceGSV.h
+	NMEASentenceVTG.cpp
+	include/NMEASentenceVTG.h
+	NMEASentenceTXT.cpp
+	include/NMEASentenceTXT.h
 	NMEASentenceGSA.cpp
 	include/NMEASentenceGSA.h
 	NMEASentenceRMC.cpp
@@ -59,8 +65,14 @@ add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for i
 	include/NMEASentenceBase.h
 	NMEASentenceGGA.cpp
 	include/NMEASentenceGGA.h
+	NMEASentenceGLL.cpp
+	include/NMEASentenceGLL.h
 	NMEASentenceGSV.cpp
 	include/NMEASentenceGSV.h
+	NMEASentenceVTG.cpp
+	include/NMEASentenceVTG.h
+	NMEASentenceTXT.cpp
+	include/NMEASentenceTXT.h
 	NMEASentenceGSA.cpp
 	include/NMEASentenceGSA.h
 	NMEASentenceRMC.cpp

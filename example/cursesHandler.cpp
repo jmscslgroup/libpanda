@@ -34,6 +34,9 @@
 #include <iostream>
 #include <math.h>
 
+#include "curses-gfx.h"
+#include "curses-clock.h"
+
 #define SIMPLE_TERM
 
 #ifdef SIMPLE_TERM
@@ -287,6 +290,9 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	//	int rowSave = row+1;
 
 	//border(0, 0, 0, 0, 0, 0, 0, 0);
+	
+	
+	double xyscale = 2.25; // since column space is stretched relative to row space
 
 	int menuX = 0;
 	int menuY = 0;
@@ -301,13 +307,36 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	int satX = menuX;
 	int satY = menuY+menuHeight;
 	int satWidth = 27;
-	int satHeight = 17;
+//	int satHeight = 17;
+	int numSatellites = handler.getGps().getData().satellitesGps.size() + handler.getGps().getData().satellitesGlonass.size();
+	int satHeight = numSatellites > 12 ? numSatellites + 4 : 16;
 
 	int statX = satX + satWidth;
 	int statY = satY;
 	int statWidth = 17;
 	int statHeight = satHeight;
-
+	
+	double alpha = 0.95;
+	double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
+//	static double gpsHeading;
+//	gpsHeading += 0.1;
+	if (gpsHeading != 0) {	// HACK
+		if (gpsHeading > M_PI*2.0) {
+			gpsHeading -= M_PI*2.0;
+		}
+		if (heading - gpsHeading > M_PI) {
+			heading -= M_PI*2.0;
+		} else if (heading - gpsHeading < -M_PI) {
+			heading += M_PI*2.0;
+		}
+		heading = alpha * heading + (1-alpha)*gpsHeading;
+		if (heading > M_PI*2.0) {
+			heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
+		} else if (heading < 0) {
+			heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
+		}
+	}
+	
 
 //	miniWindow(menuY, menuY+menuHeight, menuX, menuX+menuWidth);	// Panda menu
 	miniWindow(gpsY, gpsY+gpsHeight, gpsX, gpsX+gpsWidth);	// GPS
@@ -316,12 +345,42 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	int mapX = gpsX+gpsWidth+1;
 	int mapY = gpsY;
-	int mapWidth = 54;
 	int mapHeight = 28;
+	int mapWidth = mapHeight*xyscale-2;
 	miniWindow( mapY, mapY+mapHeight, mapX, mapX+mapWidth);
 
 	//miniWindow(0,29,0,99); // Full border
-
+	
+	
+	// All the folling "+1", "+0.5", "/2.x" are herustics, a pain to tune
+	int gpsClockX = mapX;
+	int gpsClockY = mapY+mapHeight;
+	int gpsClockWidth = mapWidth/2;
+	int gpsClockHeight = (gpsClockWidth)/xyscale;
+	miniWindow( gpsClockY, gpsClockY+gpsClockHeight + 1, gpsClockX, gpsClockX+gpsClockWidth);
+	
+	int sysClockX = gpsClockX+gpsClockWidth+1;
+	int sysClockY = gpsClockY;
+	int sysClockWidth = gpsClockWidth;
+	int sysClockHeight = gpsClockHeight;
+	miniWindow( sysClockY, sysClockY+sysClockHeight + 1, sysClockX, sysClockX+sysClockWidth);
+	
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	Coordinates2D clockCenter;
+	clockCenter.x = (double)sysClockX + (double)sysClockWidth/2.0 + 0.5;
+	clockCenter.y = (double)sysClockY + (double)sysClockHeight/2.0 + 0.5;
+	drawclock((double)sysClockWidth/2.2, (double)sysClockHeight/2.3, clockCenter, true, time);
+	
+	struct tm gpsTmCopy = handler.getGps().getData().time;
+	time_t gpsTime_t = mktime(&gpsTmCopy);
+	struct timeval gpsTime;
+	gpsTime.tv_sec = gpsTime_t;
+	gpsTime.tv_usec = (handler.getGps().getData().timeMilliseconds)*1000;
+	clockCenter.x = (double)gpsClockX + (double)gpsClockWidth/2.0 + 0.5;
+	clockCenter.y = (double)gpsClockY + (double)gpsClockHeight/2.0 + 0.5;
+	drawclock((double)gpsClockWidth/2.2, (double)gpsClockHeight/2.3, clockCenter, true, gpsTime);
+	
 
 	attron(A_BOLD);
 //	printCentered(menuY+1, menuX, menuWidth, "Panda Menu");
@@ -331,6 +390,9 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 
 	printCentered(satY+1, satX, satWidth, "GPS Satellites");
 	printCentered(statY+1, statX, statWidth, "GPS Stats");
+	
+	mvprintw(sysClockY+1, sysClockX+2, "System");
+	mvprintw(gpsClockY+1, gpsClockX+2, "GPS");
 	attroff(A_BOLD);
 
 //	// Panda menu:
@@ -398,84 +460,125 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	mvprintw(row,satX + 18,"Elev");
 	mvprintw(row++,satX + 24,"SNR");
 	attroff(A_BOLD);
-	for (std::map<int,Panda::GpsSatellite>::const_iterator it = handler.getGps().getData().satellites.begin(); it != handler.getGps().getData().satellites.end(); it++) {
-		if(!it->second.visible) {
-			attron(A_DIM);
-			mvprintw(row,satX + 1,"%02d", it->first);
-		} else  {
-			attron(A_BOLD);
-			mvprintw(row,satX + 1,"%02d", it->first);
-			attroff(A_BOLD);
-		}
-		mvprintw(row,satX + 6,it->second.visible ? "yes" : " no");
-		mvprintw(row,satX + 13,"%3d", (int)it->second.azimuth);
-		mvprintw(row,satX + 19,"%2d", (int)it->second.elevation);
-		int colorPair = (it->second.SNR / 17)+1;
-		colorPair = colorPair > 4 ? 4 : colorPair;
-		attron(COLOR_PAIR(colorPair));
-		mvprintw(row++,satX + 25,"%02d", it->second.SNR);
-		attroff(COLOR_PAIR(colorPair));
-		if(!it->second.visible) {
-			attroff(A_DIM);
+	const std::map<int,Panda::GpsSatellite>* satellites[2] = {&handler.getGps().getData().satellitesGps, &handler.getGps().getData().satellitesGlonass};
+	for (int i = 0; i < 2; i++) {
+		for (std::map<int,Panda::GpsSatellite>::const_iterator it = satellites[i]->begin(); it != satellites[i]->end(); it++) {
+			if(!it->second.visible) {
+				attron(A_DIM);
+			} else {
+				attron(A_BOLD);
+			}
+			mvprintw(row,satX + 1,"%02d%c", it->first, i == 0 ? 'P' : 'L');
+			if(it->second.visible) {
+				attroff(A_BOLD);
+			}
+			mvprintw(row,satX + 6,it->second.visible ? "yes" : " no");
+			mvprintw(row,satX + 13,"%3d", (int)it->second.azimuth);
+			mvprintw(row,satX + 19,"%2d", (int)it->second.elevation);
+			int colorPair = (it->second.SNR / 17)+1;
+			colorPair = colorPair > 4 ? 4 : colorPair;
+			attron(COLOR_PAIR(colorPair));
+			mvprintw(row++,satX + 25,"%02d", it->second.SNR);
+			attroff(COLOR_PAIR(colorPair));
+			if(!it->second.visible) {
+				attroff(A_DIM);
+			}
 		}
 	}
 
 
 	// Satellite map just for kicks!
 	double radius = 13; // row radius(height)
-	double xyscale = 2.0; // since column space is stretched relative to row space
+//	double xyscale = 2.2; // since column space is stretched relative to row space
 	double centerx = mapX + 1 + 0.5 + radius*xyscale;
 	double centery = mapY + 1 + 0.5 + radius;
 
 	mvhline(centery,centerx-radius*xyscale, ACS_HLINE, 1+2*radius*xyscale);
 	mvvline(centery-radius, centerx, ACS_VLINE, 1+2*radius);
+
 	fillCorner(centery, centerx);
+	
+	Coordinates2D east, west;
+	east.x = centerx + radius*sin(-heading + M_PI_2)*xyscale;
+	east.y = centery - radius*cos(-heading + M_PI_2);
+	west.x = centerx + radius*sin(-heading + M_PI + M_PI_2)*xyscale;
+	west.y = centery - radius*cos(-heading + M_PI + M_PI_2);
+	
+	attron(COLOR_PAIR(2));
+	ln2(east, west);
+	attroff(COLOR_PAIR(2));
+	
+	Coordinates2D north, south;
+	north.x = centerx + radius*sin(-heading)*xyscale;
+	north.y = centery - radius*cos(-heading);
+	south.x = centerx + radius*sin(-heading + M_PI)*xyscale;
+	south.y = centery - radius*cos(-heading + M_PI);
+	
+	attron(COLOR_PAIR(3));
+	ln2(north, south);
+	attroff(COLOR_PAIR(3));
+	
+	
 
 	// draw title:
 
 	// draw a circle:
 	for (int i = 0; i < 360; i+= 10) {
-		double radian = 3.14159/180.0*(double)i;
-		int x = centerx + radius*sin(radian)*xyscale;
-		int y = centery - radius*cos(radian);
-		mvprintw( y, x, "*" );
+		double radian = 3.14159/180.0*(double)i - heading;
+		double x = centerx + radius*sin(radian)*xyscale;
+		double y = centery - radius*cos(radian);
+//		mvprintw( y, x, "*" );
+		drawDotFloat(x, y);
 	}
 	// print scale:
 	for (int i = 0; i < 360; i+= 30) {
-		double radian = 3.14159/180.0*(double)i;
+		double radian = 3.14159/180.0*(double)i - heading;
 		int x = centerx + radius*sin(radian)*xyscale;
 		int y = centery - radius*cos(radian);
 		attron(A_BOLD);
 		if (i == 0) {
+			attron(COLOR_PAIR(1));
 			mvprintw( y, x, "N" );
+			attroff(COLOR_PAIR(1));
 		} else if(i == 90) {
+			attron(COLOR_PAIR(3));
 			mvprintw( y, x, "E" );
+			attroff(COLOR_PAIR(3));
 		} else if(i == 180) {
+			attron(COLOR_PAIR(2));
 			mvprintw( y, x, "S" );
+			attroff(COLOR_PAIR(2));
 		} else if(i == 270) {
+			attron(COLOR_PAIR(3));
 			mvprintw( y, x, "W" );
+			attroff(COLOR_PAIR(3));
 		} else {
 			attroff(A_BOLD);
 			mvprintw( y, x-1, "%d", i );
 		}
 		attroff(A_BOLD);
 	}
+	// draw a nice origin
+	mvaddch(centery, centerx, '+');
 	// print satellite data:
 
-
-	for (std::map<int,Panda::GpsSatellite>::const_iterator it = handler.getGps().getData().satellites.begin(); it != handler.getGps().getData().satellites.end(); it++) {
-		if (it->second.visible) {
-			//				double satRadius = sin((90.0-(double)it->second.elevation)*3.14159/180.0) * (radius-1);
-			double satRadius = (90.0-(double)it->second.elevation)/90.0 * (radius-1);
-			double radian = 3.14159/180.0*(double)it->second.azimuth;
-			int x = centerx + satRadius*sin(radian)*xyscale;
-			int y = centery - satRadius*cos(radian);
-
-			int colorPair = (it->second.SNR / 17)+1;
-			colorPair = colorPair > 4 ? 4 : colorPair;
-			attron(COLOR_PAIR(colorPair+4));
-			mvprintw( y, x, "%d", it->second.ID );
-			attroff(COLOR_PAIR(colorPair+4));
+	
+	
+	for (int i = 0; i < 2; i++) {
+		for (std::map<int,Panda::GpsSatellite>::const_iterator it = satellites[i]->begin(); it != satellites[i]->end(); it++) {
+			if (it->second.visible) {
+				//				double satRadius = sin((90.0-(double)it->second.elevation)*3.14159/180.0) * (radius-1);
+				double satRadius = (90.0-(double)it->second.elevation)/90.0 * (radius-1);
+				double radian = 3.14159/180.0*(double)it->second.azimuth - heading;
+				int x = centerx + satRadius*sin(radian)*xyscale;
+				int y = centery - satRadius*cos(radian);
+				
+				int colorPair = (it->second.SNR / 17)+1;
+				colorPair = colorPair > 4 ? 4 : colorPair;
+				attron(COLOR_PAIR(colorPair+4));
+				mvprintw( y, x, "%d", it->second.ID );
+				attroff(COLOR_PAIR(colorPair+4));
+			}
 		}
 	}
 }
@@ -511,6 +614,9 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			case SORT_UNIQUE_DATA_COUNT:
 				canFrameStats.highlightUniqueCount(valueToHighlight);
 				break;
+			case SORT_ID_BUS:
+				canFrameStats.highlightBus(valueToHighlight);
+				break;
 			default:
 				break;
 		}
@@ -528,13 +634,14 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	printCentered(menuY+4, menuX, menuWidth, "Sort by pressing key:");
 	printCentered(menuY+5, menuX, menuWidth, "\'m\',\'c\',\'r\',\'u\'");
 	printCentered(menuY+6, menuX, menuWidth, "Or use arrow keys    ");
+	printCentered(menuY+7, menuX, menuWidth, "'x' Toggle hex/dec IDs");
 	printCentered(menuY+8, menuX, menuWidth, "'-' Resets unique data");
 
 
 
 	int canX = menuX+menuWidth;
 	int canY = 0;
-	int canWidth = 41;
+	int canWidth = 41 + CAN_DATA_MAX_LENGTH*2 + 1;
 	int canHeight = 40;
 
 	int uiX = menuX;
@@ -572,10 +679,20 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	int msgIdCol = canX + 2;
 	int msgIdLength = strlen(msgId);
 	char formatStringMsgId[16];
-	snprintf(formatStringMsgId, 16, "%%%dd", msgIdLength);
+	if (messageIdAsHex) {
+		snprintf(formatStringMsgId, 16, "0x%%0%dX", msgIdLength-2);
+	} else {
+		snprintf(formatStringMsgId, 16, "%%%dd", msgIdLength);
+	}
+	
+	const char msgBus[] = "Bus:";
+	int msgBusCol = msgIdCol + msgIdLength + 3;
+	int msgBusLength = strlen(msgBus);
+	char formatStringMsgBus[16];
+	snprintf(formatStringMsgBus, 16, "%%%dd", msgBusLength);
 
 	const char msgCnt[] = "Count:";
-	int msgCntCol = msgIdCol + msgIdLength + 3;
+	int msgCntCol = msgBusCol + msgBusLength + 3;
 	int msgCntLength = strlen(msgCnt);
 	char formatStringMsgCnt[16];
 	snprintf(formatStringMsgCnt, 16, "%%%dd", msgCntLength);
@@ -591,6 +708,13 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	int uniCntLength = strlen(uniCnt);
 	char formatStringUniCnt[16];
 	snprintf(formatStringUniCnt, 16, "%%%dd", uniCntLength);
+	
+	
+	const char latestCnt[] = "Latest Data:";
+	int latestCntCol = uniCntCol + uniCntLength + 3;
+	int latestCntLength = strlen(latestCnt) + 2 + (CAN_DATA_MAX_LENGTH-8)*2;
+	char formatStringLatestCnt[CAN_DATA_MAX_LENGTH*2];	// this will need to be dynamic based on length of data
+	snprintf(formatStringLatestCnt, CAN_DATA_MAX_LENGTH*2, "%%%dd", latestCntLength);
 
 	int titleRow = canY+3;
 
@@ -601,39 +725,59 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgIdCol, msgId);
 			attroff(A_STANDOUT);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = msgIdCol + msgIdLength;
+			break;
+		case SORT_ID_BUS:
+			canFrameStats.sortByBus();
+			mvprintw(titleRow, msgIdCol, msgId);
+			attron(A_STANDOUT);
+			mvprintw(titleRow, msgBusCol, msgBus);
+			attroff(A_STANDOUT);
+			mvprintw(titleRow, msgCntCol, msgCnt);
+			mvprintw(titleRow, msgRateCol, msgRate);
+			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
+			reverseColumn = msgBusCol + msgBusLength;
 			break;
 		case SORT_ID_COUNT:
 			canFrameStats.sortByIdCount();
 			mvprintw(titleRow, msgIdCol, msgId);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			attroff(A_STANDOUT);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			mvprintw(titleRow, uniCntCol, uniCnt);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = msgCntCol + msgCntLength;
 			break;
 		case SORT_ID_RATE:
 			canFrameStats.sortByIdRate();
 			mvprintw(titleRow, msgIdCol, msgId);
 			mvprintw(titleRow, msgCntCol, msgCnt);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, msgRateCol, msgRate);
 			attroff(A_STANDOUT);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			reverseColumn = msgRateCol + msgRateLength;
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			break;
 		case SORT_UNIQUE_DATA_COUNT:
 			canFrameStats.sortByUniqueMessageCount();
 			mvprintw(titleRow, msgIdCol, msgId);
 			mvprintw(titleRow, msgCntCol, msgCnt);
 			mvprintw(titleRow, msgRateCol, msgRate);
+			mvprintw(titleRow, msgBusCol, msgBus);
 			attron(A_STANDOUT);
 			mvprintw(titleRow, uniCntCol, uniCnt);
 			attroff(A_STANDOUT);
+			mvprintw(titleRow, latestCntCol, latestCnt);
 			reverseColumn = uniCntCol + uniCntLength;
 			break;
 		default:
@@ -660,9 +804,17 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
+			mvprintw(row, msgBusCol, formatStringMsgBus, idStats->bus);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+			
+			move(row, latestCntCol);
+			for (int i = idStats->latest.dataLength-1; i >= 0; i--) {
+				printw("%02X", idStats->latest.data[i]);
+//				printw(char *fmt, ...)
+			}
+//			mvprintw(row, latestCntCol, formatStringLatestCnt, idStats->data.size());
 
 			if (idStats->highlight) {
 				attroff(A_STANDOUT);
@@ -687,9 +839,17 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 
 			//mvprintw(row++, col, "%9d  %5d  %10d  ", idStats->ID, idStats->count, idStats->data.size());
 			mvprintw(row, msgIdCol, formatStringMsgId, idStats->ID);
+			mvprintw(row, msgBusCol, formatStringMsgBus, idStats->bus);
 			mvprintw(row, msgCntCol, formatStringMsgCnt, idStats->count);
 			mvprintw(row, msgRateCol, formatStringMsgRate, idStats->currentRate);
 			mvprintw(row, uniCntCol, formatStringUniCnt, idStats->data.size());
+			
+			move(row, latestCntCol);
+			for (int i = idStats->latest.dataLength-1; i >= 0; i--) {
+				printw("%02X", idStats->latest.data[i]);
+//				printw(char *fmt, ...)
+			}
+//			mvprintw(row, latestCntCol, formatStringLatestCnt, idStats->data.size());
 
 			if (idStats->highlight) {
 				attroff(A_STANDOUT);
@@ -700,7 +860,7 @@ void CursesHandler::drawCan( CanFrameStats& canFrameStats, UsbStats& usbStats ) 
 	}
 
 
-	miniWindow(canY, canY+canHeight, canX, uniCntCol + uniCntLength + 2);
+	miniWindow(canY, canY+canHeight, canX, latestCntCol + latestCntLength + 2);
 
 
 	move(fieldY, fieldX+highlightCurrentIndex);
@@ -772,6 +932,19 @@ char CursesHandler::getUserInput( )
 				reverseSortEnable = !reverseSortEnable;
 			}
 			canSortMode = SORT_UNIQUE_DATA_COUNT;
+			break;
+			
+		case 'b':
+		case 'B':
+			if (canSortMode == SORT_ID_BUS) {
+				reverseSortEnable = !reverseSortEnable;
+			}
+			canSortMode = SORT_ID_BUS;
+			break;
+			
+		case 'x':
+		case 'X':
+			messageIdAsHex = !messageIdAsHex;
 			break;
 
 		case '-':
