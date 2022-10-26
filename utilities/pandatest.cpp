@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	handler.getUsb().setRtcSeconds(30);
 	
 	// Set CAN into loopback mode:
-	handler.getUsb().setCanLoopback(true);
+	handler.getUsb().setCanLoopback(false);
 	
 	
 	bool greenLed = 0;
@@ -143,6 +143,13 @@ int main(int argc, char **argv) {
 		Panda::CanFrame frame;
 		frame.messageID = timestamp.second;
 		frame.bus = 1;
+		frame.dataLength = 8;
+		frame.data[0] = timestamp.second;
+		handler.getCan().sendMessage(frame);
+		
+		// Now bus 0
+		frame.messageID = timestamp.second;
+		frame.bus = 0;
 		frame.dataLength = 8;
 		frame.data[0] = timestamp.second;
 		handler.getCan().sendMessage(frame);

@@ -124,9 +124,10 @@ set_target_properties(${LIBNAME} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 set_target_properties(${LIBNAME}-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 target_link_libraries(${LIBNAME}    ${LIBUSB_1_LIBRARIES}
                                 mogithread
-                                NMEAParserLib )
+                                NMEAParserLib
+                                wiringPi )
 
-set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread )
+set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread wiringPi )
 
 new_install( ${LIBNAME} )
 new_install( mogithread )
