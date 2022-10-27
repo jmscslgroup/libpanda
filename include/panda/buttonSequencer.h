@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "matthat-definitions.h"
+
 
 #define RESISTANCE_POTENTIOMETER (10000)	
 
@@ -66,6 +68,34 @@ typedef struct _ButtonEvent {
 
 
 const char* nissanButtonToStr(NissanButton button);
+
+// Generic handler for any GPIO pin
+class GpioHandler {
+private:
+	int file;
+	char pinString[100];
+	int pinStringLength;
+	char directionString[100];
+	char valueString[100];
+	
+public:
+	typedef enum {
+		GPIO_DIRECTION_IN,
+		GPIO_DIRECTION_OUT,
+	} GpioDirection;
+	
+	GpioHandler();
+	~GpioHandler();
+	
+	bool open( int pinNumber );
+	bool close();
+	
+	void setDirection( GpioDirection direction );
+//	void setInput( bool enable );
+	
+	void setGpioOutput( bool value );
+	bool read();
+};
 
 class ButtonSequence {
 	
