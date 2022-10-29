@@ -12,7 +12,7 @@
 int main(int argc, char **argv) {
 	std::cout << "Starting " << argv[0] << std::endl;
 
-	MatthatReset mMatthatReset;
+	Panda::MatthatReset mMatthatReset;
 //
 //	Panda::GpioHandler resetHandler;
 //	resetHandler.open(GPIO_PIN_PANDA_RESET);

@@ -16,18 +16,18 @@
 
 using namespace Panda;
 
-unsigned short digitalPotBufferToRegister(unsigned char *buffer) {
-		unsigned short result = buffer[0];
-		return (result << 8) | buffer[1];
-}
-
-void digitalPotResistanceToBuffer(double resistance, unsigned char *buffer) {
-		resistance = resistance > (10000+DIGI_POT_RW) ? (10000+DIGI_POT_RW) : resistance;
-		resistance = resistance < DIGI_POT_RW ? DIGI_POT_RW : resistance;
-		unsigned short setting = (resistance - DIGI_POT_RW)/10000.0 * 256;
-		buffer[0] = (buffer[0] & 0xFC) | (setting >> 8);
-		buffer[1] = setting & 0xFF;
-}
+//unsigned short digitalPotBufferToRegister(unsigned char *buffer) {
+//		unsigned short result = buffer[0];
+//		return (result << 8) | buffer[1];
+//}
+//
+//void digitalPotResistanceToBuffer(double resistance, unsigned char *buffer) {
+//		resistance = resistance > (10000+DIGI_POT_RW) ? (10000+DIGI_POT_RW) : resistance;
+//		resistance = resistance < DIGI_POT_RW ? DIGI_POT_RW : resistance;
+//		unsigned short setting = (resistance - DIGI_POT_RW)/10000.0 * 256;
+//		buffer[0] = (buffer[0] & 0xFC) | (setting >> 8);
+//		buffer[1] = setting & 0xFF;
+//}
 
 const char* Panda::nissanButtonToStr(NissanButton button) {
 	switch (button) {

@@ -97,6 +97,22 @@ public:
 	bool read();
 };
 
+class DigitalPotHandler {
+private:
+	int fd;
+	unsigned char buffer[100];
+	double wiperState0;
+	double wiperState1;
+	bool wipersEngaged;
+	
+public:
+	DigitalPotHandler();
+	~DigitalPotHandler();
+	
+	void pressButton( NissanButton button );
+	void releaseButton();
+};
+
 class ButtonSequence {
 	
 private:

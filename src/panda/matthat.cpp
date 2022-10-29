@@ -53,3 +53,54 @@ void MatthatReset::doit() {
 	bootHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_IN);
 	
 }
+
+
+
+MatthatBeep::MatthatBeep() {
+	buzzerHandler.open(GPIO_PIN_BUZZER);
+	buzzerHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_OUT);
+	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+}
+
+MatthatBeep::~MatthatBeep() {
+	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+}
+
+void MatthatBeep::singleBeep() {
+	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_ON);
+	usleep(20000);	// 1/50 s
+	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+}
+
+void MatthatBeep::doubleBeep() {
+	singleBeep();
+	usleep(500000);
+	singleBeep();
+}
+
+void MatthatBeep::tripleBeep() {
+	doubleBeep();
+	usleep(500000);
+	singleBeep();
+}
+
+
+MatthatAccButtonRelay::MatthatAccButtonRelay() {
+	relayHandler.open(GPIO_PIN_RELAY_POTENTIOMETER);
+	relayHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_OUT);
+	disarm();
+}
+
+MatthatAccButtonRelay::~MatthatAccButtonRelay() {
+	disarm();
+}
+
+void MatthatAccButtonRelay::arm() {
+	relayHandler.setGpioOutput(GPIO_PIN_RELAY_POTENTIOMETER_ARMED);
+}
+
+void MatthatAccButtonRelay::disarm() {
+	relayHandler.setGpioOutput(GPIO_PIN_RELAY_POTENTIOMETER_DISARMED);
+}
+
+
