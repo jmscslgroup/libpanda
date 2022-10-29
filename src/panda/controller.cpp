@@ -38,7 +38,8 @@ Controller*  Controller::create( Panda::Handler& handler ) {
 			break;
 			
 		case VEHICLE_MANUFACTURE_NISSAN:
-			result = new NissanController;
+//			result = new NissanController;
+			result = new NissanAccButtonController;
 			break;
 			
 		default:
@@ -145,8 +146,10 @@ void Controller::entryAction() {
 			
 			
 		case VEHICLE_MANUFACTURE_NISSAN:
-			std::cout << " - Setting Safety to SAFETY_CIRCLES_NISSAN" << std::endl;
-			pandaHandler->getUsb().setSafetyMode(SAFETY_CIRCLES_NISSAN, 0);
+//			std::cout << " - Setting Safety to SAFETY_CIRCLES_NISSAN" << std::endl;
+//			pandaHandler->getUsb().setSafetyMode(SAFETY_CIRCLES_NISSAN, 0);
+			std::cout << " - Setting Safety to SAFETY_NOOUTPUT for ACC Button-based control" << std::endl;
+			pandaHandler->getUsb().setSafetyMode(SAFETY_NOOUTPUT, 0);
 			break;
 			
 		default:

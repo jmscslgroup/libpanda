@@ -69,7 +69,8 @@ int main(int argc, char **argv) {
 	pandaHandler.getCan().saveToCsvFile("nissanTest.csv");
 //	Panda::ToyotaHandler toyotaHandler(&pandaHandler);
 //	Panda::ToyotaHandler toyotaHandler();
-	Panda::NissanController* controllerAsNissanController = NULL;
+//	Panda::NissanController* controllerAsNissanController = NULL;
+	Panda::NissanAccButtonController* controllerAsNissanController = NULL;
 	
 	
 //	ExampleCheckCanSendSuccess myExampleCheckCanSendSuccess;
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 	}
 	
 	if (pandaHandler.getVehicleManufacturer() == Panda::VEHICLE_MANUFACTURE_NISSAN) {
-		controllerAsNissanController = static_cast<Panda::NissanController*>(pandaController->getController());
+		controllerAsNissanController = static_cast<Panda::NissanAccButtonController*>(pandaController->getController());
 	} else {
 		
 		std::cerr << "This is " << std::endl;
