@@ -25,6 +25,7 @@
 
 #include "panda/usb.h"
 #include "panda/pandadefinitions.h"
+#include "panda/matthat.h"	// For reset functionality if USB device not found
 
 #include "panda_version_i.h"
 
@@ -71,24 +72,37 @@ void Usb::initialize() {
 		std::cerr << "FAILED to perform libusb_init()" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
-	//Returns:
-	// - the number of devices in the outputted list, or any libusb_error according to errors encountered by the backend.
-	ssize_t numberOfDevices = libusb_get_device_list(NULL, &devices);
-	if (numberOfDevices < 0){
-		libusb_exit(NULL);
-		std::cerr << "FAILED to perform libusb_get_device_list()" << std::endl;
-		exit(EXIT_FAILURE);
-	}
 	
-	// Returns:
-	// - 0 if found, see get_panda_device() definition in this file
-	if(openDeviceByManufacturer(devices, "circles") != 0 ) {
-		std::cerr << "Failed to open a custom \"circles\" firmware-based panda device, trying a \"comma.ai\" device" << std::endl;
-		if(openDeviceByManufacturer(devices, "comma.ai") != 0 ) {
-			std::cerr << "FAILED to open \"comma.ai\", is it plugged in?" << std::endl;
-			std::cerr << " - May need root privileges if failed to open" << std::endl;
+	
+	bool failureToOpen = false;
+	for (int i = 0; i < 2; i++) {	// attempt to open device 2 times
+		
+		//Returns:
+		// - the number of devices in the outputted list, or any libusb_error according to errors encountered by the backend.
+		ssize_t numberOfDevices = libusb_get_device_list(NULL, &devices);
+		if (numberOfDevices < 0){
+			libusb_exit(NULL);
+			std::cerr << "FAILED to perform libusb_get_device_list()" << std::endl;
 			exit(EXIT_FAILURE);
+		}
+		
+		// Returns:
+		// - 0 if found, see get_panda_device() definition in this file
+		if(openDeviceByManufacturer(devices, "circles") != 0 ) {
+			std::cerr << "Failed to open a custom \"circles\" firmware-based panda device, trying a \"comma.ai\" device" << std::endl;
+			if(openDeviceByManufacturer(devices, "comma.ai") != 0 ) {
+				if (failureToOpen == true) {	// ALREADY FAILED ONCE, MUST NOT BE CONNECTED
+					std::cerr << "FAILED to open \"comma.ai\", is it plugged in?" << std::endl;
+					std::cerr << " - May need root privileges if failed to open" << std::endl;
+					exit(EXIT_FAILURE);
+				}
+				failureToOpen = true;
+				// Let's reset the
+				std::cerr << "FAILED to open \"comma.ai\", performing a matthat board reset via GPIO..." << std::endl;
+				MatthatReset reset;
+				reset.doit();
+				
+			}
 		}
 	}
 	

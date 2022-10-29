@@ -38,6 +38,7 @@
 #include "panda/obd-pid.h"
 #include "panda/vin.h"
 #include "panda/buttonSequencer.h"
+#include "panda/matthat.h"
 
 #define PANDA_RATE_HEARTBEAT (2.0)	// Hz, for HeartbeatHelper
 
