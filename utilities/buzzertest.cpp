@@ -23,27 +23,33 @@ int main(int argc, char **argv) {
 	//Set up graceful exit
 	signal(SIGINT, killPanda);
 	
-	Panda::GpioHandler mGpioHandler;
-	mGpioHandler.open(GPIO_PIN_BUZZER);
-	mGpioHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_OUT);
-	
+//	Panda::GpioHandler mGpioHandler;
+//	mGpioHandler.open(GPIO_PIN_BUZZER);
+//	mGpioHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_OUT);
+
+	Panda::MatthatBeep mMatthatBeep;
 
 	int count = 0;
-	std::cout << "Each \'.\' represents a 0.02s buzzer attempt." << std::endl;
+//	std::cout << "Each \'.\' represents a 0.02s buzzer attempt:" << std::endl;
 	while (keepRunning == true ) {
-		std::cerr << ".";
-		mGpioHandler.setGpioOutput(1);
-		usleep(20000);
-		mGpioHandler.setGpioOutput(0);
-		usleep(500000 - 20000);
+//		std::cerr << ".";
+		mMatthatBeep.singleBeep();
+		std::cout << "Single Beep called" << std::endl;
+		sleep(1);
+		mMatthatBeep.doubleBeep();
+		std::cout << "Double Beep called" << std::endl;
+		sleep(1);
+		mMatthatBeep.tripleBeep();
+		std::cout << "Triple Beep called" << std::endl;
+		sleep(1);
 		
-		if(count++ >= 2) {
+		if(count++ >= 0) {
 			keepRunning = false;
 		}
 	}
 	
 	
-	std::cout << "Done." << std::endl;
+	std::cout << std::endl << "Done." << std::endl;
 
 	return 0;
 }

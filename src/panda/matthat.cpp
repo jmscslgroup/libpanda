@@ -67,22 +67,38 @@ MatthatBeep::~MatthatBeep() {
 //	buzzerHandler.close();
 }
 
+void MatthatBeep::entryAction() {
+	for (int i = 0; i < beepCount; i++) {
+		buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_ON);
+		std::cout << "Beep!" << std::endl;
+		usleep(onTime);	// 1/20 s
+		buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+		usleep(offTime);
+	}
+}
+
 void MatthatBeep::singleBeep() {
-	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_ON);
-	usleep(50000);	// 1/20 s
-	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+//	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_ON);
+//	usleep(50000);	// 1/20 s
+//	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+	beepCount = 1;
+	onTime = 50000;
+	offTime = 0;
+	start();
 }
 
 void MatthatBeep::doubleBeep() {
-	singleBeep();
-	usleep(50000);
-	singleBeep();
+	beepCount = 2;
+	onTime = 50000;
+	offTime = 100000;
+	start();
 }
 
 void MatthatBeep::tripleBeep() {
-	doubleBeep();
-	usleep(50000);
-	singleBeep();
+	beepCount = 3;
+	onTime = 60000;
+	offTime = 200000;
+	start();
 }
 
 

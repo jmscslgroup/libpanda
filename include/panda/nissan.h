@@ -10,6 +10,8 @@
 
 #define NISSAN_COMMAND_THREAD_RATE (200.0)	// Defines the rate of intervalAction
 
+
+// The following is deprecated stuff:
 #define NISSAN_COMMAND_BUTTON_RATE (10.0)	// Defines the rate of sending a button
 #define NISSAN_COMMAND_303_RATE (50.0)	// Defines the rate of message 303
 
@@ -17,8 +19,16 @@
 #define NISSAN_DECIMATOR_303 (NISSAN_COMMAND_THREAD_RATE/NISSAN_COMMAND_303_RATE)
 
 // Stuff for ACC button presses:
-#define NISSAN_COMMAND_PEDAL_WAIT_TIME (1.0)	// Defines the rate of sending a button
+#define NISSAN_COMMAND_PEDAL_WAIT_TIME (1.0)	// The time in seconds to wait before pressing SET after pedals released
+#define NISSAN_COMMAND_SET_WAIT_TIME (1.0)		// The time to wait in seconds after pressing SET to enter controls_allowed
 #define NISSAN_DECIMATOR_PEDAL_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_PEDAL_WAIT_TIME)
+#define NISSAN_DECIMATOR_SET_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_SET_WAIT_TIME)
+
+
+// Nassan' reported CRUISE_STATE values, from reverse-engineering:
+#define NISSAN_CRUISE_STATE_OFF (1)
+#define NISSAN_CRUISE_STATE_IDLE (13)
+#define NISSAN_CRUISE_STATE_ACTIVE (25)
 
 namespace Panda {
 

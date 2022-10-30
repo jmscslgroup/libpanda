@@ -6,6 +6,7 @@
 #define MATTHAT_H
 
 #include "panda/buttonSequencer.h"
+#include "mogi/thread.h"
 
 namespace Panda {
 class MatthatReset {
@@ -19,9 +20,15 @@ public:
 	void doit();
 };
 
-class MatthatBeep {
+class MatthatBeep : Mogi::Thread {
 private:
 	Panda::GpioHandler buzzerHandler;
+	int beepCount;
+	int onTime;
+	int offTime;
+	
+	// Overlload from Mogi::Thread
+	void entryAction();
 	
 public:
 	MatthatBeep();
