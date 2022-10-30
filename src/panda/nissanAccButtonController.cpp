@@ -94,7 +94,9 @@ void NissanAccButtonController::intervalAction() {
 			break;
 			
 		case ACC_STATE_IDLE:
-			if( decimatorPedalWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
+			if ( gasPressed ) {	// brake press?
+				decimatorPedalWaitTimer = 0;
+			} else if( decimatorPedalWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
 				decimatorPedalWaitTimer = 0;
 				// Timer expired, enter new state:
 				enterState(ACC_STATE_SET_WAIT);
@@ -155,12 +157,25 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 //	}
 //}
 
+void parseAccButtons(CanFrame* canFrame, NissanButton* buttonState) {
+	if (canFrame->messageID == 1119) {
+		NissanButton ACC_BTNS = *buttonState;
+		nissanParseWheelButtons( *canFrame, (unsigned char*)&ACC_BTNS  );
+		if (*buttonState != ACC_BTNS) {
+			*buttonState = ACC_BTNS;
+			
+//			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
+			printf("parseAccButtons(): Change detected: buttonState = %d:%s\n", (int)*buttonState, nissanButtonToStr( *buttonState ));
+		}
+	}
+}
+
 void NissanAccButtonController::updateStateVariables(CanFrame* canFrame) {
 	parseCruiseState(canFrame, &cruiseState, &cruiseEngaged);
 	cruiseOn = (cruiseState != NISSAN_CRUISE_STATE_OFF);
 	parseGasPressed(canFrame, &gasPressed);
 //	parseBrakePressed(canFrame, &brakePressed);
-	
+	parseAccButtons(canFrame, &buttonState);
 }
 
 
@@ -182,9 +197,6 @@ void NissanAccButtonController::newCanNotification(CanFrame* canFrame) {
 			break;
 			
 		case ACC_STATE_IDLE:
-			if ( gasPressed ) {	// brake press?
-				decimatorPedalWaitTimer = 0;
-			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
@@ -195,9 +207,9 @@ void NissanAccButtonController::newCanNotification(CanFrame* canFrame) {
 				printf("NissanAccButtonController: Entered ACC IDLE while controls_allowed, perhaps brake was pressed?\n");
 				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
 			}
-			if ( gasPressed ) {
-				enterState(ACC_STATE_SET_WAIT);
-			}
+//			if ( gasPressed ) {
+//				enterState(ACC_STATE_SET_WAIT);
+//			}
 			break;
 			
 		case ACC_STATE_POWER_TOGGLE_NEEDED:

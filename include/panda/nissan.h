@@ -56,6 +56,7 @@ private:
 	unsigned char cruiseState;
 	bool cruiseOn;
 	bool cruiseEngaged;
+	NissanButton buttonState;
 	
 	bool pedalTimerExpired;
 	

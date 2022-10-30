@@ -32,17 +32,17 @@ using namespace Panda;
 const char* Panda::nissanButtonToStr(NissanButton button) {
 	switch (button) {
 		case NISSAN_BUTTON_CRUISE_ON:
-			return "RESISTANCE_CRUISE_ON";
+			return "NISSAN_BUTTON_CRUISE_ON";
 		case NISSAN_BUTTON_SET:
-			return "RESISTANCE_SET";
+			return "NISSAN_BUTTON_SET";
 		case NISSAN_BUTTON_RES:
-			return "RESISTANCE_RES";
+			return "NISSAN_BUTTON_RES";
 		case NISSAN_BUTTON_CANCEL:
-			return "RESISTANCE_CANCEL";
+			return "NISSAN_BUTTON_CANCEL";
 		case NISSAN_BUTTON_DISTANCE:
-			return "RESISTANCE_DISTANCE";
+			return "NISSAN_BUTTON_DISTANCE";
 		case NISSAN_BUTTON_OFF:
-			return "RESISTANCE_OFF";
+			return "NISSAN_BUTTON_OFF";
 	}
 	
 	return NULL;

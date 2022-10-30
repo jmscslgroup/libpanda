@@ -212,7 +212,7 @@ void Panda::nissanParseCruise( CanFrame& frame, unsigned char* CRUISE_STATE, boo
  */
 
 void Panda::nissanParseWheelButtons( CanFrame& frame, unsigned char* ACC_BTNS  ) {
-	*ACC_BTNS = (frame.data[7] >> 5) &  0x07;
+	*ACC_BTNS = (frame.data[7] >> 3) &  0x07;
 }
 
 
