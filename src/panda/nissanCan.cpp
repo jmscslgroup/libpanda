@@ -194,8 +194,10 @@ void Panda::nissanParseCruise( CanFrame& frame, unsigned char* CRUISE_STATE, boo
 	
 //	*CRUISE_STATE = (frame.data[38] >> 2) &  0x1F;
 	
-	*CRUISE_STATE = (frame.data[38] << 2) &  0x1C;
-	*CRUISE_STATE += (frame.data[39] >> 6) &  0x03;
+//	*CRUISE_STATE = (frame.data[38] << 2) &  0x1C;
+//	*CRUISE_STATE += (frame.data[39] >> 6) &  0x03;
+	*CRUISE_STATE = (frame.data[38] << 1) &  0x0E;
+	*CRUISE_STATE += (frame.data[39] >> 7) &  0x01;
 	
 	
 	
@@ -212,7 +214,7 @@ void Panda::nissanParseCruise( CanFrame& frame, unsigned char* CRUISE_STATE, boo
  */
 
 void Panda::nissanParseWheelButtons( CanFrame& frame, unsigned char* ACC_BTNS  ) {
-	*ACC_BTNS = (frame.data[7] >> 3) &  0x07;
+	*ACC_BTNS = (frame.data[7] >> 3) & 0x07;
 }
 
 

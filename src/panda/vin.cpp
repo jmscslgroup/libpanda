@@ -36,9 +36,13 @@ int Panda::vinToYear( const unsigned char* vin ) {
 	if (yearCode >= '1' && yearCode <= '9') {
 		return 2000 + (int)(yearCode-'0');
 	}
-	if (yearCode > 'I') {	// 'I' is an invalid letter in a VIN, so it is skipped
+	if (yearCode >= 'I') {	// 'I' is an invalid letter in a VIN, so it is skipped
+		if (yearCode >= 'O') {	// 'O' is an invalid letter in a VIN, so it is skipped
+			yearCode -= 1;
+		}
 		yearCode -= 1;
 	}
+	
 	return 2010 + (int)(yearCode-'A');
 }
 
@@ -128,7 +132,12 @@ VehicleModel Panda::vinToModel( const unsigned char* vin ) {
 				}
 				break;
 				
-				
+			case VEHICLE_MANUFACTURE_NISSAN:
+				switch (vin[2]) {
+					case '1': return VEHICLE_MODEL_NISSAN_ROGUE;
+					default: break;
+				}
+					
 			case VEHICLE_MANUFACTURE_OTHER:
 			default:
 				break;

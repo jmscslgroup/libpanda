@@ -67,13 +67,11 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 }
 
 void NissanAccButtonController::exitState() {
-//	std::cout << "NissanAccButtonController: Exiting state " << stateToName(state) << std::endl;
 	switch (state) {
 		case ACC_STATE_OFF:
 			break;
 			
 		case ACC_STATE_IDLE:
-//			potHandler.pressButton(NISSAN_BUTTON_SET);
 			break;
 			
 		case ACC_STATE_SET_WAIT:
@@ -128,12 +126,12 @@ void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* crui
 		if (*cruiseState != CRUISE_STATE) {
 			*cruiseState = CRUISE_STATE;
 			
-			printf("parseCruiseState(): Change detected: Message 308: cruiseState = %d\n", (int)*cruiseState);
+			printf("parseCruiseState(): CAN change detected: Message 308: cruiseState = %d\n", (int)*cruiseState);
 		}
 		
 		if (*cruiseEngaged != CRUISE_ENGAGED) {
 			*cruiseEngaged = CRUISE_ENGAGED;
-			printf("parseCruiseState(): Change detected: Message 308: cruiseEngaged = %d (Currently unused)\n", *cruiseEngaged);
+			printf("parseCruiseState(): CAN change detected: Message 308: cruiseEngaged = %d (Currently unused)\n", *cruiseEngaged);
 		}
 		
 	}
@@ -147,7 +145,7 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 			*gasPressed = ACCEL_PEDAL_POSITION != 0;
 			
 //			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
-			printf("parseCruiseState(): Change detected: gasPressed = %d\n", *gasPressed);
+			printf("parseCruiseState(): CAN change detected: gasPressed = %d\n", *gasPressed);
 		}
 	}
 }
@@ -160,13 +158,13 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 
 void parseAccButtons(CanFrame* canFrame, NissanButton* buttonState) {
 	if (canFrame->messageID == 1119) {
-		NissanButton ACC_BTNS = *buttonState;
-		nissanParseWheelButtons( *canFrame, (unsigned char*)&ACC_BTNS  );
+		unsigned char ACC_BTNS = *buttonState;
+		nissanParseWheelButtons( *canFrame, &ACC_BTNS  );
 		if (*buttonState != ACC_BTNS) {
-			*buttonState = ACC_BTNS;
+			*buttonState = (NissanButton)ACC_BTNS;
 			
 //			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
-			printf("parseAccButtons(): Change detected: buttonState = %d:%s\n", (int)*buttonState, nissanButtonToStr( *buttonState ));
+			printf("parseAccButtons(): CAN change detected: buttonState = %d:%s\n", (int)*buttonState, nissanButtonToStr( *buttonState ));
 		}
 	}
 }

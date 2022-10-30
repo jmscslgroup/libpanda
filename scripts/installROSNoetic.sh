@@ -54,9 +54,9 @@ cd ~/ros_install_ws
 #rosdep install -y --from-paths src --ignore-src --rosdistro noetic -r --os=debian:buster
 rosdep install -y --from-paths src --ignore-src --rosdistro noetic -r #--os=debian:buster
 
-# The below does not allow other packages tobe compiled against common_msgs, see above instead
+# The below does not allow other packages to be compiled against common_msgs, see above instead
 # Bunting: I included the below block for also installing common ROS messages
-# I also feel like this should be instlalled via apt, not sure if that's possible
+# I also feel like this should be installed via apt, not sure if that's possible
 #cd src
 #git clone https://github.com/ros/common_msgs.git
 #cd ..
