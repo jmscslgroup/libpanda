@@ -27,8 +27,10 @@
 
 // Nassan' reported CRUISE_STATE values, from reverse-engineering:
 #define NISSAN_CRUISE_STATE_OFF (1)
+#define NISSAN_CRUISE_STATE_STANDSTILL (9)
 #define NISSAN_CRUISE_STATE_IDLE (13)
 #define NISSAN_CRUISE_STATE_ACTIVE (25)
+#define NISSAN_CRUISE_STATE_UNKNOWN_ACTIVE (29)
 
 namespace Panda {
 

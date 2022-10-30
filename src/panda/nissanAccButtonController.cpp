@@ -49,6 +49,7 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 			break;
 			
 		case ACC_STATE_SET_WAIT:
+			buzzerHandler.singleBeep();
 			decimatorSetWaitTimer = 0;
 			break;
 			
@@ -66,18 +67,17 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 }
 
 void NissanAccButtonController::exitState() {
-	std::cout << "NissanAccButtonController: Exiting state " << stateToName(state) << std::endl;
+//	std::cout << "NissanAccButtonController: Exiting state " << stateToName(state) << std::endl;
 	switch (state) {
 		case ACC_STATE_OFF:
 			break;
 			
 		case ACC_STATE_IDLE:
-			relayHandler.arm();
-			buzzerHandler.singleBeep();
-			potHandler.pressButton(NISSAN_BUTTON_SET);
+//			potHandler.pressButton(NISSAN_BUTTON_SET);
 			break;
 			
 		case ACC_STATE_SET_WAIT:
+			relayHandler.arm();
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
@@ -94,13 +94,13 @@ void NissanAccButtonController::intervalAction() {
 			break;
 			
 		case ACC_STATE_IDLE:
-			if ( gasPressed ) {	// brake press?
-				decimatorPedalWaitTimer = 0;
-			} else if( decimatorPedalWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
-				decimatorPedalWaitTimer = 0;
-				// Timer expired, enter new state:
-				enterState(ACC_STATE_SET_WAIT);
-			}
+//			if ( gasPressed ) {	// brake press?
+//				decimatorPedalWaitTimer = 0;
+//			} else if( decimatorPedalWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
+//				decimatorPedalWaitTimer = 0;
+//				// Timer expired, enter new state:
+//				enterState(ACC_STATE_SET_WAIT);
+//			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
@@ -114,6 +114,7 @@ void NissanAccButtonController::intervalAction() {
 			break;
 			
 		case ACC_STATE_POWER_TOGGLE_NEEDED:
+			enterState(ACC_STATE_IDLE);
 			break;
 	}
 }
@@ -197,19 +198,29 @@ void NissanAccButtonController::newCanNotification(CanFrame* canFrame) {
 			break;
 			
 		case ACC_STATE_IDLE:
+//			if (buttonState == NISSAN_BUTTON_SET ||
+//				buttonState == NISSAN_BUTTON_RES) {
+//				enterState(ACC_STATE_SET_WAIT);
+//			}
+			if (cruiseEngaged == 1) {
+				enterState(ACC_STATE_SET_WAIT);
+			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
-			if ( cruiseState == NISSAN_CRUISE_STATE_IDLE ) {	// BRAKE WAS PRESSED
-				printf("NissanAccButtonController: Entered ACC IDLE while controls_allowed, perhaps brake was pressed?\n");
-				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
-			}
+//			if ( cruiseState == NISSAN_CRUISE_STATE_IDLE ) {	// BRAKE WAS PRESSED
+//				printf("NissanAccButtonController: Entered ACC IDLE while controls_allowed, perhaps brake was pressed?\n");
+//				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
+//			}
 //			if ( gasPressed ) {
 //				enterState(ACC_STATE_SET_WAIT);
 //			}
+			if (cruiseEngaged == 0) {
+				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
+			}
 			break;
 			
 		case ACC_STATE_POWER_TOGGLE_NEEDED:
