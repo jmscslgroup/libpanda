@@ -20,6 +20,8 @@ NissanAccButtonController::NissanAccButtonController() {
 	
 	state = ACC_STATE_OFF;
 	//enterState(ACC_STATE_OFF);
+	
+	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
@@ -42,6 +44,7 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 	std::cout << "NissanAccButtonController: Entering state " << stateToName(newState) << std::endl;
 	switch (newState) {
 		case ACC_STATE_OFF:
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
 			break;
 			
 		case ACC_STATE_IDLE:
