@@ -55,6 +55,7 @@ private:
 //	bool brakePressed;
 	unsigned char cruiseState;
 	bool cruiseOn;
+	bool cruiseEngaged;
 	
 	bool pedalTimerExpired;
 	

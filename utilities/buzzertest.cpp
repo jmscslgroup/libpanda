@@ -43,6 +43,10 @@ int main(int argc, char **argv) {
 		std::cout << "Triple Beep called" << std::endl;
 		sleep(1);
 		
+		mMatthatBeep.customBeep(5, 100000, 100000);
+		std::cout << "Custom Quintuple Beep called" << std::endl;
+		sleep(1);
+		
 		if(count++ >= 0) {
 			keepRunning = false;
 		}

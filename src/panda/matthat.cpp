@@ -101,6 +101,13 @@ void MatthatBeep::tripleBeep() {
 	start();
 }
 
+void MatthatBeep::customBeep(int count, int onTimeMicroseconds, int offTimeMicroseconds) {
+	beepCount = count;
+	onTime = onTimeMicroseconds;
+	offTime = offTimeMicroseconds;
+	start();
+}
+
 
 MatthatAccButtonRelay::MatthatAccButtonRelay() {
 	relayHandler.open(GPIO_PIN_RELAY_POTENTIOMETER);

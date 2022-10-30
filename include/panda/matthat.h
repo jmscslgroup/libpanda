@@ -37,6 +37,8 @@ public:
 	void singleBeep();
 	void doubleBeep();
 	void tripleBeep();
+	
+	void customBeep(int count, int onTimeMicroseconds, int offTimeMicroseconds);
 };
 
 class MatthatAccButtonRelay {

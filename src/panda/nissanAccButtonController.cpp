@@ -13,12 +13,13 @@ NissanAccButtonController::NissanAccButtonController() {
 //	brakePressed = false;
 	cruiseState = NISSAN_CRUISE_STATE_OFF;
 	cruiseOn = false;
+	cruiseEngaged = false;
 	
 	// Other Initialization:
 	this->setIntervalActionRate(NISSAN_COMMAND_THREAD_RATE);
 	
 	state = ACC_STATE_OFF;
-	enterState(ACC_STATE_OFF);
+	//enterState(ACC_STATE_OFF);
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
@@ -49,15 +50,15 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 			
 		case ACC_STATE_SET_WAIT:
 			decimatorSetWaitTimer = 0;
-			relayHandler.arm();
-			buzzerHandler.singleBeep();
-			potHandler.pressButton(NISSAN_BUTTON_SET);
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
 			break;
 			
 		case ACC_STATE_POWER_TOGGLE_NEEDED:
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+			relayHandler.disarm();
+			buzzerHandler.doubleBeep();
 			break;
 	}
 	
@@ -71,15 +72,15 @@ void NissanAccButtonController::exitState() {
 			break;
 			
 		case ACC_STATE_IDLE:
+			relayHandler.arm();
+			buzzerHandler.singleBeep();
+			potHandler.pressButton(NISSAN_BUTTON_SET);
 			break;
 			
 		case ACC_STATE_SET_WAIT:
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
-			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
-			relayHandler.disarm();
-			buzzerHandler.doubleBeep();
 			break;
 			
 		case ACC_STATE_POWER_TOGGLE_NEEDED:
@@ -115,18 +116,23 @@ void NissanAccButtonController::intervalAction() {
 	}
 }
 
-void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState) {
+void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* cruiseEngaged) {
 	if (canFrame->messageID == 308) {
 		unsigned char CRUISE_STATE;
 		bool CRUISE_ENGAGED;
 		nissanParseCruise(*canFrame, &CRUISE_STATE, &CRUISE_ENGAGED);
 		
 		if (*cruiseState != CRUISE_STATE) {
+			*cruiseState = CRUISE_STATE;
 			
-			printf("parseCruiseState(): Change detected: Message 308: CRUISE_STATE = %d, CRUISE_ENGAGED = %d\n", (int)CRUISE_STATE, CRUISE_ENGAGED);
+			printf("parseCruiseState(): Change detected: Message 308: cruiseState = %d\n", (int)*cruiseState);
 		}
 		
-		*cruiseState = CRUISE_STATE;
+		if (*cruiseEngaged != CRUISE_ENGAGED) {
+			*cruiseEngaged = CRUISE_ENGAGED;
+			printf("parseCruiseState(): Change detected: Message 308: cruiseEngaged = %d (Currently unused)\n", *cruiseEngaged);
+		}
+		
 	}
 }
 
@@ -135,10 +141,11 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 		int ACCEL_PEDAL_POSITION;
 		nissanPedalThrottle(*canFrame, &ACCEL_PEDAL_POSITION);
 		if (*gasPressed != (ACCEL_PEDAL_POSITION != 0)) {
+			*gasPressed = ACCEL_PEDAL_POSITION != 0;
 			
-			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
+//			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
+			printf("parseCruiseState(): Change detected: gasPressed = %d\n", *gasPressed);
 		}
-		*gasPressed = ACCEL_PEDAL_POSITION != 0;
 	}
 }
 
@@ -149,7 +156,7 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 //}
 
 void NissanAccButtonController::updateStateVariables(CanFrame* canFrame) {
-	parseCruiseState(canFrame, &cruiseState);
+	parseCruiseState(canFrame, &cruiseState, &cruiseEngaged);
 	cruiseOn = (cruiseState != NISSAN_CRUISE_STATE_OFF);
 	parseGasPressed(canFrame, &gasPressed);
 //	parseBrakePressed(canFrame, &brakePressed);
@@ -189,7 +196,7 @@ void NissanAccButtonController::newCanNotification(CanFrame* canFrame) {
 				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
 			}
 			if ( gasPressed ) {
-				enterState(ACC_STATE_IDLE);
+				enterState(ACC_STATE_SET_WAIT);
 			}
 			break;
 			
