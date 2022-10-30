@@ -16,6 +16,10 @@
 #define NISSAN_DECIMATOR_BUTTON (NISSAN_COMMAND_THREAD_RATE/NISSAN_COMMAND_BUTTON_RATE)
 #define NISSAN_DECIMATOR_303 (NISSAN_COMMAND_THREAD_RATE/NISSAN_COMMAND_303_RATE)
 
+// Stuff for ACC button presses:
+#define NISSAN_COMMAND_PEDAL_WAIT_TIME (1.0)	// Defines the rate of sending a button
+#define NISSAN_DECIMATOR_PEDAL_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_PEDAL_WAIT_TIME)
+
 namespace Panda {
 
 
@@ -28,21 +32,30 @@ class NissanAccButtonController : public Panda::Controller {
 private:
 	// State definitions
 	typedef enum {
-		ACC_STATE_IDLE,
-		ACC_STATE_WAITING_PEDAL_RELEASE,
-		ACC_STATE_SETUP_CONTROL,
-		ACC_STATE_CONTROLS_ALLOWED,	// armed
-		ACC_STATE_CANCEL_REQUEST
+		ACC_STATE_OFF,
+		ACC_STATE_IDLE,	// ON
+		ACC_STATE_SET_WAIT,	// wait for SET to be recognized to change vehicle's state
+		ACC_STATE_CONTROLS_ALLOWED,	// armed and ON
+		ACC_STATE_POWER_TOGGLE_NEEDED,
+		//ACC_STATE_COME_HOME	// ON
 	} AccCommandState;
 	
 	AccCommandState state;
+	bool gasPressed;
+//	bool brakePressed;
+	unsigned char cruiseState;
+	bool cruiseOn;
+	
+	bool pedalTimerExpired;
 	
 	// Gpio stuff operation
 	MatthatAccButtonRelay relayHandler;
 	MatthatBeep buzzerHandler;
+	DigitalPotHandler potHandler;
 	
 	// List of loop decimators:
-	int decimatorWaitTimer;
+	int decimatorPedalWaitTimer;
+	int decimatorSetWaitTimer;
 	
 	// Functional attributes:
 	
@@ -61,7 +74,11 @@ private:
 	void handleSetAcceleration( double acceleration );
 	void newCanNotification(CanFrame* canFrame);
 	
+	void enterState( AccCommandState newState );
+	void exitState( );
 	
+	
+	void updateStateVariables( CanFrame* canFrame );
 	
 protected:
 	NissanAccButtonController();
@@ -70,7 +87,10 @@ public:
 	
 	~NissanAccButtonController();
 	
-	void sendButton( bool value );
+	bool sendButton( NissanButton button );
+	
+	static const char* stateToName( const AccCommandState& state);
+	
 };
 
 /*! CAN message building functions
@@ -83,6 +103,9 @@ void replaceCanThreeOhThree( CanFrame* frame, int WHEEL_TORQUE, int speed );
 CanFrame buildCanThreeOhThree( int WHEEL_TORQUE, int speed );
 void nissanParseThreeOhThree( CanFrame& frame, int* WHEEL_TORQUE, int* speed  );
 
+void nissanPedalThrottle( CanFrame& frame, int* ACCEL_PEDAL_POSITION  );
+void nissanParseCruise( CanFrame& frame, unsigned char* CRUISE_STATE, bool* CRUISE_ENGAGED  );
+void nissanParseWheelButtons( CanFrame& frame, unsigned char* ACC_BTNS  );
 
 /*! NissanController
 	

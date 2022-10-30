@@ -16,38 +16,37 @@ GpioHandler::GpioHandler() {
 }
 
 GpioHandler::~GpioHandler() {
-	close();
+	this->close();
 }
 
 
 bool GpioHandler::open( int pinNumber ) {
+	pinStringLength = sprintf(pinString, "%d", pinNumber);
+	sprintf(directionString, "/sys/class/gpio/gpio%d/direction", pinNumber);
+	sprintf(valueString, "/sys/class/gpio/gpio%d/value", pinNumber);
+	
 	int fd = ::open("/sys/class/gpio/export", O_WRONLY);
 	if (fd == -1) {
 		fprintf(stderr, "Error: GpioHandler::open(): Unable to open /sys/class/gpio/export\n");
-		return 1;
-	}
-	
-	pinStringLength = sprintf(pinString, "%d", pinNumber);
-	
-	if (write(fd, pinString, pinStringLength) != pinStringLength) {
-		fprintf(stderr, "Error: GpioHandler::open(): Error writing \"%s\" to /sys/class/gpio/export\n", pinString);
+		//	return 1;
+	} else {
+		
+		if (write(fd, pinString, pinStringLength) != pinStringLength) {
+			fprintf(stderr, "Error: GpioHandler::open(): Error writing \"%s\" to /sys/class/gpio/export\n", pinString);
+			//::close(fd);
+			//return 1;
+		}
 		::close(fd);
-		return 1;
 	}
-	::close(fd);
-	
-	
-	sprintf(directionString, "/sys/class/gpio/gpio%d/direction", pinNumber);
 	
 	// default to input:
 	setDirection( GPIO_DIRECTION_IN );
-	
-	sprintf(valueString, "/sys/class/gpio/gpio%d/value", pinNumber);
 	
 	file = ::open(valueString, O_WRONLY);
 	if (file == -1) {
 		fprintf(stderr, "Error: GpioHandler::open(): Unable to open %s\n", valueString);
 		//		exit(1);
+		return 1;
 	}
 	return 0;
 }
@@ -55,13 +54,15 @@ bool GpioHandler::open( int pinNumber ) {
 bool GpioHandler::close( ) {
 	if(file < 0) {
 		//fprintf(stderr, "Warning: GpioHandler::close(): Gpio %s was never open!\n", pinString);
-		return 1;
+//		return 1;
+	} else {
+		::close(file);
+		file = -1;
 	}
 	
 	setDirection( GPIO_DIRECTION_IN );	// Juuust incase
 	
-	::close(file);
-	file = -1;
+	
 	
 	int fd = ::open("/sys/class/gpio/unexport", O_WRONLY);
 	if (fd == -1) {
@@ -71,7 +72,9 @@ bool GpioHandler::close( ) {
 	
 	if (write(fd, pinString, pinStringLength) != pinStringLength) {
 		fprintf(stderr, "Error: GpioHandler::close(): Unable to open /sys/class/gpio/unexport\n");
-		::close(fd);
+//		::close(fd);
+	} else {
+		fprintf(stderr, "Info: GpioHandler::close(): \"%s\" written to /sys/class/gpio/unexport\n", pinString);
 	}
 	
 	

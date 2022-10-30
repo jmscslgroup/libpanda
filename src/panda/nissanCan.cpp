@@ -157,3 +157,73 @@ void Panda::nissanParseThreeOhThree( CanFrame& frame, int* WHEEL_TORQUE, int* sp
 	*speed |= (frame.data[8] >> 2) & 0x3F;
 	*speed |= (((int)frame.data[7])  << 6) & 0x00FC0;	// speed
 }
+
+
+/*
+ BO_ 140 PEDAL_THROTTLE: 48 XXX
+  SG_ ACCEL_PEDAL_POSITION: 43|10@0+ (1,0) [0|1000] "" XXX
+  SG_ ACCEL_PEDAL_POSITION_REPEAT: 49|10@0+ (1,0) [0|200] "" XXX
+  SG_ RPM_RELATED: 86|12@0+ (0.05,0) [0|4000] "" XXX
+  SG_ WHEEL_TORQUE_CMD_RELATED: 139|16@0+ (0.05,0) [0|100000] "" XXX
+  SG_ RPM: 167|16@0+ (0.14285,0) [0|100000] "" XXX
+  SG_ WHEEL_TORQUE_CMD_RELATED_2: 183|10@0+ (0.05,0) [0|100000] "" XXX
+ */
+
+void Panda::nissanPedalThrottle( CanFrame& frame, int* ACCEL_PEDAL_POSITION  ) {
+//	*ACCEL_PEDAL_POSITION = 0;
+	*ACCEL_PEDAL_POSITION = (((int)frame.data[5]) << 6) & 0x3C0;
+	*ACCEL_PEDAL_POSITION += (frame.data[6] >> 2) & 0x3F;
+	
+//	*CRUISE_STATE = (frame.data[38] >> 2) &  0x1F;
+//	*CRUISE_ENGAGED = (frame.data[40] >> 1) &  0x01;
+}
+
+/*
+ BO_ 308 CRUISE: 64 XXX
+  SG_ CRUISE_TORQUE_STATE : 57|4@0+ (1,0) [0|16] "" XXX
+  SG_ WHEEL_TORQUE_CMD : 68|12@0+ (1,0) [0|4000] "" XXX
+  SG_ STEER_ANGLE_BUT_NOT : 151|16@0+ (1,0) [0|40000] "" XXX
+  SG_ BRAKE_TORQUE_ACTIVE : 160|1@0+ (1,0) [0|1] "" XXX
+  SG_ BRAKE_TORQUE_CMD : 170|10@0+ (1,0) [0|1000] "" XXX
+  SG_ CRUISE_STATE : 306|5@0+ (1,0) [0|32] "" XXX
+  SG_ CRUISE_ENGAGED : 321|1@0+ (1,0) [0|1] "" XXX
+ */
+
+
+void Panda::nissanParseCruise( CanFrame& frame, unsigned char* CRUISE_STATE, bool* CRUISE_ENGAGED  ) {
+	
+//	*CRUISE_STATE = (frame.data[38] >> 2) &  0x1F;
+	
+	*CRUISE_STATE = (frame.data[38] << 2) &  0x1C;
+	*CRUISE_STATE += (frame.data[39] >> 6) &  0x03;
+	
+	
+	
+	
+	*CRUISE_ENGAGED = (frame.data[40] >> 1) &  0x01;
+}
+
+
+/*
+ BO_ 1119 WHEEL_BUTTONS: 20 XXX
+  SG_ SIGNAL1 : 48|3@0+ (1,0) [0|1] "" XXX
+  SG_ LKAS_LDW_ON : 55|1@0+ (1,0) [0|1] "" XXX
+  SG_ ACC_BTNS : 61|3@0+ (1,0) [0|1] "" XXX
+ */
+
+void Panda::nissanParseWheelButtons( CanFrame& frame, unsigned char* ACC_BTNS  ) {
+	*ACC_BTNS = (frame.data[7] >> 5) &  0x07;
+}
+
+
+/*
+ BO_ 1487 ACC_HUD: 48 XXX
+  SG_ SYSTEM_ON : 94|1@0+ (1,0) [0|1] "" XXX
+  SG_ MINICAR : 142|1@0+ (1,0) [0|1] "" XXX
+  //SG_ HUD_STATE1 : 153|2@0+ (1,0) [0|4] "" XXX
+  SG_ SET_SPEED : 158|7@0+ (1,0) [0|90] "" XXX
+  //lsb is sysetm on/off
+  SG_ SET_DISTANCE : 166|2@0+ (1,0) [0|3] "" XXX
+  SG_ HUD_STATES : 177|5@0+ (1,0) [0|32] "" XXX
+  SG_ STATE_SIGNAL : 287|4@0+ (1,0) [0|16] "" XXX
+ */

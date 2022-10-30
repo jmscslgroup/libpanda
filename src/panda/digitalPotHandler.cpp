@@ -158,6 +158,8 @@ double nissanButtonToDigitalPotResistance( NissanButton& button ) {
 			return RESISTANCE_CANCEL * 2.0;
 		case NISSAN_BUTTON_DISTANCE:
 			return RESISTANCE_DISTANCE * 2.0;
+		case NISSAN_BUTTON_OFF:
+			return 10000.0;
 	}
 	
 	return 10000;
@@ -165,6 +167,10 @@ double nissanButtonToDigitalPotResistance( NissanButton& button ) {
 
 void DigitalPotHandler::pressButton( NissanButton button ) {
 	int result;
+	if (button == NISSAN_BUTTON_OFF) {
+		releaseButton();
+		return;
+	}
 	double resistance = nissanButtonToDigitalPotResistance( button );
 	
 	if (resistance == wiperState0 &&

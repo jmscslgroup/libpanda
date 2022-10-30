@@ -64,23 +64,24 @@ MatthatBeep::MatthatBeep() {
 
 MatthatBeep::~MatthatBeep() {
 	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
+//	buzzerHandler.close();
 }
 
 void MatthatBeep::singleBeep() {
 	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_ON);
-	usleep(20000);	// 1/50 s
+	usleep(50000);	// 1/20 s
 	buzzerHandler.setGpioOutput(GPIO_PIN_BUZZER_OFF);
 }
 
 void MatthatBeep::doubleBeep() {
 	singleBeep();
-	usleep(500000);
+	usleep(50000);
 	singleBeep();
 }
 
 void MatthatBeep::tripleBeep() {
 	doubleBeep();
-	usleep(500000);
+	usleep(50000);
 	singleBeep();
 }
 
@@ -93,6 +94,7 @@ MatthatAccButtonRelay::MatthatAccButtonRelay() {
 
 MatthatAccButtonRelay::~MatthatAccButtonRelay() {
 	disarm();
+//	relayHandler.close();
 }
 
 void MatthatAccButtonRelay::arm() {

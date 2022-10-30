@@ -426,5 +426,363 @@ int main(int argc, char **argv) {
 	std::cout << "Done." << std::endl;
 	
 	
+	
+	std::cout << "\n------------- Checking Nissan 308 Parse -------------" << std::endl;
+	
+	// 00 01 2a 08 5b 70 00 00 00 00 9c 40 00 00 b8 07 27 70 80 73 80 00 00 00 01 10 06 85 7f 00 00 4e 20 00 00 b9 07 1b 70 7f fc 00 00 00 00 00 00 00 00 00 00 00 00 00 c6 fa 10 bf f6 c5 6d 87 ae c9
+	int d = 0;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x01;
+	frame.data[d++] = 0x2a;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x5b;
+	frame.data[d++] = 0x70;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x9c;
+	frame.data[d++] = 0x40;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xb8;
+	frame.data[d++] = 0x07;
+	frame.data[d++] = 0x27;
+	frame.data[d++] = 0x70;
+	frame.data[d++] = 0x80;
+	frame.data[d++] = 0x73;
+	frame.data[d++] = 0x80;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x01;
+	frame.data[d++] = 0x10;
+	frame.data[d++] = 0x06;
+	frame.data[d++] = 0x85;
+	frame.data[d++] = 0x7f;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x4e;
+	frame.data[d++] = 0x20;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xb9;
+	frame.data[d++] = 0x07;
+	frame.data[d++] = 0x1b;
+	frame.data[d++] = 0x70;
+	frame.data[d++] = 0x7f;
+	frame.data[d++] = 0xfc;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xc6;
+	frame.data[d++] = 0xfa;
+	frame.data[d++] = 0x10;
+	frame.data[d++] = 0xbf;
+	frame.data[d++] = 0xf6;
+	frame.data[d++] = 0xc5;
+	frame.data[d++] = 0x6d;
+	frame.data[d++] = 0x87;
+	frame.data[d++] = 0xae;
+	frame.data[d++] = 0xc9;
+	frame.dataLength = d;
+	
+	printf("Test frame for CRUISE_STATE == 1, CRUISE_ENGAGED == 0: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	unsigned char CRUISE_STATE;
+	bool CRUISE_ENGAGED;
+	Panda::nissanParseCruise( frame, &CRUISE_STATE, &CRUISE_ENGAGED  );
+	printf("Result of parse: CRUISE_STATE = %d, CRUISE_ENGAGED = %d\n", (int)CRUISE_STATE, CRUISE_ENGAGED);
+	
+	
+	// 00 01 2a 08 8e d0 00 02 50 54 9c 40 00 00 b8 07 a2 d0 7f 7b 00 00 00 00 01 10 06 4b df 00 00 4e 20 00 00 b9 07 d2 d6 7f fe 00 00 00 00 00 00 00 00 00 00 00 00 00 3c 08 74 55 dc 0f ad ad 01 4d
+	d = 0;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x01;
+	frame.data[d++] = 0x2a;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x8e;
+	frame.data[d++] = 0xd0;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x02;
+	frame.data[d++] = 0x50;
+	frame.data[d++] = 0x54;
+	frame.data[d++] = 0x9c;
+	frame.data[d++] = 0x40;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xb8;
+	frame.data[d++] = 0x07;
+	frame.data[d++] = 0xa2;
+	frame.data[d++] = 0xd0;
+	frame.data[d++] = 0x7f;
+	frame.data[d++] = 0x7b;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x01;
+	frame.data[d++] = 0x10;
+	frame.data[d++] = 0x06;
+	frame.data[d++] = 0x4b;
+	frame.data[d++] = 0xdf;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x4e;
+	frame.data[d++] = 0x20;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xb9;
+	frame.data[d++] = 0x07;
+	frame.data[d++] = 0xd2;
+	frame.data[d++] = 0xd6;
+	frame.data[d++] = 0x7f;
+	frame.data[d++] = 0xfe;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x3c;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x74;
+	frame.data[d++] = 0x55;
+	frame.data[d++] = 0xdc;
+	frame.data[d++] = 0x0f;
+	frame.data[d++] = 0xad;
+	frame.data[d++] = 0xad;
+	frame.data[d++] = 0x01;
+	frame.data[d++] = 0x4d;
+	
+	printf("\nTest frame for CRUISE_STATE == 25, CRUISE_ENGAGED == 1: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	Panda::nissanParseCruise( frame, &CRUISE_STATE, &CRUISE_ENGAGED  );
+	printf("Result of parse: CRUISE_STATE = %d, CRUISE_ENGAGED = %d\n", (int)CRUISE_STATE, CRUISE_ENGAGED);
+	
+	std::cout << "\n------------- Checking Nissan 1119 Parse -------------" << std::endl;
+	// 00 04 5f 04 d8 14 7b 02 00 00 b4 09 6a 8e ff d6 8f c2 3f 92 -> ACC_BTNS == 6
+	frame.data[0] = 0x00;
+	frame.data[1] = 0x04;
+	frame.data[2] = 0x5f;
+	frame.data[3] = 0x04;
+	frame.data[4] = 0xd8;
+	frame.data[5] = 0x14;
+	frame.data[6] = 0x7c;
+	frame.data[7] = 0x02;
+	frame.data[8] = 0x00;
+	frame.data[9] = 0x00;
+	frame.data[10] = 0xb4;
+	frame.data[11] = 0x09;
+	frame.data[12] = 0x6a;
+	frame.data[13] = 0x8e;
+	frame.data[14] = 0xff;
+	frame.data[15] = 0xd6;
+	frame.data[16] = 0x8f;
+	frame.data[17] = 0xc2;
+	frame.data[18] = 0x3f;
+	frame.data[19] = 0x92;
+	frame.dataLength = 20;
+	
+	printf("Test frame for ACC_BTN == 0: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	unsigned char ACC_BTNS;
+	Panda::nissanParseWheelButtons(frame, &ACC_BTNS);
+	printf("Result of parse: ACC_BTNS = %d\n", (int)ACC_BTNS);
+	
+	// 00 04 5f 04 a0 b4 7b aa 00 00 aa d5 49 78 2f 29 b1 de 3f a0
+	frame.data[0] = 0x00;
+	frame.data[1] = 0x04;
+	frame.data[2] = 0x5f;
+	frame.data[3] = 0x04;
+	frame.data[4] = 0xa0;
+	frame.data[5] = 0xb4;
+	frame.data[6] = 0x7b;
+	frame.data[7] = 0xaa;
+	frame.data[8] = 0x00;
+	frame.data[9] = 0x00;
+	frame.data[10] = 0xaa;
+	frame.data[11] = 0xd5;
+	frame.data[12] = 0x49;
+	frame.data[13] = 0x78;
+	frame.data[14] = 0x2f;
+	frame.data[15] = 0x29;
+	frame.data[16] = 0xb1;
+	frame.data[17] = 0xde;
+	frame.data[18] = 0x3f;
+	frame.data[19] = 0xa0;
+	
+	printf("\nTest frame for ACC_BTN == 5: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	Panda::nissanParseWheelButtons(frame, &ACC_BTNS);
+	printf("Result of parse: ACC_BTNS = %d\n", (int)ACC_BTNS);
+	
+	
+	std::cout << "\n------------- Checking Nissan 140 Parse -------------" << std::endl;
+	// 00 00 74 08 81 10 00 00 00 11 3a 70 00 00 75 08 3a 14 dd 02 18 a8 32 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 b1 32 dc 3a fc fe d7 ec bd c1
+	d = 0;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x74;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x81;
+	frame.data[d++] = 0x10;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x11;
+	frame.data[d++] = 0x3a;
+	frame.data[d++] = 0x70;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x75;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x3a;
+	frame.data[d++] = 0x14;
+	frame.data[d++] = 0xdd;
+	frame.data[d++] = 0x02;
+	frame.data[d++] = 0x18;
+	frame.data[d++] = 0xa8;
+	frame.data[d++] = 0x32;
+	frame.data[d++] = 0x18;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xb1;
+	frame.data[d++] = 0x32;
+	frame.data[d++] = 0xdc;
+	frame.data[d++] = 0x3a;
+	frame.data[d++] = 0xfc;
+	frame.data[d++] = 0xfe;
+	frame.data[d++] = 0xd7;
+	frame.data[d++] = 0xec;
+	frame.data[d++] = 0xbd;
+	frame.data[d++] = 0xc1;
+	frame.dataLength = d;
+	
+	printf("Test frame for ACCEL_PEDAL_POSITION == 0: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+	int ACCEL_PEDAL_POSITION;
+	
+	Panda::nissanPedalThrottle(frame, &ACCEL_PEDAL_POSITION);
+	printf("Result of parse: ACCEL_PEDAL_POSITION = %d\n", (int)ACCEL_PEDAL_POSITION);
+	
+	
+	// 00 00 74 08 25 60 c0 27 00 11 40 80 00 00 75 08 36 65 06 c2 36 3f 39 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a3 7d ef c6 54 ed 96 ea 26 04
+	d = 0;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x74;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x25;
+	frame.data[d++] = 0x60;
+	frame.data[d++] = 0xc0;
+	frame.data[d++] = 0x27;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x11;
+	frame.data[d++] = 0x40;
+	frame.data[d++] = 0x80;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x75;
+	frame.data[d++] = 0x08;
+	frame.data[d++] = 0x36;
+	frame.data[d++] = 0x65;
+	frame.data[d++] = 0x06;
+	frame.data[d++] = 0xc2;
+	frame.data[d++] = 0x36;
+	frame.data[d++] = 0x3f;
+	frame.data[d++] = 0x39;
+	frame.data[d++] = 0x20;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0x00;
+	frame.data[d++] = 0xa3;
+	frame.data[d++] = 0x7d;
+	frame.data[d++] = 0xef;
+	frame.data[d++] = 0xc6;
+	frame.data[d++] = 0x54;
+	frame.data[d++] = 0xed;
+	frame.data[d++] = 0x96;
+	frame.data[d++] = 0xea;
+	frame.data[d++] = 0x26;
+	frame.data[d++] = 0x04;
+	frame.dataLength = d;
+	
+	printf("\n Test frame for ACCEL_PEDAL_POSITION == 48: %d,%u,", (int)frame.bus, frame.messageID);
+	
+	for (int i =0; i < frame.dataLength; i++) {
+		printf( "%02x ", frame.data[i]);
+	}
+	printf(",%d\n", frame.dataLength);
+	
+//	int ACCEL_PEDAL_POSITION;
+	
+	Panda::nissanPedalThrottle(frame, &ACCEL_PEDAL_POSITION);
+	printf("Result of parse: ACCEL_PEDAL_POSITION = %d\n", (int)ACCEL_PEDAL_POSITION);
+	
 	return 0;
 }

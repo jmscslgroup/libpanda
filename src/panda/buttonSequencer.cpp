@@ -41,6 +41,8 @@ const char* Panda::nissanButtonToStr(NissanButton button) {
 			return "RESISTANCE_CANCEL";
 		case NISSAN_BUTTON_DISTANCE:
 			return "RESISTANCE_DISTANCE";
+		case NISSAN_BUTTON_OFF:
+			return "RESISTANCE_OFF";
 	}
 	
 	return NULL;
@@ -58,6 +60,8 @@ unsigned int nissanButtonToDigitalPot( NissanButton& button ) {
 			return (127*RESISTANCE_CANCEL)/RESISTANCE_POTENTIOMETER;
 		case NISSAN_BUTTON_DISTANCE:
 			return (127*RESISTANCE_DISTANCE)/RESISTANCE_POTENTIOMETER;
+		case NISSAN_BUTTON_OFF:
+			return (127*10000)/RESISTANCE_POTENTIOMETER;
 	}
 	
 	return 63;

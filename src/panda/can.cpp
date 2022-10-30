@@ -543,8 +543,8 @@ void Can::notificationCanRead(char* buffer, size_t bufferLength) {
 					
 					CanFrame newFrame = bufferToCanFrame(&chunk[parsePosition], chunkLength-parsePosition, pandaCanVersion);
 					if (newFrame.messageID == -1) {
-						std::cerr << "Error: Can::notificationCanRead(): Parsing packet resulted in error, this is what was recieved:" << std::endl;
-						printBuffer(buffer, bufferLength);
+						//std::cerr << "Error: Can::notificationCanRead(): Parsing packet resulted in error, this is what was recieved:" << std::endl;
+						//printBuffer(buffer, bufferLength);
 						unlock();
 						return;
 					}

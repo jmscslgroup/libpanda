@@ -20,12 +20,12 @@ private:
 	
 	void newPandaHealthNotification(const PandaHealth& pandaHealth) {
 //		Panda::printPandaHealth(pandaHealth);
-		printf("Panda reports controls_allowed as: %d and safetyModel as %s\n", pandaHealth.controls_allowed, Panda::safetyModelToString(pandaHealth.safety_mode));
+		//printf("Panda reports controls_allowed as: %d and safetyModel as %s\n", pandaHealth.controls_allowed, Panda::safetyModelToString(pandaHealth.safety_mode));
 	};
 	
 	
 	void newControlNotification(Panda::Controller* controller) {
-		std::cout << "ExampleControllerListener::newControlNotification() controls_allowed: " << (int)controller->getControlsAllowed() << std::endl;
+//		std::cout << "ExampleControllerListener::newControlNotification() controls_allowed: " << (int)controller->getControlsAllowed() << std::endl;
 	};
 	
 public:
@@ -139,14 +139,27 @@ int main(int argc, char **argv) {
 	frame.dataLength = 12;
 	
 //	pandaHandler.getUsb().setSafetyMode(SAFETY_ALLOUTPUT, 1);
+	int setResCount = 0;
 	while(keepRunning) {
-		usleep(1000000.0/10.0);	// run at ~10 Hz
+		usleep(1000000.0/2.0);	// run at ~2 Hz
 
 		// For testing these will do nothing other than clear heartbeats
-			pandaController->getController()->setAcceleration(0);
-			pandaController->getController()->setSteerTorque(0);
+//			pandaController->getController()->setAcceleration(0);
+//			pandaController->getController()->setSteerTorque(0);
 		
-		
+		if (setResCount++ > 5) {
+			setResCount = -5;
+		}
+		if (setResCount > 0) {
+			controllerAsNissanController->sendButton(Panda::NISSAN_BUTTON_SET);
+			usleep(200000);
+			controllerAsNissanController->sendButton(Panda::NISSAN_BUTTON_OFF);
+		} else {
+			controllerAsNissanController->sendButton(Panda::NISSAN_BUTTON_RES);
+			usleep(200000);
+			controllerAsNissanController->sendButton(Panda::NISSAN_BUTTON_OFF);
+			
+		}
 
 		
 		// Fake a message:
@@ -161,6 +174,9 @@ int main(int argc, char **argv) {
 	std::cout << "Stopping pandaHandler..." << std::endl;
 	pandaHandler.stop();
 
+	
+	std::cout << "Cleaning pandaController..." << std::endl;
+	delete pandaController;
 	std::cout << "simpleSend is Done." << std::endl;
 //	return 0;
 	exit(EXIT_SUCCESS);
