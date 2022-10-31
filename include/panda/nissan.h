@@ -35,7 +35,7 @@
 #define NISSAN_CRUISE_STATE_STANDSTILL (4)
 #define NISSAN_CRUISE_STATE_IDLE (6)
 #define NISSAN_CRUISE_STATE_ACTIVE (12)
-#define NISSAN_CRUISE_STATE_UNKNOWN_ACTIVE (14)
+#define NISSAN_CRUISE_STATE_UNKNOWN_ACTIVE (14)	// Occurs from 12, when driver presses gas pedal
 
 namespace Panda {
 

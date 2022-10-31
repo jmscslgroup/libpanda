@@ -52,7 +52,7 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 			break;
 			
 		case ACC_STATE_SET_WAIT:
-			buzzerHandler.singleBeep();
+//			buzzerHandler.singleBeep();
 			decimatorSetWaitTimer = 0;
 			break;
 			
@@ -62,7 +62,7 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 		case ACC_STATE_POWER_TOGGLE_NEEDED:
 			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
 			relayHandler.disarm();
-			buzzerHandler.doubleBeep();
+//			buzzerHandler.doubleBeep();
 			break;
 	}
 	
