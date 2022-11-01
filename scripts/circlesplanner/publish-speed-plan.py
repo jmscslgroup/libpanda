@@ -96,6 +96,9 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
         headway_list = [ast.literal_eval(record['max_headway']) for record in speed_planner]
         
         target_speed = get_target_by_position([pos_list, speed_list], xpos, pub_at, dtype=float)
+        target_speed_200 = get_target_by_position([pos_list, speed_list], xpos+200, pub_at, dtype=float)
+        target_speed_500 = get_target_by_position([pos_list, speed_list], xpos+500, pub_at, dtype=float)
+        target_speed_1000 = get_target_by_position([pos_list, speed_list], xpos+1000, pub_at, dtype=float)
         max_headway = get_target_by_position([pos_list, headway_list], xpos, pub_at, dtype=bool)
         print('Speed Planner targets: {} m/s, {} gap.'.format(target_speed, 'open' if max_headway else 'close'))
 
@@ -112,11 +115,20 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
 #    process = subprocess.Popen(bashCommand_headway.split(), stdout=subprocess.PIPE)
 #    output, error = process.communicate()
     rospy.set_param('SP_TARGET_SPEED', target_speed )
+    rospy.set_param('SP_TARGET_SPEED_200', target_speed_200 )
+    rospy.set_param('SP_TARGET_SPEED_500', target_speed_500 )
+    rospy.set_param('SP_TARGET_SPEED_1000', target_speed_1000 )
     rospy.set_param('SP_MAX_HEADWAY', target_max_headway )
 
     sp_speed = rospy.Publisher('/sp/target_speed', Float32, queue_size=10)
+    sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float32, queue_size=10)
+    sp_speed_500 = rospy.Publisher('/sp/target_speed_500', Float32, queue_size=10)
+    sp_speed_1000 = rospy.Publisher('/sp/target_speed_1000', Float32, queue_size=10)
     sp_headway = rospy.Publisher('/sp/max_headway', Float32, queue_size=10)
     sp_speed.publish(target_speed)
+    sp_speed_200.publish(target_speed_200)
+    sp_speed_500.publish(target_speed_500)
+    sp_speed_1000.publish(target_speed_1000)
     sp_headway.publish(target_max_headway)
 
 if __name__ == "__main__":
