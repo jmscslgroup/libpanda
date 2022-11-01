@@ -6,7 +6,7 @@ import os
 import rospy
 import sys
 import time
-from std_msgs.msg import Float32
+from std_msgs.msg import Byte, Float64
 
 def getGPSLocation(filename):
     """Returns lat,long as a pair. If fix is not A, then return None"""
@@ -82,7 +82,7 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     print('lat,long=', lat, long)
     xpos = getXposFromGPS(lat,long,i24_geo_file)
     print('xposition=', xpos)
-    pos_pub = rospy.Publisher('/xpos', Float32, queue_size=10)
+    pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
     pos_pub.publish(xpos)
     
     if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0:
@@ -120,11 +120,11 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     rospy.set_param('SP_TARGET_SPEED_1000', target_speed_1000 )
     rospy.set_param('SP_MAX_HEADWAY', target_max_headway )
 
-    sp_speed = rospy.Publisher('/sp/target_speed', Float32, queue_size=10)
-    sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float32, queue_size=10)
-    sp_speed_500 = rospy.Publisher('/sp/target_speed_500', Float32, queue_size=10)
-    sp_speed_1000 = rospy.Publisher('/sp/target_speed_1000', Float32, queue_size=10)
-    sp_headway = rospy.Publisher('/sp/max_headway', Float32, queue_size=10)
+    sp_speed = rospy.Publisher('/sp/target_speed', Float64, queue_size=10)
+    sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float64, queue_size=10)
+    sp_speed_500 = rospy.Publisher('/sp/target_speed_500', Float64, queue_size=10)
+    sp_speed_1000 = rospy.Publisher('/sp/target_speed_1000', Float64, queue_size=10)
+    sp_headway = rospy.Publisher('/sp/max_headway', Byte, queue_size=10)
     sp_speed.publish(target_speed)
     sp_speed_200.publish(target_speed_200)
     sp_speed_500.publish(target_speed_500)
