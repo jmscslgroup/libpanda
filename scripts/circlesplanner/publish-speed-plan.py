@@ -118,7 +118,7 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     rospy.set_param('SP_TARGET_SPEED_200', target_speed_200 )
     rospy.set_param('SP_TARGET_SPEED_500', target_speed_500 )
     rospy.set_param('SP_TARGET_SPEED_1000', target_speed_1000 )
-    rospy.set_param('SP_MAX_HEADWAY', target_max_headway )
+    rospy.set_param('SP_MAX_HEADWAY', max_headway )
 
     sp_speed = rospy.Publisher('/sp/target_speed', Float64, queue_size=10)
     sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float64, queue_size=10)
