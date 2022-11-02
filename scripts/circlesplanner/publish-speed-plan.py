@@ -99,7 +99,7 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
         target_speed_200 = get_target_by_position([pos_list, speed_list], xpos+200, pub_at, dtype=float)
         target_speed_500 = get_target_by_position([pos_list, speed_list], xpos+500, pub_at, dtype=float)
         target_speed_1000 = get_target_by_position([pos_list, speed_list], xpos+1000, pub_at, dtype=float)
-        max_headway = get_target_by_position([pos_list, headway_list], xpos, pub_at, dtype=bool)
+        max_headway = get_target_by_position([pos_list, headway_list], xpos, pub_at, dtype=int)
         print('Speed Planner targets: {} m/s, {} gap.'.format(target_speed, 'open' if max_headway else 'close'))
 
     # import subprocess
