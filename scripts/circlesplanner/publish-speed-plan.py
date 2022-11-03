@@ -90,7 +90,7 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
         target_speed_200 = 30
         target_speed_500 = 30
         target_speed_1000 = 30
-        target_max_headway = 0
+        max_headway = 0
     else:
         speed_planner = json.loads(open(circles_planner_file).read())
         pub_at = ast.literal_eval(speed_planner[0]['published_at'])
