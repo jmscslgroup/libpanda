@@ -36,6 +36,7 @@ git clone https://github.com/WiringPi/WiringPi.git
 cd WiringPi
 git pull origin
 ./build
+cd ..
 
 echo "Done installing libWiringPi, result of \$ gpio readall
 :"
