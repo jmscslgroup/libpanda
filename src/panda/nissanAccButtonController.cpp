@@ -8,6 +8,7 @@
 
 #include "panda/nissan.h"
 
+#define FILE_ORANGE_WIRE_CONNECTED "/etc/libpanda.d/wireAccButtonConnected"
 
 using namespace Panda;
 
@@ -19,7 +20,7 @@ void writeToFileThenClose(const char* filename, const char* data) {
 };
 
 NissanAccButtonController::NissanAccButtonController() {
-	writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "1\n");
+	writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
 	
 	// State Variables:
 	gasPressed = true;
@@ -361,7 +362,8 @@ void NissanAccButtonController::enterState( CheckButtonState newState ) {
 		case CHECK_BUTTON_PASSED:
 			if (!checkButtonFailed) {
 				checkButtonFailed = false;
-				writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "1\n");
+				writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
+				std::cerr << "NissanAccButtonController: \"Orange\" wire connected to ACC buttons!" << std::endl;
 			}
 			checkButtonFailed = false;
 			break;
@@ -373,7 +375,7 @@ void NissanAccButtonController::enterState( CheckButtonState newState ) {
 		case CHECK_BUTTON_FAILED:
 			if (!checkButtonFailed) {
 				checkButtonFailed = true;
-				writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "0\n");
+				writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "0\n");
 			}
 			std::cerr << "ERROR! NissanAccButtonController: \"Orange\" wire disconnected from ACC buttons!" << std::endl;
 			break;
