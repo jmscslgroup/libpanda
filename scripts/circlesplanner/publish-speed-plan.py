@@ -87,6 +87,10 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     
     if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0:
         target_speed = 30
+        target_speed_200 = 30
+        target_speed_500 = 30
+        target_speed_1000 = 30
+        target_max_headway = 0
     else:
         speed_planner = json.loads(open(circles_planner_file).read())
         pub_at = ast.literal_eval(speed_planner[0]['published_at'])
@@ -106,9 +110,9 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     # import subprocess
 
 #    bashCommand_speed = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
-#    bashCommand_headway = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( target_max_headway )
+#    bashCommand_headway = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( max_headway )
 #    bashCommand_speed = "/opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
-#    bashCommand_headway = "/opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( target_max_headway )
+#    bashCommand_headway = "/opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( max_headway )
 #    print('bashCommand_speed=', bashCommand_speed )
 #    print('bashCommand_headway=', bashCommand_headway)
 #    process = subprocess.Popen(bashCommand_speed.split(), stdout=subprocess.PIPE)
@@ -130,7 +134,7 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     sp_speed_200.publish(target_speed_200)
     sp_speed_500.publish(target_speed_500)
     sp_speed_1000.publish(target_speed_1000)
-    sp_headway.publish(target_max_headway)
+    sp_headway.publish(max_headway)
 
 if __name__ == "__main__":
     # TODO: make these cmd line params but use these as defaults
