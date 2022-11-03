@@ -21,8 +21,15 @@
 // Stuff for ACC button presses:
 #define NISSAN_COMMAND_PEDAL_WAIT_TIME (1.0)	// The time in seconds to wait before pressing SET after pedals released
 #define NISSAN_COMMAND_SET_WAIT_TIME (1.0)		// The time to wait in seconds after pressing SET to enter controls_allowed
+#define NISSAN_TRANSITION_TO_BUTTON_TEST (30.0)		//
+#define NISSAN_TRANSITION_EXIT_BUTTON_TEST (0.25)		//
 #define NISSAN_DECIMATOR_PEDAL_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_PEDAL_WAIT_TIME)
-#define NISSAN_DECIMATOR_SET_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_SET_WAIT_TIME)
+#define NISSAN_DECIMATOR_TRANSITION_TO_BUTTON_TEST (NISSAN_COMMAND_THREAD_RATE * NISSAN_TRANSITION_TO_BUTTON_TEST)
+#define NISSAN_DECIMATOR_TRANSITION_EXIT_BUTTON_TEST (NISSAN_COMMAND_THREAD_RATE * NISSAN_TRANSITION_EXIT_BUTTON_TEST)
+
+// Stuff for a concurrent state machine for button chekcing:
+#define NISSAN_CHECK_BUTTON_RESPONSE (5.0)		// The time in seconds to wait for a button response on the CAN bus
+#define NISSAN_DECIMATOR_CHECK_BUTTON_RESPONSE (NISSAN_COMMAND_THREAD_RATE * NISSAN_CHECK_BUTTON_RESPONSE)
 
 
 // Nassan' reported CRUISE_STATE values, from reverse-engineering:
@@ -53,8 +60,9 @@ private:
 		ACC_STATE_IDLE,	// ON
 		ACC_STATE_SET_WAIT,	// wait for SET to be recognized to change vehicle's state
 		ACC_STATE_CONTROLS_ALLOWED,	// armed and ON
-		ACC_STATE_POWER_TOGGLE_NEEDED,
+//		ACC_STATE_POWER_TOGGLE_NEEDED,
 		//ACC_STATE_COME_HOME	// ON
+		ACC_STATE_BUTTON_TEST
 	} AccCommandState;
 	
 	AccCommandState state;
@@ -75,13 +83,29 @@ private:
 	// List of loop decimators:
 	int decimatorPedalWaitTimer;
 	int decimatorSetWaitTimer;
+	int decimatorTranstionToButtonTest;
+	int decimatorTranstionExitButtonTest;
 	
 	// Functional attributes:
 	
 	
+	// a concurrent state machine for checking button responses:
+	// State definitions
+	typedef enum {
+		CHECK_BUTTON_PASSED,
+		CHECK_BUTTON_RUNNING,
+		CHECK_BUTTON_FAILED
+	} CheckButtonState;
 	
-	// Functions that handle sending Button Press message
-//	void arm
+	CheckButtonState stateCheckButton;
+	int decimaterCheckButtonResponse;
+	bool checkButtonFailed;
+	
+	
+	// Functions for parsing CAN messages to udpate state variables:
+	void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* cruiseEngaged);
+	void parseGasPressed(CanFrame* canFrame, bool* gasPressed);
+	void parseAccButtons(CanFrame* canFrame, NissanButton* buttonState);
 	
 	// Overloaded from Panda::controller
 	// This is called at regular fast intervals, where we decimate the interval and send CAN messages
@@ -93,11 +117,21 @@ private:
 	void handleSetAcceleration( double acceleration );
 	void newCanNotification(CanFrame* canFrame);
 	
+	
+	// State handling:
+	void transitionToState( AccCommandState newState );
 	void enterState( AccCommandState newState );
-	void exitState( );
-	
-	
+	void exitState( AccCommandState priorState );
 	void updateStateVariables( CanFrame* canFrame );
+	
+	// and for concurrent state machine:
+	void intervalActionCheckButton();
+	void transitionToState( CheckButtonState newState );
+	void enterState( CheckButtonState oldState );
+	void exitState( CheckButtonState newState );
+	
+	// Helper functions:
+	void sendButtonPress( NissanButton button );
 	
 protected:
 	NissanAccButtonController();
@@ -107,6 +141,9 @@ public:
 	~NissanAccButtonController();
 	
 	bool sendButton( NissanButton button );
+	
+	
+	bool isHardwareConnectionGood();
 	
 	static const char* stateToName( const AccCommandState& state);
 	

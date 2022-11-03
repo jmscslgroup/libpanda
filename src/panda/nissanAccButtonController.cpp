@@ -1,12 +1,25 @@
 /*
  Author: Matt Bunting
+ 
+ Statecharts represent diagrams in Rev 5
  */
+
+#include <cstring>
 
 #include "panda/nissan.h"
 
+
 using namespace Panda;
 
+// This helper was copied from pandacord:
+void writeToFileThenClose(const char* filename, const char* data) {
+	FILE* file = fopen( filename, "w+");
+	fwrite( data, 1, strlen(data), file);
+	fclose(file);
+};
+
 NissanAccButtonController::NissanAccButtonController() {
+	writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "1\n");
 	
 	// State Variables:
 	gasPressed = true;
@@ -19,13 +32,22 @@ NissanAccButtonController::NissanAccButtonController() {
 	this->setIntervalActionRate(NISSAN_COMMAND_THREAD_RATE);
 	
 	state = ACC_STATE_OFF;
-	//enterState(ACC_STATE_OFF);
+	//transitionToState(ACC_STATE_OFF);
 	
 	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+	
+	stateCheckButton = CHECK_BUTTON_PASSED;
+	checkButtonFailed = false;
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
 	relayHandler.disarm();
+}
+
+void NissanAccButtonController::sendButtonPress( NissanButton button ) {
+	potHandler.pressButton(button);
+	// Begin timer, if not already started
+	enterState(	CHECK_BUTTON_RUNNING);
 }
 
 const char* NissanAccButtonController::stateToName( const AccCommandState& state) {
@@ -34,43 +56,61 @@ const char* NissanAccButtonController::stateToName( const AccCommandState& state
 		case ACC_STATE_IDLE: return "ACC_STATE_IDLE";
 		case ACC_STATE_SET_WAIT: return "ACC_STATE_SET_WAIT";
 		case ACC_STATE_CONTROLS_ALLOWED: return "ACC_STATE_CONTROLS_ALLOWED";
-		case ACC_STATE_POWER_TOGGLE_NEEDED: return "ACC_STATE_POWER_TOGGLE_NEEDED";
+		case ACC_STATE_BUTTON_TEST: return "ACC_STATE_BUTTON_TEST";
+//		case ACC_STATE_POWER_TOGGLE_NEEDED: return "ACC_STATE_POWER_TOGGLE_NEEDED";
 	}
 	return "";
 }
 
+void NissanAccButtonController::transitionToState( AccCommandState newState ) {
+	std::cout << "NissanAccButtonController: Transition from " << stateToName(state) << " --> " << stateToName(newState) << std::endl;
+
+	exitState(state);
+	enterState(newState);
+}
+
 void NissanAccButtonController::enterState( AccCommandState newState ) {
-	exitState();
-	std::cout << "NissanAccButtonController: Entering state " << stateToName(newState) << std::endl;
+//	exitState();
+//	std::cout << "NissanAccButtonController: Entering state " << stateToName(newState) << std::endl;
 	switch (newState) {
 		case ACC_STATE_OFF:
-			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+			relayHandler.disarm();
+//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
+			decimatorTranstionToButtonTest = 0;
 			break;
 			
 		case ACC_STATE_IDLE:
+			relayHandler.disarm();
 			decimatorPedalWaitTimer = 0;
 			break;
 			
 		case ACC_STATE_SET_WAIT:
-//			buzzerHandler.singleBeep();
 			decimatorSetWaitTimer = 0;
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
+//			buzzerHandler.singleBeep();
+			relayHandler.arm();
 			break;
 			
-		case ACC_STATE_POWER_TOGGLE_NEEDED:
-			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
-			relayHandler.disarm();
-//			buzzerHandler.doubleBeep();
+//		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+//			relayHandler.disarm();
+//			break;
+			
+		case ACC_STATE_BUTTON_TEST:
+			relayHandler.arm();
+			sendButtonPress(NISSAN_BUTTON_CANCEL);
+			decimatorTranstionExitButtonTest = 0;
 			break;
 	}
 	
-	state = newState;
+	this->state = newState;
 }
 
-void NissanAccButtonController::exitState() {
-	switch (state) {
+void NissanAccButtonController::exitState(AccCommandState oldState) {
+	switch (oldState) {
 		case ACC_STATE_OFF:
 			break;
 			
@@ -78,20 +118,37 @@ void NissanAccButtonController::exitState() {
 			break;
 			
 		case ACC_STATE_SET_WAIT:
-			relayHandler.arm();
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
+//			buzzerHandler.doubleBeep();
 			break;
 			
-		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//			break;
+		case ACC_STATE_BUTTON_TEST:
 			break;
 	}
 }
 
+// This is basically a Statechart doAction:
 void NissanAccButtonController::intervalAction() {
+	
+	// No matter the state, if cruise was turned off then enter that state:
+	if (!cruiseOn &&
+		(state != ACC_STATE_OFF) &&
+		(state != ACC_STATE_BUTTON_TEST) ) {
+		transitionToState(ACC_STATE_OFF);
+	}
+	
 	switch (state) {
 		case ACC_STATE_OFF:
+			if (cruiseOn) {
+				transitionToState(ACC_STATE_IDLE);
+			}
+			if( decimatorTranstionToButtonTest++ > NISSAN_DECIMATOR_TRANSITION_TO_BUTTON_TEST) {
+				transitionToState(ACC_STATE_BUTTON_TEST);
+			}
 			break;
 			
 		case ACC_STATE_IDLE:
@@ -100,27 +157,47 @@ void NissanAccButtonController::intervalAction() {
 //			} else if( decimatorPedalWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
 //				decimatorPedalWaitTimer = 0;
 //				// Timer expired, enter new state:
-//				enterState(ACC_STATE_SET_WAIT);
+//				transitionToState(ACC_STATE_SET_WAIT);
 //			}
+			if (cruiseEngaged == 1) {
+				transitionToState(ACC_STATE_SET_WAIT);
+			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
 			if( decimatorSetWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
 				// Timer expired, enter new state:
-				enterState(ACC_STATE_CONTROLS_ALLOWED);
+				transitionToState(ACC_STATE_CONTROLS_ALLOWED);
 			}
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
+			if (cruiseEngaged == 0) {
+				transitionToState(ACC_STATE_IDLE);
+			}
 			break;
 			
-		case ACC_STATE_POWER_TOGGLE_NEEDED:
-			enterState(ACC_STATE_IDLE);
+//		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//			transitionToState(ACC_STATE_IDLE);
+//			break;
+		case ACC_STATE_BUTTON_TEST:
+			if (cruiseOn) {
+				transitionToState(ACC_STATE_IDLE);
+			}
+			if( decimatorTranstionExitButtonTest++ > NISSAN_DECIMATOR_TRANSITION_EXIT_BUTTON_TEST) {
+				transitionToState(ACC_STATE_OFF);
+			}
 			break;
 	}
+	
+	
+	/*
+	 This is a concurrent state machine purely for checking button activity on the 
+	 */
+	intervalActionCheckButton();
 }
 
-void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* cruiseEngaged) {
+void NissanAccButtonController::parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* cruiseEngaged) {
 	if (canFrame->messageID == 308) {
 		unsigned char CRUISE_STATE;
 		bool CRUISE_ENGAGED;
@@ -140,7 +217,7 @@ void parseCruiseState(CanFrame* canFrame, unsigned char* cruiseState, bool* crui
 	}
 }
 
-void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
+void NissanAccButtonController::parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 	if (canFrame->messageID == 140) {
 		int ACCEL_PEDAL_POSITION;
 		nissanPedalThrottle(*canFrame, &ACCEL_PEDAL_POSITION);
@@ -159,13 +236,16 @@ void parseGasPressed(CanFrame* canFrame, bool* gasPressed) {
 //	}
 //}
 
-void parseAccButtons(CanFrame* canFrame, NissanButton* buttonState) {
+void NissanAccButtonController::parseAccButtons(CanFrame* canFrame, NissanButton* buttonState) {
 	if (canFrame->messageID == 1119) {
 		unsigned char ACC_BTNS = *buttonState;
 		nissanParseWheelButtons( *canFrame, &ACC_BTNS  );
 		if (*buttonState != ACC_BTNS) {
 			*buttonState = (NissanButton)ACC_BTNS;
 			
+			if(stateCheckButton == CHECK_BUTTON_RUNNING) {
+				transitionToState(CHECK_BUTTON_PASSED);
+			}
 //			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
 			printf("parseAccButtons(): CAN change detected: buttonState = %d:%s\n", (int)*buttonState, nissanButtonToStr( *buttonState ));
 		}
@@ -185,46 +265,38 @@ void NissanAccButtonController::updateStateVariables(CanFrame* canFrame) {
 void NissanAccButtonController::newCanNotification(CanFrame* canFrame) {
 	updateStateVariables( canFrame);
 	
-	// No matter the state, if cruise was turned off then enter that state:
-	if (!cruiseOn &&
-		state != ACC_STATE_OFF) {
-		enterState(ACC_STATE_OFF);
-	}
+//	// No matter the state, if cruise was turned off then enter that state:
+//	if (!cruiseOn &&
+//		state != ACC_STATE_OFF) {
+//		transitionToState(ACC_STATE_OFF);
+//	}
 	
 	switch (state) {
 		case ACC_STATE_OFF:
-			if (cruiseOn) {
-				enterState(ACC_STATE_IDLE);
-			}
+//			if (cruiseOn) {
+//				transitionToState(ACC_STATE_IDLE);
+//			}
 			break;
 			
 		case ACC_STATE_IDLE:
-//			if (buttonState == NISSAN_BUTTON_SET ||
-//				buttonState == NISSAN_BUTTON_RES) {
-//				enterState(ACC_STATE_SET_WAIT);
+//			if (cruiseEngaged == 1) {
+//				transitionToState(ACC_STATE_SET_WAIT);
 //			}
-			if (cruiseEngaged == 1) {
-				enterState(ACC_STATE_SET_WAIT);
-			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
-//			if ( cruiseState == NISSAN_CRUISE_STATE_IDLE ) {	// BRAKE WAS PRESSED
-//				printf("NissanAccButtonController: Entered ACC IDLE while controls_allowed, perhaps brake was pressed?\n");
-//				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
+//			if (cruiseEngaged == 0) {
+//				transitionToState(ACC_STATE_IDLE);
 //			}
-//			if ( gasPressed ) {
-//				enterState(ACC_STATE_SET_WAIT);
-//			}
-			if (cruiseEngaged == 0) {
-				enterState(ACC_STATE_POWER_TOGGLE_NEEDED);
-			}
 			break;
 			
-		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//		case ACC_STATE_POWER_TOGGLE_NEEDED:
+//			break;
+			
+		case ACC_STATE_BUTTON_TEST:
 			break;
 	}
 	
@@ -245,10 +317,85 @@ bool NissanAccButtonController::checkControlsAllowed(Panda::CanFrame* frame) {
 bool NissanAccButtonController::sendButton( NissanButton button ) {
 	setAcceleration(0);	// HACK to clear heartbeat within button pressing scheme
 	setSteerTorque(0);	// HACK to clear heartbeat within button pressing scheme
-	if (state == ACC_STATE_CONTROLS_ALLOWED) {
-		printf("Sending a button! %d\n", (int)button);
-		potHandler.pressButton(button);
+	if ((state == ACC_STATE_CONTROLS_ALLOWED) &&
+		(cruiseEngaged == true) ) {	// This prevent race conditions
+		//		printf("Sending a button! %d\n", (int)button);
+		//		potHandler.pressButton(button);
+		sendButtonPress(button);
+		
+		// Kickoff the button check timer, if not running:
+		if (stateCheckButton != CHECK_BUTTON_RUNNING) {
+			transitionToState(CHECK_BUTTON_RUNNING);
+		}
 		return 1;
 	}
 	return 0;
+}
+
+
+void NissanAccButtonController::intervalActionCheckButton() {
+	switch (stateCheckButton) {
+		case CHECK_BUTTON_PASSED:
+			break;
+			
+		case CHECK_BUTTON_RUNNING:
+			if(decimaterCheckButtonResponse++ > NISSAN_DECIMATOR_CHECK_BUTTON_RESPONSE) {
+				transitionToState(CHECK_BUTTON_FAILED);
+			}
+			break;
+			
+		case CHECK_BUTTON_FAILED:
+			break;
+	}
+}
+
+void NissanAccButtonController::transitionToState( CheckButtonState newState ) {
+	exitState(stateCheckButton);
+	enterState(newState);
+}
+
+
+
+void NissanAccButtonController::enterState( CheckButtonState newState ) {
+	switch (newState) {
+		case CHECK_BUTTON_PASSED:
+			if (!checkButtonFailed) {
+				checkButtonFailed = false;
+				writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "1\n");
+			}
+			checkButtonFailed = false;
+			break;
+			
+		case CHECK_BUTTON_RUNNING:
+			decimaterCheckButtonResponse = 0;
+			break;
+			
+		case CHECK_BUTTON_FAILED:
+			if (!checkButtonFailed) {
+				checkButtonFailed = true;
+				writeToFileThenClose("/etc/libpanda.d/orangeWireGood", "0\n");
+			}
+			std::cerr << "ERROR! NissanAccButtonController: \"Orange\" wire disconnected from ACC buttons!" << std::endl;
+			break;
+	}
+	
+	stateCheckButton = newState;
+}
+
+void NissanAccButtonController::exitState( CheckButtonState priorState ) {
+	switch (priorState) {
+		case CHECK_BUTTON_PASSED:
+			break;
+			
+		case CHECK_BUTTON_RUNNING:
+			break;
+			
+		case CHECK_BUTTON_FAILED:
+			break;
+	}
+}
+
+
+bool NissanAccButtonController::isHardwareConnectionGood() {
+	return !checkButtonFailed;
 }
