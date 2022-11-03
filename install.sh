@@ -71,10 +71,6 @@ if [[ ! -f "/etc/libpanda.d/vin" ]]; then
 fi
 
 ./build.sh
-cd scripts/blinkt
-sudo ./install.sh
-cd ../crazypifi
-sudo ./install.sh
 cd ../xUps
 sudo ./install.sh
 cd ../circles-ui
