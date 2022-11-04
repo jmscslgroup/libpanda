@@ -24,7 +24,7 @@ do
 	echo "Performing command: ${FULL_COMMAND}"
 	$(${FULL_COMMAND} > ${SPEEDPLANNER_FILE})
 	
-	source /opt/ros/melodic/setup.bash
+	source /opt/ros/noetic/setup.bash
 
 	# now that we have a new file, re-calculate our speed
 	/usr/local/sbin/publish-speed-plan.py

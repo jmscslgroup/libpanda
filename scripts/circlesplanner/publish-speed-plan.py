@@ -93,16 +93,22 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     print('lat,long=', lat, long)
     xpos = getXposFromGPS(lat,long,i24_geo_file)
     print('xposition=', xpos)
+    rospy.init_node(name='circles_planner')
     pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
     pos_pub.publish(xpos)
     rospy.Subscriber('/is_westbound', Bool, wb_callback)
+
+    # HACK HACK HACK install westbount stuff soon
+    is_westbound=True
     
-    if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0 or not is_westbound:
+    if not os.path.exists(circles_planner_file) or os.stat(circles_planner_file).st_size == 0 or not is_westbound:
+    #if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0 or not is_westbound:
         target_speed = 30
         target_speed_200 = 30
         target_speed_500 = 30
         target_speed_1000 = 30
         max_headway = 0
+        print('Printing default message, sWestbound=', is_westbound,' or maybe missing file ', circles_planner_file)
     else:
         speed_planner = json.loads(open(circles_planner_file).read())
         pub_at = ast.literal_eval(speed_planner[0]['published_at'])
