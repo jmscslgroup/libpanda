@@ -27,6 +27,6 @@ do
 	source /opt/ros/noetic/setup.bash
 
 	# now that we have a new file, re-calculate our speed
-	/usr/local/sbin/publish-speed-plan.py
+	#/usr/local/sbin/publish-speed-plan.py
 	
 done
