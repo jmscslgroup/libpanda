@@ -88,21 +88,28 @@ def get_target_by_position(profile, x_pos, pub_at, dtype=float):
     return result
 
 def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
-    # TODO: move this stuff into the loop that loads files
-    lat, long = getGPSLocation(gpsfile)
-    if not myLat == None:
-        lat = myLat
-    if not myLong == None:
-        long = myLong
-    print('lat,long=', lat, long)
-    xpos = getXposFromGPS(lat,long,i24_geo_file)
-    print('xposition=', xpos)
     rospy.init_node(name='circles_planner')
     pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
-    pos_pub.publish(xpos)
     rospy.Subscriber('/is_westbound', Bool, wb_callback)
 
+    sp_speed = rospy.Publisher('/sp/target_speed', Float64, queue_size=10)
+    sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float64, queue_size=10)
+    sp_speed_500 = rospy.Publisher('/sp/target_speed_500', Float64, queue_size=10)
+    sp_speed_1000 = rospy.Publisher('/sp/target_speed_1000', Float64, queue_size=10)
+    sp_headway = rospy.Publisher('/sp/max_headway', Int16, queue_size=10)
+
     while not rospy.is_shutdown():
+        # TODO: move this stuff into the loop that loads files
+        lat, long = getGPSLocation(gpsfile)
+        if not myLat == None:
+            lat = myLat
+        if not myLong == None:
+            long = myLong
+        xpos = getXposFromGPS(lat,long,i24_geo_file)
+        print('lat,long=', lat, long)
+        print('xposition=', xpos)
+        pos_pub.publish(xpos)
+
         # HACK HACK HACK install westbound stuff soon
         # is_westbound=True
         max_headway = Int16() 
@@ -147,13 +154,8 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
         rospy.set_param('SP_TARGET_SPEED_200', target_speed_200 )
         rospy.set_param('SP_TARGET_SPEED_500', target_speed_500 )
         rospy.set_param('SP_TARGET_SPEED_1000', target_speed_1000 )
-        rospy.set_param('SP_MAX_HEADWAY', max_headway )
+        rospy.set_param('SP_MAX_HEADWAY', max_headway.data )
     
-        sp_speed = rospy.Publisher('/sp/target_speed', Float64, queue_size=10)
-        sp_speed_200 = rospy.Publisher('/sp/target_speed_200', Float64, queue_size=10)
-        sp_speed_500 = rospy.Publisher('/sp/target_speed_500', Float64, queue_size=10)
-        sp_speed_1000 = rospy.Publisher('/sp/target_speed_1000', Float64, queue_size=10)
-        sp_headway = rospy.Publisher('/sp/max_headway', Int16, queue_size=10)
         sp_speed.publish(target_speed)
         sp_speed_200.publish(target_speed_200)
         sp_speed_500.publish(target_speed_500)
