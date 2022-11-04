@@ -216,7 +216,7 @@ void NissanAccButtonController::parseCruiseState(CanFrame* canFrame, unsigned ch
 		
 		if (*cruiseEngaged != CRUISE_ENGAGED) {
 			*cruiseEngaged = CRUISE_ENGAGED;
-			printf("parseCruiseState(): CAN change detected: Message 308: cruiseEngaged = %d (Currently unused)\n", *cruiseEngaged);
+			printf("parseCruiseState(): CAN change detected: Message 308: cruiseEngaged = %d\n", *cruiseEngaged);
 		}
 		
 	}

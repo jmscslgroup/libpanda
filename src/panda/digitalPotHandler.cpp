@@ -177,7 +177,7 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 	
 	if (resistance == wiperState0 &&
 		resistance == wiperState1 ) {
-		printf("DigitalPotHandler::pressButton(): WIPER_0 and WIPER_1 already set to %f ohms\n", resistance);
+		//printf("DigitalPotHandler::pressButton(): WIPER_0 and WIPER_1 already set to %f ohms\n", resistance);
 		
 	} else {
 		
@@ -212,7 +212,7 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 	if (!wipersEngaged) {
 		
 		
-		printf("DigitalPotHandler::pressButton(): Pressing button\n");
+		printf("DigitalPotHandler::pressButton(): Applying resistance to physical output\n");
 		buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		buffer[0] |= 0x01;	//  reserved bit "forced to 1", may not be needed here
 		buffer[1] = 0xFF & ~DIGI_POT_TCON_R1A & ~DIGI_POT_TCON_R0A;	// 2nd part of 16-bit command
