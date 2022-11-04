@@ -6,7 +6,18 @@ import os
 import rospy
 import sys
 import time
-from std_msgs.msg import Byte, Float64
+from std_msgs.msg import Byte, Float64, Bool
+
+
+is_westbound = False
+can_update_time = None
+
+def wb_callback(data):
+    global is_westbound
+    global can_update_time
+    is_westbound = data.data
+    can_update_time = rospy.Time.now()
+
 
 def getGPSLocation(filename):
     """Returns lat,long as a pair. If fix is not A, then return None"""
@@ -84,8 +95,9 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     print('xposition=', xpos)
     pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
     pos_pub.publish(xpos)
+    rospy.Subscriber('/is_westbound', Bool, wb_callback)
     
-    if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0:
+    if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0 or not is_westbound:
         target_speed = 30
         target_speed_200 = 30
         target_speed_500 = 30
