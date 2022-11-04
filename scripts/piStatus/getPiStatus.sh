@@ -19,6 +19,8 @@ do
   fi
   EXTERNAL_POWER=$(echo $(cat /etc/libpanda.d/x725hasexternalpower)|tr -d '\r')
   UPDATE_TIME=$(date +%s)
+  
+  ORANGE_WIRE_CONNECTED=$(echo $(cat /etc/libpanda.d/wireAccButtonConnected)|tr -d '\r')
 
   FREE_RAM=$(awk '/MemFree/ { printf "%.3fG", $2/1024/1024 }' /proc/meminfo)
   AVAILABLE_RAM=$(awk '/MemAvailable/ { printf "%.3fG", $2/1024/1024 }' /proc/meminfo)
@@ -32,8 +34,8 @@ do
   CPU_USAGE_5MIN=$(top -bn1 | grep load | awk '{printf "%.2f", $(NF-1)}')
   CPU_USAGE_15MIN=$(top -bn1 | grep load | awk '{printf "%.2f", $(NF)}')
 
-  JSON='{"wlan0_mac":"%s","update_time":"%d","ssid":"%s","wlan0_upload_rate_kb":"%.2f","wlan0_download_rate_kb":"%.2f","wlan0_ip":"%s","eth0_ip":"%s","vin":"%s","battery_voltage":"%.2f","external_power":"%d","free_ram":"%s","available_ram":"%s","total_ram":"%s","total_memory_available":"%s","total_memory":"%s","total_memory_used_percent":"%s","cpu_load_1min":"%.2f","cpu_load_5min":"%.2f","cpu_load_15min":"%.2f"}'
-  JSON=$(printf "$JSON" "$WLAN0_MAC" "$UPDATE_TIME" "$SSID" "$UPLOAD_RATE_KB" "$DOWNLOAD_RATE_KB" "$WLAN0_IP" "$ETH0_IP" "$VIN" "$BATTERY_VOLTAGE" "$EXTERNAL_POWER" "$FREE_RAM" "$AVAILABLE_RAM" "$TOTAL_RAM" "$TOTAL_MEMORY_AVAILABLE" "$TOTAL_MEMORY" "$TOTAL_MEMORY_USED_PERCENT" "$CPU_USAGE_1MIN" "$CPU_USAGE_5MIN" "$CPU_USAGE_15MIN")
+  JSON='{"wlan0_mac":"%s","update_time":"%d","ssid":"%s","wlan0_upload_rate_kb":"%.2f","wlan0_download_rate_kb":"%.2f","wlan0_ip":"%s","eth0_ip":"%s","vin":"%s","battery_voltage":"%.2f","external_power":"%d","free_ram":"%s","available_ram":"%s","total_ram":"%s","total_memory_available":"%s","total_memory":"%s","total_memory_used_percent":"%s","cpu_load_1min":"%.2f","cpu_load_5min":"%.2f","cpu_load_15min":"%.2f","acc_button_wire_connected:"%d"}'
+  JSON=$(printf "$JSON" "$WLAN0_MAC" "$UPDATE_TIME" "$SSID" "$UPLOAD_RATE_KB" "$DOWNLOAD_RATE_KB" "$WLAN0_IP" "$ETH0_IP" "$VIN" "$BATTERY_VOLTAGE" "$EXTERNAL_POWER" "$FREE_RAM" "$AVAILABLE_RAM" "$TOTAL_RAM" "$TOTAL_MEMORY_AVAILABLE" "$TOTAL_MEMORY" "$TOTAL_MEMORY_USED_PERCENT" "$CPU_USAGE_1MIN" "$CPU_USAGE_5MIN" "$CPU_USAGE_15MIN" "$ORANGE_WIRE_CONNECTED")
   ENDPOINT="http://ransom.isis.vanderbilt.edu/LIVE_VIEWER_SITE/piStatusRest.php?PASS=circles&DATA=%s"
   ENDPOINT=$(printf "$ENDPOINT" "$JSON")
   echo $JSON > /etc/libpanda.d/piStatus.json
