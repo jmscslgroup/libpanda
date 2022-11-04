@@ -126,10 +126,11 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
             speed_planner = json.loads(open(circles_planner_file).read())
             pub_at = ast.literal_eval(speed_planner[0]['published_at'])
             # TODO: fix hard-coded lane number to vehicle's lane assignment
-            pos_list = [ast.literal_eval(record['position']) for record in speed_planner if record['lane_num'] == 2]
+            lane_num = 2
+            pos_list = [ast.literal_eval(record['position']) for record in speed_planner if record['lane_num'] == str(lane_num)]
             # print('got pos_list {} at time {}'.format(pos_list, pub_at))
-            speed_list = [ast.literal_eval(record['target_speed']) for record in speed_planner if record['lane_num'] == 2]
-            headway_list = [ast.literal_eval(record['max_headway']) for record in speed_planner if record['lane_num'] == 2]
+            speed_list = [ast.literal_eval(record['target_speed']) for record in speed_planner if record['lane_num'] == str(lane_num)]
+            headway_list = [ast.literal_eval(record['max_headway']) for record in speed_planner if record['lane_num'] == str(lane_num)]
             
             target_speed = get_target_by_position([pos_list, speed_list], xpos, pub_at, dtype=float)
             target_speed_200 = get_target_by_position([pos_list, speed_list], xpos+200, pub_at, dtype=float)
