@@ -72,6 +72,18 @@ const char* NissanAccButtonController::stateToName( const AccCommandState& state
 	return "";
 }
 
+const char* NissanAccButtonController::accStateToName( int state ) {
+	switch (state) {
+		case NISSAN_CRUISE_STATE_OFF: return "NISSAN_CRUISE_STATE_OFF";
+		case NISSAN_CRUISE_STATE_STANDSTILL: return "NISSAN_CRUISE_STATE_STANDSTILL";
+		case NISSAN_CRUISE_STATE_IDLE: return "NISSAN_CRUISE_STATE_IDLE";
+		case NISSAN_CRUISE_STATE_ACTIVE: return "NISSAN_CRUISE_STATE_ACTIVE";
+		case NISSAN_CRUISE_STATE_ACTIVE_DRIVER_PRESSING_GAS: return "NISSAN_CRUISE_STATE_ACTIVE_DRIVER_PRESSING_GAS";
+		default: break;
+	}
+	return "";
+}
+
 void NissanAccButtonController::transitionToState( AccCommandState newState ) {
 	std::cout << "NissanAccButtonController: Transition from " << stateToName(state) << " --> " << stateToName(newState) << std::endl;
 
@@ -214,7 +226,7 @@ void NissanAccButtonController::parseCruiseState(CanFrame* canFrame, unsigned ch
 		if (*cruiseState != CRUISE_STATE) {
 			*cruiseState = CRUISE_STATE;
 			
-			printf("parseCruiseState(): CAN change detected: Message 308: cruiseState = %d\n", (int)*cruiseState);
+			printf("parseCruiseState(): CAN change detected: Message 308: cruiseState = %d == %s\n", (int)*cruiseState, accStateToName((int)*cruiseState));
 		}
 		
 		if (*cruiseEngaged != CRUISE_ENGAGED) {
