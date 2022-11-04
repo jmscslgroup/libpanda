@@ -32,14 +32,17 @@ NissanAccButtonController::NissanAccButtonController() {
 	// Other Initialization:
 	this->setIntervalActionRate(NISSAN_COMMAND_THREAD_RATE);
 	
-	state = ACC_STATE_OFF;
+//	state = ACC_STATE_OFF;
 	//transitionToState(ACC_STATE_OFF);
 	
-	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
-	lastButtonSent = NISSAN_BUTTON_OFF;
+//	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+//	lastButtonSent = NISSAN_BUTTON_OFF;
 	
 	stateCheckButton = CHECK_BUTTON_PASSED;
 	checkButtonFailed = false;
+	
+	enterState(ACC_STATE_OFF);
+	enterState(CHECK_BUTTON_PASSED);
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
@@ -140,9 +143,9 @@ void NissanAccButtonController::exitState(AccCommandState oldState) {
 void NissanAccButtonController::intervalAction() {
 	
 	// No matter the state, if cruise was turned off then enter that state:
-	if (!cruiseOn &&
-		(state != ACC_STATE_OFF) &&
-		(state != ACC_STATE_BUTTON_TEST) ) {
+	if ((!cruiseOn) &&
+		((state != ACC_STATE_OFF) &&
+		(state != ACC_STATE_BUTTON_TEST)) ) {
 		transitionToState(ACC_STATE_OFF);
 	}
 	
