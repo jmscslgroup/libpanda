@@ -28,7 +28,7 @@
 #define NISSAN_DECIMATOR_TRANSITION_EXIT_BUTTON_TEST (NISSAN_COMMAND_THREAD_RATE * NISSAN_TRANSITION_EXIT_BUTTON_TEST)
 
 // Stuff for a concurrent state machine for button chekcing:
-#define NISSAN_CHECK_BUTTON_RESPONSE (5.0)		// The time in seconds to wait for a button response on the CAN bus
+#define NISSAN_CHECK_BUTTON_RESPONSE (2.0)		// The time in seconds to wait for a button response on the CAN bus
 #define NISSAN_DECIMATOR_CHECK_BUTTON_RESPONSE (NISSAN_COMMAND_THREAD_RATE * NISSAN_CHECK_BUTTON_RESPONSE)
 
 
@@ -72,6 +72,7 @@ private:
 	bool cruiseOn;
 	bool cruiseEngaged;
 	NissanButton buttonState;
+	NissanButton lastButtonSent;
 	
 	bool pedalTimerExpired;
 	

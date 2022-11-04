@@ -36,6 +36,7 @@ NissanAccButtonController::NissanAccButtonController() {
 	//transitionToState(ACC_STATE_OFF);
 	
 	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
+	lastButtonSent = NISSAN_BUTTON_OFF;
 	
 	stateCheckButton = CHECK_BUTTON_PASSED;
 	checkButtonFailed = false;
@@ -47,8 +48,13 @@ NissanAccButtonController::~NissanAccButtonController() {
 
 void NissanAccButtonController::sendButtonPress( NissanButton button ) {
 	potHandler.pressButton(button);
-	// Begin timer, if not already started
-	enterState(	CHECK_BUTTON_RUNNING);
+	
+	// Kickoff the button check timer, if not running:
+	if (stateCheckButton != CHECK_BUTTON_RUNNING &&
+		lastButtonSent != button) {
+		transitionToState(CHECK_BUTTON_RUNNING);
+	}
+	lastButtonSent = button;
 }
 
 const char* NissanAccButtonController::stateToName( const AccCommandState& state) {
@@ -76,7 +82,6 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 	switch (newState) {
 		case ACC_STATE_OFF:
 			relayHandler.disarm();
-//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
 			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
 			decimatorTranstionToButtonTest = 0;
 			break;
@@ -96,7 +101,6 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 			break;
 			
 //		case ACC_STATE_POWER_TOGGLE_NEEDED:
-//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
 //			relayHandler.disarm();
 //			break;
 			
@@ -321,13 +325,8 @@ bool NissanAccButtonController::sendButton( NissanButton button ) {
 	if ((state == ACC_STATE_CONTROLS_ALLOWED) &&
 		(cruiseEngaged == true) ) {	// This prevent race conditions
 		//		printf("Sending a button! %d\n", (int)button);
-		//		potHandler.pressButton(button);
 		sendButtonPress(button);
 		
-		// Kickoff the button check timer, if not running:
-		if (stateCheckButton != CHECK_BUTTON_RUNNING) {
-			transitionToState(CHECK_BUTTON_RUNNING);
-		}
 		return 1;
 	}
 	return 0;
@@ -360,10 +359,9 @@ void NissanAccButtonController::transitionToState( CheckButtonState newState ) {
 void NissanAccButtonController::enterState( CheckButtonState newState ) {
 	switch (newState) {
 		case CHECK_BUTTON_PASSED:
-			if (!checkButtonFailed) {
-				checkButtonFailed = false;
+			if (checkButtonFailed) {
 				writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
-				std::cerr << "NissanAccButtonController: \"Orange\" wire connected to ACC buttons!" << std::endl;
+				std::cerr << "NissanAccButtonController: \"Orange\" wire is good! Reconnected to ACC buttons." << std::endl;
 			}
 			checkButtonFailed = false;
 			break;
@@ -374,9 +372,9 @@ void NissanAccButtonController::enterState( CheckButtonState newState ) {
 			
 		case CHECK_BUTTON_FAILED:
 			if (!checkButtonFailed) {
-				checkButtonFailed = true;
 				writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "0\n");
 			}
+			checkButtonFailed = true;
 			std::cerr << "ERROR! NissanAccButtonController: \"Orange\" wire disconnected from ACC buttons!" << std::endl;
 			break;
 	}
