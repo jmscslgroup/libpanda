@@ -32,6 +32,9 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
+- [circles-raspbian-2022-11-03.img.gz](https://drive.google.com/file/d/1YEusko0QJddRBEGpIbmps8o8WxrUFnWL/view?usp=sharing)
+	Configured for the November MVT experiment. Derived from the Raspbian 64 bit lite image from September 22, 2022. Libpanda was then cloned, and the build.sh and install.sh scripts were executed. 
+
 - [circles-raspbian-2021-08-05.img.tar.gz](https://drive.google.com/file/d/1gY0HUJqwlm0UU3zjo45wSHIOra53bO6r/view?usp=sharing)
 	Configured for experiments on the following day of 08/06/2021.  Major change involves a reorganization of a few ROS topics and a new safety node that disengages the cruise controller automatically on hard commanded decelerations when another vehicle cuts in front of the follower vehicle.
 
