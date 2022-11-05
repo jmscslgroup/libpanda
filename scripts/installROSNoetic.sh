@@ -28,7 +28,7 @@ sudo apt-get upgrade -y
 #sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python-setuptools catkin # python3-catkin python3-empy python3-catkin-pkg python3-yaml
 sudo apt-get install -y python3-rosdep python3-rosinstall-generator python3-vcstool build-essential cmake python3-wstool python3-rosinstall
 #extras for noetic:
-sudo apt-get install -y python3-empy python3-catkin python3-catkin-pkg python3-yaml
+sudo apt-get install -y python3-empy python3-catkin python3-catkin-pkg python3-yaml python3-rosdep
 
 sudo rosdep init
 rosdep update
