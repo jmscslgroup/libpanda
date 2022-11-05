@@ -71,7 +71,8 @@ if [[ ! -f "/etc/libpanda.d/vin" ]]; then
 fi
 
 ./build.sh
-cd ../xUps
+cd scripts
+cd xUps
 sudo ./install.sh
 cd ../circles-ui
 sudo ./install.sh
