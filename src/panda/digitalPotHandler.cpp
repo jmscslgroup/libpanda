@@ -10,6 +10,8 @@
 #include <sys/ioctl.h>
 //#include <linux/i2c-dev.h>
 
+#include <time.h> // time debugging
+
 #include <wiringPiSPI.h>
 
 #include <cstdio>
@@ -168,6 +170,8 @@ double nissanButtonToDigitalPotResistance( NissanButton& button ) {
 }
 
 void DigitalPotHandler::pressButton( NissanButton button ) {
+	struct timespec now;
+	
 	int result;
 	if (button == NISSAN_BUTTON_OFF) {
 		releaseButton();
@@ -188,7 +192,8 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 		}
 		
 		// Setup
-		printf("DigitalPotHandler::pressButton(): Setting WIPER_0 and WIPER_1 to %f ohms, Effective resistance = %f ohms\n", resistance, resistance/2.0);
+		clock_gettime(CLOCK_REALTIME, &now);	/* mark start time */
+		printf("DigitalPotHandler::pressButton(): %d.%09ld Setting WIPER_0 and WIPER_1 to %f ohms, Effective resistance = %f ohms\n", (int)now.tv_sec, now.tv_nsec, resistance, resistance/2.0);
 		buffer[0] = (DIGI_POT_REG_WIPER_0 << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		digitalPotResistanceToBuffer(resistance, buffer);
 		result = wiringPiSPIDataRW(CHANNEL, buffer, 2);
@@ -212,7 +217,8 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 	if (!wipersEngaged) {
 		
 		
-		printf("DigitalPotHandler::pressButton(): Applying resistance to physical output\n");
+		clock_gettime(CLOCK_REALTIME, &now);	/* mark start time */
+		printf("DigitalPotHandler::pressButton(): %d.%09ld Applying resistance to physical output\n", (int)now.tv_sec, now.tv_nsec);
 		buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		buffer[0] |= 0x01;	//  reserved bit "forced to 1", may not be needed here
 		buffer[1] = 0xFF & ~DIGI_POT_TCON_R1A & ~DIGI_POT_TCON_R0A;	// 2nd part of 16-bit command
@@ -222,15 +228,20 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 	}
 	
 	//	usleep(dTime * 1000000);
+	clock_gettime(CLOCK_REALTIME, &now);	/* mark start time */
+	printf("DigitalPotHandler::pressButton(): %d.%09ld Complete.\n", (int)now.tv_sec, now.tv_nsec);
 }
 
 void DigitalPotHandler::releaseButton() {
+	struct timespec now;
 	int result;
 	// Button Release
 	//	dTime = TIME_PER_BUTTON_RELEASE/1000000.0;
 	//	if (argc > 3)
 	//		dTime =(double) stoi(argv[3])/1000.0;
-	printf("DigitalPotHandler::releaseButton():  Disconnecting potentiometer\n");//, dTime);
+	
+	clock_gettime(CLOCK_REALTIME, &now);	/* mark start time */
+	printf("DigitalPotHandler::releaseButton(): %d.%09ld Disconnecting potentiometer\n", (int)now.tv_sec, now.tv_nsec);//, dTime);
 	buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 	buffer[0] |= 0x01;	//  reserved bit "forced to 1", may not be needed here
 	buffer[1] = 0xFF & ~DIGI_POT_TCON_R1A & ~DIGI_POT_TCON_R0A & ~DIGI_POT_TCON_R0W & ~DIGI_POT_TCON_R1W ;	// 2nd part of 16-bit command
@@ -238,4 +249,6 @@ void DigitalPotHandler::releaseButton() {
 	
 	wipersEngaged = false;
 	//	usleep(dTime * 1000000);
+	clock_gettime(CLOCK_REALTIME, &now);	/* mark start time */
+	printf("DigitalPotHandler::releaseButton(): %d.%09ld Complete.\n", (int)now.tv_sec, now.tv_nsec);
 }
