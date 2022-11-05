@@ -28,6 +28,7 @@ NissanAccButtonController::NissanAccButtonController() {
 	cruiseState = NISSAN_CRUISE_STATE_OFF;
 	cruiseOn = false;
 	cruiseEngaged = false;
+	busyButtons = false;
 	
 	// Other Initialization:
 	this->setIntervalActionRate(NISSAN_COMMAND_THREAD_RATE);
@@ -50,7 +51,9 @@ NissanAccButtonController::~NissanAccButtonController() {
 }
 
 void NissanAccButtonController::sendButtonPress( NissanButton button ) {
+	busyButtons = true;
 	potHandler.pressButton(button);
+	busyButtons = false;
 	
 	// Kickoff the button check timer, if not running:
 	if (stateCheckButton != CHECK_BUTTON_RUNNING &&
@@ -414,3 +417,8 @@ void NissanAccButtonController::exitState( CheckButtonState priorState ) {
 bool NissanAccButtonController::isHardwareConnectionGood() {
 	return !checkButtonFailed;
 }
+
+bool NissanAccButtonController::busySendingPress() {
+	return busyButtons;
+}
+

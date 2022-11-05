@@ -75,6 +75,7 @@ private:
 	NissanButton lastButtonSent;
 	
 	bool pedalTimerExpired;
+	bool busyButtons;
 	
 	// Gpio stuff operation
 	MatthatAccButtonRelay relayHandler;
@@ -145,6 +146,8 @@ public:
 	
 	
 	bool isHardwareConnectionGood();
+	// True when a button press is sending, false when complete or idle
+	bool busySendingPress();
 	
 	static const char* stateToName( const AccCommandState& state);
 	static const char* accStateToName( int state );
