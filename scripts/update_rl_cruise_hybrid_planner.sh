@@ -26,7 +26,7 @@ fi
 cd catkin_ws/src
 
 # The following are repositories under jmscslgroup:
-declare -a repositories=(can_to_ros)
+declare -a repositories=(can_to_ros live_tracker)
 
 for repository in "${repositories[@]}"
 do
