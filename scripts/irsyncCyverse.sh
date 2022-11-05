@@ -15,7 +15,7 @@ DIR_PATH_LOCAL="/var/panda/CyverseData/JmscslgroupData/bagfiles/"
 
 response=
 
-while getopts “hf” opt; do
+while getopts “hfy” opt; do
   case $opt in
     h) echo "Uploads data to CyVerse."
 	echo " -f : force upload without prompt"
@@ -37,12 +37,13 @@ fi
 case "$response" in
       [yY][eE][sS]|[yY])
       #csv files:
-	  irsync -r -v ${LOCAL} i:${REMOTE}
+	  #irsync -r -v ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
-	  imkdir -pv ${DIR_PATH_CYVERSE}
-	  irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
-          ;;
+	  #imkdir -pv ${DIR_PATH_CYVERSE}
+	  #irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+          rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
+	;;
       *)
           echo "Exiting" 
           ;;

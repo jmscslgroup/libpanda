@@ -38,7 +38,7 @@ class CirclesManager:
 
 		hasExternalPower = True
 		try:
-			hasInternet = int(getFileContents( fileInternet ))
+			#hasInternet = int(getFileContents( fileInternet ))
 			isApClient = int(getFileContents( fileIsApClient ))
 			isApHost = int(getFileContents( fileisApHost ))
 			hasApClients = int(getFileContents( fileHasApClients ))
