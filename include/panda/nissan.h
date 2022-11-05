@@ -42,7 +42,7 @@
 #define NISSAN_CRUISE_STATE_STANDSTILL (4)
 #define NISSAN_CRUISE_STATE_IDLE (6)
 #define NISSAN_CRUISE_STATE_ACTIVE (12)
-#define NISSAN_CRUISE_STATE_UNKNOWN_ACTIVE (14)	// Occurs from 12, when driver presses gas pedal
+#define NISSAN_CRUISE_STATE_ACTIVE_DRIVER_PRESSING_GAS (14)	// Occurs from 12, when driver presses gas pedal
 
 namespace Panda {
 
@@ -147,6 +147,7 @@ public:
 	bool isHardwareConnectionGood();
 	
 	static const char* stateToName( const AccCommandState& state);
+	static const char* accStateToName( int state );
 	
 };
 
