@@ -24,6 +24,7 @@ then
 	apt-get install -y ${toInstall[@]}
 fi
 
+echo "1" > /etc/libpanda.d/wireAccButtonConnected
 
 cp getPiStatus.sh /usr/local/sbin/getPiStatus.sh
 
