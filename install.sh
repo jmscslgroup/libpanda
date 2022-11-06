@@ -86,6 +86,8 @@ cd ../circlesplanner
 sudo ./install.sh
 cd ../piStatus
 sudo ./install.sh
+cd ../autoUpdate
+sudo ./install.sh
 # not installing live tracker python version
 # cd ../live-tracker-raspberry-pi
 # sudo ./install.sh

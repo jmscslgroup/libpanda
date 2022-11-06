@@ -1,0 +1,11 @@
+[Unit]
+Description=Auto-updates libpanda and the corresponding catkin packages at boot if connected to vuDevices.
+After=can.service
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /usr/local/sbin/autoUpdate.sh
+
+[Install]
+WantedBy=multi-user.target
