@@ -13,6 +13,17 @@ source /opt/ros/noetic/setup.bash
 cd /home/circles/libpanda # likely unnecessary
 git pull
 
+INSTALLED_LIBPANDA_GIT_VERSION=$(pandaversion)
+CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
+
+if [ "$INSTALLED_LIBPANDA_GIT_VERSION" != "$CURRENT_LIBPANDA_GIT_VERSION" ]; then
+	# ned to update
+else
+	echo "libpanda is already up to date!"
+	exit 1
+fi
+
+
 echo "Stopping can_to_ros..."
 sudo systemctl stop can
 
