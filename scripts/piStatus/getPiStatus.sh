@@ -22,6 +22,7 @@ do
 
   ORANGE_WIRE_CONNECTED=$(echo $(cat /etc/libpanda.d/wireAccButtonConnected)|tr -d '\r')
   LIBPANDA_GIT_HASH=$(cd /home/circles/libpanda && git rev-parse HEAD)
+  LOG_MESSAGE=$(echo $(cat /etc/libpanda.d/logMessage)|tr -d '\r')
 
   FREE_RAM=$(awk '/MemFree/ { printf "%.3fG", $2/1024/1024 }' /proc/meminfo)
   AVAILABLE_RAM=$(awk '/MemAvailable/ { printf "%.3fG", $2/1024/1024 }' /proc/meminfo)
@@ -35,13 +36,15 @@ do
   CPU_USAGE_5MIN=$(top -bn1 | grep load | awk '{printf "%.2f", $(NF-1)}')
   CPU_USAGE_15MIN=$(top -bn1 | grep load | awk '{printf "%.2f", $(NF)}')
 
-  JSON='{"wlan0_mac":"%s","update_time":"%d","ssid":"%s","wlan0_upload_rate_kb":"%.2f","wlan0_download_rate_kb":"%.2f","wlan0_ip":"%s","eth0_ip":"%s","vin":"%s","battery_voltage":"%.2f","external_power":"%d","free_ram":"%s","available_ram":"%s","total_ram":"%s","total_memory_available":"%s","total_memory":"%s","total_memory_used_percent":"%s","cpu_load_1min":"%.2f","cpu_load_5min":"%.2f","cpu_load_15min":"%.2f","acc_button_wire_connected":"%d","libpanda_git_hash":"%s"}'
-  JSON=$(printf "$JSON" "$WLAN0_MAC" "$UPDATE_TIME" "$SSID" "$UPLOAD_RATE_KB" "$DOWNLOAD_RATE_KB" "$WLAN0_IP" "$ETH0_IP" "$VIN" "$BATTERY_VOLTAGE" "$EXTERNAL_POWER" "$FREE_RAM" "$AVAILABLE_RAM" "$TOTAL_RAM" "$TOTAL_MEMORY_AVAILABLE" "$TOTAL_MEMORY" "$TOTAL_MEMORY_USED_PERCENT" "$CPU_USAGE_1MIN" "$CPU_USAGE_5MIN" "$CPU_USAGE_15MIN" "$ORANGE_WIRE_CONNECTED" "$LIBPANDA_GIT_HASH")
+  JSON='{"wlan0_mac":"%s","update_time":"%d","ssid":"%s","wlan0_upload_rate_kb":"%.2f","wlan0_download_rate_kb":"%.2f","wlan0_ip":"%s","eth0_ip":"%s","vin":"%s","battery_voltage":"%.2f","external_power":"%d","free_ram":"%s","available_ram":"%s","total_ram":"%s","total_memory_available":"%s","total_memory":"%s","total_memory_used_percent":"%s","cpu_load_1min":"%.2f","cpu_load_5min":"%.2f","cpu_load_15min":"%.2f","acc_button_wire_connected":"%d","libpanda_git_hash":"%s","log_message":"%s"}'
+  JSON=$(printf "$JSON" "$WLAN0_MAC" "$UPDATE_TIME" "$SSID" "$UPLOAD_RATE_KB" "$DOWNLOAD_RATE_KB" "$WLAN0_IP" "$ETH0_IP" "$VIN" "$BATTERY_VOLTAGE" "$EXTERNAL_POWER" "$FREE_RAM" "$AVAILABLE_RAM" "$TOTAL_RAM" "$TOTAL_MEMORY_AVAILABLE" "$TOTAL_MEMORY" "$TOTAL_MEMORY_USED_PERCENT" "$CPU_USAGE_1MIN" "$CPU_USAGE_5MIN" "$CPU_USAGE_15MIN" "$ORANGE_WIRE_CONNECTED" "$LIBPANDA_GIT_HASH" "$LOG_MESSAGE")
+  POST_JSON=$(echo $JSON | sed 's/%/%25/g' | sed 's/ /%20/g' | sed 's/&/%26/g' | sed 's/:/%3A/g' | sed 's/\\/%5C/g' | sed 's/\//%%2F/g' | sed 's/</%3C/g' | sed 's/>/%3E/g' | sed 's/#/%23/g' | sed 's/@/%40/g')
+
+
   ENDPOINT="http://ransom.isis.vanderbilt.edu/LIVE_VIEWER_SITE/piStatusRest.php?PASS=circles&DATA=%s"
-  ENDPOINT=$(printf "$ENDPOINT" "$JSON")
+  ENDPOINT=$(printf "$ENDPOINT" "$POST_JSON")
   echo $JSON > /etc/libpanda.d/piStatus.json
-  echo $ENDPOINT
-  wget -O - $ENDPOINT
+  wget -O - ${ENDPOINT}
 
   sleep 10
 done

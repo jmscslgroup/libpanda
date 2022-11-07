@@ -2,7 +2,7 @@
 # Author: Matt Nice
 
 echo "========================="
-echo "Installing pi-status "
+echo "Installing piStatus "
 
 declare -a depencencies=(ifstat)
 toInstall=()
@@ -25,6 +25,7 @@ then
 fi
 
 echo "1" > /etc/libpanda.d/wireAccButtonConnected
+echo "Installing piStatus" > /etc/libpanda.d/logMessage
 
 cp getPiStatus.sh /usr/local/sbin/getPiStatus.sh
 

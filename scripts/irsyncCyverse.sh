@@ -42,7 +42,10 @@ case "$response" in
 	  # rosbag files:
 	  #imkdir -pv ${DIR_PATH_CYVERSE}
 	  #irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
-          rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
+          
+	##Starting the rsync upload process
+	sudo sh -c "echo 'rsync transfer starting' > /etc/libpanda.d/logMessage"
+	rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
 	;;
       *)
           echo "Exiting" 
