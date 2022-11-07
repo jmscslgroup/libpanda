@@ -43,7 +43,8 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH false)
 #SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib64")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
 
-execute_process(COMMAND git rev-parse --short=8 HEAD
+#execute_process(COMMAND git rev-parse --short=8 HEAD
+execute_process(COMMAND git rev-parse HEAD
                 OUTPUT_VARIABLE LIBPANDA_GIT_REV
                 ERROR_QUIET
                 OUTPUT_STRIP_TRAILING_WHITESPACE )
