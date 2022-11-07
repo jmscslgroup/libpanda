@@ -18,7 +18,7 @@ do
       break
     fi
   fi
-  i = $((i + 1))
+  i=$((i + 1))
   if [ $i -ge $max_tries ]
   then
     echo "1 minute timeout reached for connectivity."
