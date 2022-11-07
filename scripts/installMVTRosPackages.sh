@@ -27,22 +27,12 @@ do
 	LINE=$(echo $LINE | tr -d [:space:])
 	IFS=","
 	set -- $LINE
+	IFS=
     owner=$1
     repository=$2
     versionHash=$3
 	echo "Checking ${owner}/${repository} with hash ${versionHash}"
-	IFS=
-#done < $ROS_PACKAGE_REPOSITORY_CSV
-#
-#for repositoryAndHash in "${repositories[@]}"
-#do
-#	IFS=","
-#	set -- $repositoryAndHash # convert the "tuple" into the param args $1 $2...
-##    echo $1 and $2
-#    owner=$1
-#    repository=$2
-#    versionHash=$3
-#	echo "Checking ${owner}/${repository} with hash ${versionHash}"
+
 	if [ -d ${repository} ]; then
 		cd ${repository}
 		GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
@@ -58,7 +48,6 @@ do
 		git clone "https://github.com/${owner}/${repository}.git"
 		git checkout ${versionHash}
 	fi
-#done
 done < $ROS_PACKAGE_REPOSITORY_CSV
 
 
@@ -79,18 +68,23 @@ sudo systemctl enable can
 echo "Saving hashes to /etc/libpanda.d/git_hashes/"
 cd src
 sudo mkdir -p /etc/libpanda.d/git_hashes
-for repositoryAndHash in "${repositories[@]}"
+while IFS= read -r LINE
 do
+	#echo $LINE
+	LINE=$(echo $LINE | tr -d [:space:])
 	IFS=","
-	set -- $repositoryAndHash # convert the "tuple" into the param args $1 $2...
-#    echo $1 and $2
-	owner=$1
+	set -- $LINE
+	IFS=
+    owner=$1
     repository=$2
     versionHash=$3
+    
 	cd ${repository}
 	GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 	sudo sh -c "echo -n ${GIT_VERSION} > /etc/libpanda.d/git_hashes/${repository}"
 	cd ..
-done
+	
+	echo "Saved hash for ${owner}/${repository}"
+done < $ROS_PACKAGE_REPOSITORY_CSV
 
 echo "----------------------------"
