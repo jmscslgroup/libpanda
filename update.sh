@@ -13,7 +13,7 @@ source /opt/ros/noetic/setup.bash
 cd /home/circles/libpanda # likely unnecessary
 git pull
 
-INSTALLED_LIBPANDA_GIT_VERSION=$(pandaversion)
+INSTALLED_LIBPANDA_GIT_VERSION=$(cat /etc/libpanda.d/libpanda_version)
 CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ];
@@ -21,6 +21,8 @@ then
 	echo "libpanda is already up to date!"
 	exit 1
 fi
+
+echo "Update needed, Git hash mismatch: $INSTALLED_LIBPANDA_GIT_VERSION != $CURRENT_LIBPANDA_GIT_VERSION"
 
 
 echo "Stopping can_to_ros..."
@@ -35,6 +37,10 @@ echo "Executing installMVTRosPackages..."
 
 echo "Executing install_rl_cruise_hybrid_planner..."
 ./install_rl_cruise_hybrid_planner.sh
+
+# Do the following at the end of installs to ensure all other processes completed
+echo "Saving current pandaversion to /etc/libpanda.d/libpanda_version"
+sudo sh -c "pandaversion > /etc/libpanda.d/libpanda_version"
 
 echo "Starting can_to_ros..."
 sudo systemctl start can
