@@ -11,7 +11,7 @@ echo "Installing/Updating Vandertest ROS packages"
 
 source ~/.bashrc
 
-ROS_PACKAGE_REPOSITORY_CSV=rosRepositories.csv
+ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositories.csv
 
 
 
