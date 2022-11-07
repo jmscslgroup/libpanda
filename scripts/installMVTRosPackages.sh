@@ -11,24 +11,38 @@ echo "Installing/Updating Vandertest ROS packages"
 
 source ~/.bashrc
 
+ROS_PACKAGE_REPOSITORY_CSV=rosRepositories.csv
+
+
+
 cd ~
 if [ ! -d catkin_ws/src ]; then
 	mkdir -p catkin_ws/src
 fi
 cd catkin_ws/src
 
-# The following are repositories under jmscslgroup:
-declare -a repositories=("jmscslgroup,can_to_ros,63130161901da3e286c140ba6426630fcc82cd31" "jmscslgroup,setpointreader,bf9116d7e7a8284527e1d94537de1228c2b3abb8" "jmscslgroup,live_tracker,32dcb38decc03646e2dbeec9a3e3487411e0aa54" "CIRCLES-consortium,algos-stack,f95d26f78ffed06cd21fa73fcf414d5d5e5042a2")
-
-for repositoryAndHash in "${repositories[@]}"
+while IFS= read -r LINE
 do
+	#echo $LINE
+	LINE=$(echo $LINE | tr -d [:space:])
 	IFS=","
-	set -- $repositoryAndHash # convert the "tuple" into the param args $1 $2...
-#    echo $1 and $2
+	set -- $LINE
     owner=$1
     repository=$2
     versionHash=$3
 	echo "Checking ${owner}/${repository} with hash ${versionHash}"
+	IFS=
+#done < $ROS_PACKAGE_REPOSITORY_CSV
+#
+#for repositoryAndHash in "${repositories[@]}"
+#do
+#	IFS=","
+#	set -- $repositoryAndHash # convert the "tuple" into the param args $1 $2...
+##    echo $1 and $2
+#    owner=$1
+#    repository=$2
+#    versionHash=$3
+#	echo "Checking ${owner}/${repository} with hash ${versionHash}"
 	if [ -d ${repository} ]; then
 		cd ${repository}
 		GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
@@ -44,7 +58,8 @@ do
 		git clone "https://github.com/${owner}/${repository}.git"
 		git checkout ${versionHash}
 	fi
-done
+#done
+done < $ROS_PACKAGE_REPOSITORY_CSV
 
 
 # Build:
