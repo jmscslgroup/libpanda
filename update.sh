@@ -1,10 +1,10 @@
 #!/bin/bash
 # Author: Matt Bunting
 
-echo "Running libpanda's update.sh"
+>&2 echo "Running libpanda's update.sh"
 
 if [[ $EUID == 0 ]];
-  then echo "Do NOT run this script as root"
+  then >&2 echo "Do NOT run this script as root"
   exit
 fi
 
@@ -17,27 +17,27 @@ INSTALLED_LIBPANDA_GIT_VERSION=$(pandaversion)
 CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" != "$CURRENT_LIBPANDA_GIT_VERSION" ]; then
-	# ned to update
+	# need to update
 else
-	echo "libpanda is already up to date!"
+	>&2 echo "libpanda is already up to date!"
 	exit 1
 fi
 
 
-echo "Stopping can_to_ros..."
+>&2 echo "Stopping can_to_ros..."
 sudo systemctl stop can
 
-echo "Updating libpanda..."
+>&2 echo "Updating libpanda..."
 ./install.sh
 
 cd scripts
-echo "Executing installMVTRosPackages..."
+>&2 echo "Executing installMVTRosPackages..."
 ./installMVTRosPackages.sh
 
-echo "Executing install_rl_cruise_hybrid_planner..."
+>&2 echo "Executing install_rl_cruise_hybrid_planner..."
 ./install_rl_cruise_hybrid_planner.sh
 
-echo "Starting can_to_ros..."
+>&2 echo "Starting can_to_ros..."
 sudo systemctl start can
 
-echo "libpanda update.sh done."
+>&2 echo "libpanda update.sh done."
