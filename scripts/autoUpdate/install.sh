@@ -2,7 +2,7 @@
 # Author: Alex Richardson
 
 echo "========================="
-echo "Installing pi-status "
+echo "Installing auto-update"
 
 declare -a depencencies=(ifstat wget)
 toInstall=()

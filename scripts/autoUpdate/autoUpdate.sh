@@ -30,10 +30,11 @@ do
 done
 
 echo "Updating..."
+echo "Updating..." > /etc/libpanda.d/logMessage
 #systemctl stop can
 #su -c "cd /home/circles/libpanda && git pull && ./install.sh" circles
 #systemctl start can
 su -c "cd /home/circles/libpanda && ./update.sh" circles
 echo "Updating done!"
-
+echo "Updating done!" > /etc/libpanda.d/logMessage
 
