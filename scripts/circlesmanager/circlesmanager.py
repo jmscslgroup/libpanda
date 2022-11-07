@@ -93,7 +93,8 @@ class CirclesManager:
 				logging.info(" - - Power disconnect timeout!  Running final scripts...")
 				#os.system("echo \"- - - This is where we run a script\"")
 				logging.info(" - - Shutting system down...")
-				sudo sh -c "echo 'Shutting system down...' > /etc/libpanda.d/logMessage"
+				os.system("sudo sh -c 'echo \"Rsync finished, shutting system down...\" > /etc/libpanda.d/logMessage'")
+				time.sleep(20)
 				f = open(fileX725HasExtenalPower, "w")
 				f.write("1")
 				f.close()

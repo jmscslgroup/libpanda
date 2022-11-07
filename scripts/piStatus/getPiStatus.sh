@@ -1,6 +1,10 @@
 #!/bin/sh
 #Author: Matt Nice
 
+
+echo "System booting up..." > /etc/libpanda.d/logMessage
+
+
 while :
 do
   SSID=$(iwconfig wlan0 | grep -Eo "ESSID:\".*\"" | grep -Eo "\".*\"" | tail -c +2 | head -c -2)

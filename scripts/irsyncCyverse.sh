@@ -45,6 +45,7 @@ case "$response" in
           
 	##Starting the rsync upload process
 	sudo sh -c "echo 'rsync transfer starting' > /etc/libpanda.d/logMessage"
+	#sleep 10
 	rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
 	;;
       *)
