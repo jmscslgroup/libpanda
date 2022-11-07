@@ -18,7 +18,7 @@ CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ];
 then
-	echo "libpanda is already up to date!"
+	echo "Software stack is already up to date!"
 	exit 1
 fi
 
