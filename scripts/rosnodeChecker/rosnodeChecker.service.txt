@@ -1,0 +1,11 @@
+[Unit]
+Description=Checks that the rosnodes are listed after can service is up. Logs 'nominal state' or the failed node in piStatus logMessage file.
+After=autoUpdate.service
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /usr/local/sbin/rosnodeChecker.sh
+
+[Install]
+WantedBy=multi-user.target
