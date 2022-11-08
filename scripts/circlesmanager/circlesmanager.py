@@ -75,6 +75,7 @@ class CirclesManager:
 				pandarecordWasRunning = os.system("simpleCheckPandarecord")
 				canWasRunning = os.system("simpleCheckCan")
 				os.system("service pandarecord stop")
+				os.system("service rosnodeChecker stop")
 				os.system("service can stop")
 				os.system("runuser -l circles -c 'irsyncCyverse -f'")
 				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync

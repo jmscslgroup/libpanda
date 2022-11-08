@@ -26,7 +26,9 @@ echo "Update needed, Git hash mismatch: $INSTALLED_LIBPANDA_GIT_VERSION != $CURR
 
 
 echo "Stopping can_to_ros..."
+sudo systemctl stop rosnodeChecker
 sudo systemctl stop can
+sudo sh -c "echo 'ROS has been stopped for update!' > /etc/libpanda.d/logMessage"
 
 echo "Updating libpanda..."
 ./install.sh
@@ -44,5 +46,6 @@ sudo sh -c "pandaversion > /etc/libpanda.d/libpanda_version"
 
 echo "Starting can_to_ros..."
 sudo systemctl start can
+sudo systemctl start rosnodeChecker
 
 echo "libpanda update.sh done."

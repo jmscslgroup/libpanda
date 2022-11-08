@@ -6,6 +6,7 @@ Wants=network.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/bash /usr/local/sbin/autoUpdate.sh
+ExecStartPost=systemctl start rosnodeChecker
 
 [Install]
 WantedBy=multi-user.target

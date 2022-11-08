@@ -31,7 +31,7 @@ sudo chmod 655 /etc/systemd/system/rosnodeChecker.service
 
 systemctl daemon-reload
 
-systemctl enable rosnodeChecker.service
+systemctl disable rosnodeChecker.service
 
 echo "Done."
 echo "========================="
