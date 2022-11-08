@@ -46,6 +46,7 @@ do
 		cd ..
 	else
 		git clone "https://github.com/${owner}/${repository}.git"
+		cd ${repository}
 		git checkout ${versionHash}
 	fi
 done < $ROS_PACKAGE_REPOSITORY_CSV
