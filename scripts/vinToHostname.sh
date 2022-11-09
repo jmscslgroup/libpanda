@@ -6,6 +6,7 @@ VIN_CURRENT=$(cat /etc/hostname)
 
 if [ "$VIN" == "$VIN_CURRENT" ];
 then
+	echo "vin matches"
 	exit
 fi
 
@@ -30,8 +31,9 @@ then
 	fi
 
 	echo "vinToHostname: This is a new VIN!  Need to reboot to apply"
-	if ping -q -c 1 -W 8.8.8.8 > /dev/null;then
-		python3 ~/libpanda/scripts/vinParser.py
+	if ping -q -c 1 -W 1 8.8.8.8 > /dev/null;then
+		echo "trying vinParser"
+		python3 /usr/sbin/vinParser.py
 	fi
 	reboot
 fi

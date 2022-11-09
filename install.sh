@@ -63,6 +63,7 @@ if [ ! -d /etc/libpanda.d ]; then
 fi
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
+sudo cp scripts/vinParser.py /usr/sbin/vinParser.py
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple
 sudo cp scripts/installVandertestRosPackages.sh /usr/sbin/updateVandertest
 
