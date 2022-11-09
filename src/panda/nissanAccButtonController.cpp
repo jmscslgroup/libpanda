@@ -15,7 +15,10 @@ using namespace Panda;
 // This helper was copied from pandacord:
 void writeToFileThenClose(const char* filename, const char* data) {
 	FILE* file = fopen( filename, "w+");
-	fwrite( data, 1, strlen(data), file);
+	int length = strlen(data);
+	if(fwrite( data, 1, length, file) != length ) {
+		std::cerr << "Error! NissanAccButtonController unable to write to file " << filename << std::endl;
+	}
 	fclose(file);
 };
 
