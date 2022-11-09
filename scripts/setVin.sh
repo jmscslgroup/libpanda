@@ -22,7 +22,7 @@ Runit()
   # Run VIN Update
   sudo echo $Name > /etc/libpanda.d/vin
   sudo perl -pi -e 'chomp if eof' /etc/libpanda.d/vin
-  sudo python3 /home/circles/libpanda/scripts/vinParser.py
+  sudo python3 ~/libpanda/scripts/vinParser.py
   # sudo python3 ./vinParser.py
 }
 ############################################################
@@ -67,7 +67,7 @@ if test "$1" != "-o"; then
         [yY][eE][sS]|[yY])
             sudo echo $VIN > /etc/libpanda.d/vin
             sudo perl -pi -e 'chomp if eof' /etc/libpanda.d/vin
-            sudo python3 /home/circles/libpanda/scripts/vinParser.py
+            sudo python3 ~/libpanda/scripts/vinParser.py
             # sudo python3 ./vinParser.py
   	  echo "The vin is updated to " $(cat /etc/libpanda.d/vin)
             ;;
