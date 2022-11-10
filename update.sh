@@ -11,10 +11,11 @@ fi
 source /opt/ros/noetic/setup.bash
 
 cd /home/circles/libpanda # likely unnecessary
-git pull
+# git pull
 
 INSTALLED_LIBPANDA_GIT_VERSION=$(cat /etc/libpanda.d/libpanda_version)
-CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
+#CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
+CURRENT_LIBPANDA_GIT_VERSION=0000
 
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ];
 then
@@ -37,8 +38,8 @@ cd scripts
 echo "Executing installMVTRosPackages..."
 ./installMVTRosPackages.sh
 
-echo "Executing install_rl_cruise_hybrid_planner..."
-./install_rl_cruise_hybrid_planner.sh
+echo "Executing install_explicitaccel_microaccel..."
+./install_explicitaccel_microaccel.sh
 
 # Do the following at the end of installs to ensure all other processes completed
 echo "Saving current pandaversion to /etc/libpanda.d/libpanda_version"
