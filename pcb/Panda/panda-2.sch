@@ -20674,6 +20674,7 @@ Diodes Incorporated
 <part name="GND76" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
 <part name="C3" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="1uF"/>
 <part name="IC3" library="Tinkercad" library_urn="urn:adsk.eagle:library:30890021" deviceset="*555" device="_SOIC" package3d_urn="urn:adsk.eagle:package:18494142/1" technology="LMC"/>
+<part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="4.7uF"/>
 </parts>
 <sheets>
 <sheet>
@@ -21299,12 +21300,12 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <attribute name="NAME" x="137.16" y="221.615" size="1.778" layer="95"/>
 <attribute name="VALUE" x="137.16" y="185.42" size="1.778" layer="96"/>
 </instance>
-<instance part="R24" gate="G$1" x="132.08" y="185.42" smashed="yes" rot="R90">
-<attribute name="NAME" x="130.5814" y="181.61" size="1.778" layer="95" rot="R90"/>
-<attribute name="VALUE" x="135.382" y="181.61" size="1.778" layer="96" rot="R90"/>
+<instance part="R24" gate="G$1" x="129.54" y="185.42" smashed="yes" rot="R90">
+<attribute name="NAME" x="128.0414" y="181.61" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="132.842" y="181.61" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="GND66" gate="1" x="132.08" y="177.8" smashed="yes">
-<attribute name="VALUE" x="129.54" y="175.26" size="1.778" layer="96"/>
+<instance part="GND66" gate="1" x="129.54" y="177.8" smashed="yes">
+<attribute name="VALUE" x="127" y="175.26" size="1.778" layer="96"/>
 </instance>
 <instance part="C1" gate="G$1" x="71.12" y="180.34" smashed="yes">
 <attribute name="NAME" x="72.644" y="180.721" size="1.778" layer="95"/>
@@ -21418,6 +21419,10 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <instance part="IC3" gate="G$1" x="96.52" y="195.58" smashed="yes">
 <attribute name="NAME" x="96.52" y="208.28" size="1.778" layer="95" align="center"/>
 <attribute name="VALUE" x="96.52" y="182.88" size="1.778" layer="96" align="center"/>
+</instance>
+<instance part="C4" gate="G$1" x="132.08" y="195.58" smashed="yes">
+<attribute name="NAME" x="133.604" y="195.961" size="1.778" layer="95"/>
+<attribute name="VALUE" x="133.604" y="190.881" size="1.778" layer="96"/>
 </instance>
 </instances>
 <busses>
@@ -22916,10 +22921,14 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <label x="43.18" y="-68.58" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
-<net name="N$34" class="0">
+<net name="CNT_RST" class="0">
 <segment>
 <pinref part="IC2" gate="A" pin="RES"/>
 <pinref part="R24" gate="G$1" pin="2"/>
+<wire x1="129.54" y1="190.5" x2="132.08" y2="190.5" width="0.1524" layer="91"/>
+<label x="121.92" y="190.5" size="1.778" layer="95"/>
+<pinref part="C4" gate="G$1" pin="2"/>
+<junction x="132.08" y="190.5"/>
 </segment>
 </net>
 <net name="N$35" class="0">
@@ -23101,6 +23110,10 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <label x="246.38" y="236.22" size="1.778" layer="95"/>
 <pinref part="IC3" gate="G$1" pin="!RST"/>
 <pinref part="IC3" gate="G$1" pin="V+"/>
+<wire x1="127" y1="213.36" x2="132.08" y2="213.36" width="0.1524" layer="91"/>
+<junction x="127" y="213.36"/>
+<pinref part="C4" gate="G$1" pin="1"/>
+<wire x1="132.08" y1="213.36" x2="132.08" y2="198.12" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="R36" gate="G$1" pin="1"/>

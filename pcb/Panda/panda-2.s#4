@@ -22960,7 +22960,7 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <pinref part="IC3" gate="G$1" pin="THR"/>
 </segment>
 </net>
-<net name="N$36" class="0">
+<net name="CLK_555" class="0">
 <segment>
 <wire x1="111.76" y1="187.96" x2="119.38" y2="187.96" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="187.96" x2="119.38" y2="215.9" width="0.1524" layer="91"/>
@@ -22973,6 +22973,7 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <wire x1="175.26" y1="172.72" x2="175.26" y2="182.88" width="0.1524" layer="91"/>
 <wire x1="175.26" y1="182.88" x2="180.34" y2="182.88" width="0.1524" layer="91"/>
 <pinref part="IC3" gate="G$1" pin="OUT"/>
+<label x="137.16" y="172.72" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$37" class="0">
@@ -22983,7 +22984,7 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <pinref part="IC3" gate="G$1" pin="CV"/>
 </segment>
 </net>
-<net name="N$39" class="0">
+<net name="CLK_4040" class="0">
 <segment>
 <wire x1="213.36" y1="185.42" x2="213.36" y2="228.6" width="0.1524" layer="91"/>
 <wire x1="213.36" y1="228.6" x2="129.54" y2="228.6" width="0.1524" layer="91"/>
@@ -22992,9 +22993,10 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <wire x1="129.54" y1="218.44" x2="132.08" y2="218.44" width="0.1524" layer="91"/>
 <pinref part="IC4" gate="G$1" pin="4Y"/>
 <wire x1="205.74" y1="185.42" x2="213.36" y2="185.42" width="0.1524" layer="91"/>
+<label x="132.08" y="228.6" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="N$41" class="0">
+<net name="!RST_DRIVE" class="0">
 <segment>
 <pinref part="IC2" gate="A" pin="Q6"/>
 <wire x1="157.48" y1="205.74" x2="170.18" y2="205.74" width="0.1524" layer="91"/>
@@ -23009,6 +23011,7 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <junction x="170.18" y="205.74"/>
 <pinref part="IC4" gate="G$1" pin="3B"/>
 <wire x1="170.18" y1="193.04" x2="180.34" y2="193.04" width="0.1524" layer="91"/>
+<label x="157.48" y="205.74" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$42" class="0">

@@ -176,7 +176,7 @@
 <wire x1="8.128" y1="51.689" x2="8.636" y2="51.689" width="0.1524" layer="48"/>
 <text x="10.16" y="42.545" size="0.762" layer="48" rot="R90">5V</text>
 <text x="12.7" y="41.656" size="0.762" layer="48" rot="R90">3.3V</text>
-<text x="19.177" y="4.191" size="2.159" layer="48">CIRCLES mattHat v1.0</text>
+<text x="19.177" y="4.191" size="2.159" layer="48">CIRCLES mattHat v1.1</text>
 <circle x="14.605" y="7.366" radius="1.778" width="0.1524" layer="48"/>
 <polygon width="0.1524" layer="48">
 <vertex x="12.827" y="7.1882" curve="281"/>
@@ -4517,6 +4517,11 @@ design rules under a new name.</description>
 <attribute name="THERMALLOSS" value="" x="29.845" y="49.784" size="1.778" layer="27" display="off"/>
 <attribute name="TYPE" value="" x="29.845" y="49.784" size="1.778" layer="27" display="off"/>
 </element>
+<element name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" package="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="4.7uF" x="33.528" y="34.036" smashed="yes" rot="MR180">
+<attribute name="NAME" x="32.893" y="33.401" size="1.27" layer="26" rot="MR180"/>
+<attribute name="POPULARITY" value="73" x="33.528" y="34.036" size="1.778" layer="28" rot="MR180" display="off"/>
+<attribute name="SPICEPREFIX" value="C" x="33.528" y="34.036" size="1.778" layer="28" rot="MR180" display="off"/>
+</element>
 </elements>
 <signals>
 <signal name="GND">
@@ -6203,11 +6208,14 @@ design rules under a new name.</description>
 <wire x1="16.443" y1="26.102" x2="16.002" y2="26.543" width="0.1524" layer="1"/>
 <wire x1="16.002" y1="26.543" x2="15.494" y2="26.543" width="0.1524" layer="1"/>
 </signal>
-<signal name="N$34">
+<signal name="CNT_RST">
 <contactref element="IC2" pad="11"/>
 <contactref element="R24" pad="2"/>
 <wire x1="35.822" y1="34.417" x2="35.822" y2="36.4156" width="0.1524" layer="16"/>
 <wire x1="35.822" y1="36.4156" x2="35.814" y2="36.4236" width="0.1524" layer="16"/>
+<contactref element="C4" pad="2"/>
+<wire x1="34.378" y1="34.036" x2="34.759" y2="34.417" width="0.1524" layer="16"/>
+<wire x1="34.759" y1="34.417" x2="35.822" y2="34.417" width="0.1524" layer="16"/>
 </signal>
 <signal name="N$35">
 <contactref element="C1" pad="1"/>
@@ -6376,6 +6384,10 @@ design rules under a new name.</description>
 <wire x1="26.797" y1="46.355" x2="26.797" y2="47.3011" width="0.254" layer="1"/>
 <wire x1="32.3151" y1="51.689" x2="33.028" y2="51.689" width="0.254" layer="1"/>
 <wire x1="33.028" y1="51.689" x2="34.044" y2="50.673" width="0.254" layer="1"/>
+<contactref element="C4" pad="1"/>
+<wire x1="29.464" y1="36.4236" x2="29.464" y2="35.052" width="0.1524" layer="16"/>
+<wire x1="29.464" y1="35.052" x2="30.48" y2="34.036" width="0.1524" layer="16"/>
+<wire x1="30.48" y1="34.036" x2="32.678" y2="34.036" width="0.1524" layer="16"/>
 </signal>
 <signal name="PI_NRST">
 <contactref element="J7" pad="6"/>
