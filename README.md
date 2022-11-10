@@ -89,7 +89,7 @@ Run with USB in synchronous mode (default is asynchronous):
 
 `$ sudo ./pandaCurses -u s`
 
-Run with faked CAN data (i.e. when not connected to a car):
+Run with faked CAN data (i.e. when not connected to a car...):
 
 `$ sudo ./pandaCurses -f`
 
