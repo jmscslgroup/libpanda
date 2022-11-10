@@ -6,6 +6,7 @@ VIN_CURRENT=$(cat /etc/hostname)
 
 if [ "$VIN" == "$VIN_CURRENT" ];
 then
+	echo "vin matches"
 	exit
 fi
 
@@ -20,7 +21,7 @@ then
 	echo $VIN > /etc/hostname
 	sed -i "/^127.0.1.1/ c\127.0.1.1  $VIN" /etc/hosts
 	sed -i "/^ssid=/ c\ssid=$VIN" /etc/hostapd/hostapd.conf
-	
+
 	if grep -Fxq "$VIN" /etc/wpa_supplicant/wpa_supplicant.conf;
 	then
 		echo "This pi already has the mifi configured"
@@ -30,9 +31,9 @@ then
 	fi
 
 	echo "vinToHostname: This is a new VIN!  Need to reboot to apply"
+	if ping -q -c 1 -W 1 8.8.8.8 > /dev/null;then
+		echo "trying vinParser"
+		python3 /usr/sbin/vinParser.py
+	fi
 	reboot
 fi
-
-
-	
-
