@@ -1,6 +1,8 @@
 #!/bin/bash
 # Author: Matt Bunting
 
+LAUNCH_FILE=explicitaccel_microaccel_readonly.launch
+
 echo "----------------------------"
 if [[ $EUID == 0 ]];
   then echo "Do NOT run this script as root"
@@ -39,7 +41,7 @@ catkin_make
 
 source devel/setup.sh
 #rosrun robot_upstart uninstall can
-rosrun robot_upstart install can_to_ros/launch/explicitaccel_microaccel_readonly.launch --user root
+rosrun robot_upstart install can_to_ros/launch/${LAUNCH_FILE} --user root
 
 
 
