@@ -39,7 +39,7 @@ catkin_make
 
 source devel/setup.sh
 #rosrun robot_upstart uninstall can
-rosrun robot_upstart install can_to_ros/launch/explicitaccel_microaccel_readonly.launch --user root
+rosrun robot_upstart install can_to_ros/launch/explicit_cruise_planner_readonly.launch --user root
 
 
 
