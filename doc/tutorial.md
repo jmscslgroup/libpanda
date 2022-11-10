@@ -5,6 +5,9 @@ Hardware tutorial                         {#mainpage}
 
 # Table of Contents
 * [About](#about)
+* [mattHat](#mattHat)
+	* [Flashing](#matthat-flashing)
+	* [Jumper Configuration](#matthat-jumpers)
 * [Hardware](#hardware)
 	* [List of Components](#hardware-list)
 		* [Required](#hardware-req)
@@ -53,6 +56,15 @@ The majority of example source code to interface with the Panda is based on pyth
 <a name="hardware"></a>
 ___
 # Hardware
+<a name="matthat-flashing"></a>
+___
+## mattHat v1.0
+![mattHat v1.0](/doc/images/matthat-front.png "mattHat v1.0")
+
+<a name="matthat-jumpers"></a>
+___
+## mattHat Jumper Configuration
+
 
 <a name="hardware-list"></a>
 ___
