@@ -20675,6 +20675,7 @@ Diodes Incorporated
 <part name="R38" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-US_" device="R0402" package3d_urn="urn:adsk.eagle:package:23547/3" value="1k"/>
 <part name="SUPPLY2" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="VIN" device=""/>
 <part name="GND76" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="GND" device=""/>
+<part name="C3" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0402" package3d_urn="urn:adsk.eagle:package:23626/2" value="1uF"/>
 </parts>
 <sheets>
 <sheet>
@@ -21422,6 +21423,10 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <instance part="GND76" gate="1" x="439.42" y="-2.54" smashed="yes">
 <attribute name="VALUE" x="436.88" y="-5.08" size="1.778" layer="96"/>
 </instance>
+<instance part="C3" gate="G$1" x="429.26" y="7.62" smashed="yes">
+<attribute name="NAME" x="430.784" y="8.001" size="1.778" layer="95"/>
+<attribute name="VALUE" x="430.784" y="2.921" size="1.778" layer="96"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -21741,6 +21746,10 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <segment>
 <pinref part="R38" gate="G$1" pin="1"/>
 <pinref part="GND76" gate="1" pin="GND"/>
+<wire x1="439.42" y1="0" x2="429.26" y2="0" width="0.1524" layer="91"/>
+<junction x="439.42" y="0"/>
+<pinref part="C3" gate="G$1" pin="2"/>
+<wire x1="429.26" y1="0" x2="429.26" y2="2.54" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="BOOT0" class="0">
@@ -23148,10 +23157,13 @@ Vbe_sat is 950mV @ 50ma Ic, 5mA Ib</text>
 <net name="VOLT_S" class="0">
 <segment>
 <pinref part="R37" gate="G$1" pin="1"/>
-<wire x1="439.42" y1="10.16" x2="419.1" y2="10.16" width="0.1524" layer="91"/>
+<wire x1="439.42" y1="10.16" x2="429.26" y2="10.16" width="0.1524" layer="91"/>
 <label x="419.1" y="10.16" size="1.778" layer="95"/>
 <pinref part="R38" gate="G$1" pin="2"/>
 <junction x="439.42" y="10.16"/>
+<pinref part="C3" gate="G$1" pin="1"/>
+<wire x1="429.26" y1="10.16" x2="419.1" y2="10.16" width="0.1524" layer="91"/>
+<junction x="429.26" y="10.16"/>
 </segment>
 <segment>
 <pinref part="U16" gate="G$1" pin="PF11"/>
