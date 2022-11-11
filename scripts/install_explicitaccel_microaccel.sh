@@ -40,7 +40,7 @@ cd ~/catkin_ws
 catkin_make
 
 source devel/setup.sh
-#rosrun robot_upstart uninstall can
+rosrun robot_upstart uninstall can
 rosrun robot_upstart install can_to_ros/launch/${LAUNCH_FILE} --user root
 
 
