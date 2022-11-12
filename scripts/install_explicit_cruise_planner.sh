@@ -1,7 +1,9 @@
 #!/bin/bash
 # Author: Matt Bunting
 
-LAUNCH_FILE=explicitaccel_microaccel_readonly.launch
+# if you follow conventions correctly, you only need to change the below two parameters
+
+LAUNCH_FILE=explicit_cruise_planner_readonly.launch
 
 echo "----------------------------"
 if [[ $EUID == 0 ]];
@@ -9,31 +11,31 @@ if [[ $EUID == 0 ]];
   exit
 fi
 
-echo "Installing/Updating Vandertest ROS packages"
-
+# uninstall the current installations
 source ~/.bashrc
-
 sh uninstallRobotUpstart.sh
+
+echo "Installing/Updating Vandertest ROS packages"
 
 cd ~
 if [ ! -d catkin_ws/src ]; then
-	mkdir -p catkin_ws/src
+    mkdir -p catkin_ws/src
 fi
 cd catkin_ws/src
 
 # The following are repositories under jmscslgroup:
-declare -a repositories=(can_to_ros explicitaccel_microaccel)
+declare -a repositories=(can_to_ros explicit_cruise_planner)
 
 for repository in "${repositories[@]}"
 do
-	echo "Checking" $repository
-	if [ -d ${repository} ]; then
-		cd ${repository}
-		git pull
-		cd ..
-	else
-		git clone "https://github.com/jmscslgroup/${repository}.git"
-	fi
+    echo "Checking" $repository
+    if [ -d ${repository} ]; then
+        cd ${repository}
+        git pull
+        cd ..
+    else
+        git clone "https://github.com/jmscslgroup/${repository}.git"
+    fi
 done
 
 cd ~/catkin_ws
