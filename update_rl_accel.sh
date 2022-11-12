@@ -39,7 +39,7 @@ cd scripts
 echo "Executing installMVTRosPackages..."
 ./installMVTRosPackages.sh
 
-echo "Executing install_rl_cruise_hybrid_planner..."
+echo "Executing install_rl_cruise_accel_planner..."
 ./install_rl_cruise_accel_planner.sh
 
 # Do the following at the end of installs to ensure all other processes completed
