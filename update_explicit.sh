@@ -15,6 +15,7 @@ git pull
 
 INSTALLED_LIBPANDA_GIT_VERSION=$(cat /etc/libpanda.d/libpanda_version)
 CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
+CURRENT_LIBPANDA_GIT_VERSION=00000
 
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ];
 then
