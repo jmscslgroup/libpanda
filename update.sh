@@ -36,6 +36,8 @@ echo "Updating libpanda..."
 cd scripts
 echo "Executing installMVTRosPackages..."
 ./installMVTRosPackages.sh
+echo "Uninstalling original can service if it exists..."
+./uninstallRobotUpstart.sh
 
 echo "Executing install_rl_cruise_hybrid_planner..."
 ./install_rl_cruise_hybrid_planner.sh
