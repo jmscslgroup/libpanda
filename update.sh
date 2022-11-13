@@ -16,7 +16,7 @@ git pull
 INSTALLED_LIBPANDA_GIT_VERSION=$(cat /etc/libpanda.d/libpanda_version)
 CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 
-if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ] && [ $1 != "-f" ];
+if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ] && [ "$1" != "-f" ];
 then
 	echo "Software stack is already up to date!"
 	exit 1
