@@ -45,8 +45,9 @@ void MatthatReset::doit() {
 	
 	std::cout << "MatthatReset:  - Releasing Reset with Boot still released" << std::endl;
 	resetHandler.setGpioOutput(GPIO_PIN_PANDA_RESET_RELEASED);
-	std::cout << "MatthatReset:  - Waiting 1 second for Panda to start" << std::endl;
-	sleep(1);
+	std::cout << "MatthatReset:  - Waiting 2 seconds for Panda to enumerate USB..." << std::endl;
+	sleep(2);
+	std::cout << "MatthatReset:  - Reset procedure complete!" << std::endl;
 	
 	
 	resetHandler.setDirection(Panda::GpioHandler::GPIO_DIRECTION_IN);
