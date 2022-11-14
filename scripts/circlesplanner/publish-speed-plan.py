@@ -22,18 +22,20 @@ def wb_callback(data):
     # TODO: move this stuff into the loop that loads files
     lat, long = getGPSLocation(gpsfile)
     if not inputLat == None:
-        lat = inputLat 
+        lat = inputLat
     if not inputLong == None:
         long = inputLong
     xpos = getXposFromGPS(lat,long,i24_geo_file)
     print('lat,long=', lat, long)
     print('xposition=', xpos)
     pos_pub.publish(xpos)
+    lat_pub.publish(lat)
+    lon_pub.publish(long)
 
     # HACK HACK HACK install westbound stuff soon
     # is_westbound=True
-    max_headway = Int16() 
-        
+    max_headway = Int16()
+
     if not os.path.exists(circles_planner_file) or os.stat(circles_planner_file).st_size == 0 or not is_westbound:
     #if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0 or not is_westbound:
         target_speed = 30
@@ -51,7 +53,7 @@ def wb_callback(data):
         # print('got pos_list {} at time {}'.format(pos_list, pub_at))
         speed_list = [ast.literal_eval(record['target_speed']) for record in speed_planner if record['lane_num'] == str(lane_num)]
         headway_list = [ast.literal_eval(record['max_headway']) for record in speed_planner if record['lane_num'] == str(lane_num)]
-            
+
         target_speed = get_target_by_position([pos_list, speed_list], xpos, pub_at, dtype=float)
         target_speed_200 = get_target_by_position([pos_list, speed_list], xpos+200, pub_at, dtype=float)
         target_speed_500 = get_target_by_position([pos_list, speed_list], xpos+500, pub_at, dtype=float)
@@ -60,7 +62,7 @@ def wb_callback(data):
         print('Speed Planner targets: {} m/s, {} gap.'.format(target_speed, 'open' if max_headway else 'close'))
 
         # import subprocess
-    
+
 #    bashCommand_speed = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
 #    bashCommand_headway = "source /home/circles/.bashrc && /opt/ros/melodic/bin/rosparam set SP_MAX_HEADWAY {}".format( max_headway )
 #    bashCommand_speed = "/opt/ros/melodic/bin/rosparam set SP_TARGET_SPEED {}".format( target_speed )
@@ -76,7 +78,7 @@ def wb_callback(data):
     rospy.set_param('SP_TARGET_SPEED_500', target_speed_500 )
     rospy.set_param('SP_TARGET_SPEED_1000', target_speed_1000 )
     rospy.set_param('SP_MAX_HEADWAY', max_headway.data )
-    
+
     sp_speed.publish(target_speed)
     sp_speed_200.publish(target_speed_200)
     sp_speed_500.publish(target_speed_500)
@@ -91,7 +93,7 @@ def getGPSLocation(filename):
     long = None
     vals = gpsstring.split(',')
     print('vals=',vals)
-    if vals[-1] == 'A': 
+    if vals[-1] == 'A':
         lat = float(vals[2])
         long = float(vals[3])
     return lat,long
@@ -157,7 +159,11 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     inputLong = myLong
     rospy.init_node(name='circles_planner')
     global pos_pub
+    global lon_pub
+    global lat_pub
     pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
+    lon_pub = rospy.Publisher('/longitude', Float64, queue_size=10)
+    lat_pub = rospy.Publisher('/latitude', Float64, queue_size=10)
     rospy.Subscriber('/is_westbound', Bool, wb_callback)
 
     global sp_speed
@@ -186,5 +192,3 @@ if __name__ == "__main__":
         main(gpsfile, i24_geo_file, circles_planner_file, myLat, myLong)
     else:
         main(gpsfile, i24_geo_file, circles_planner_file)
-
-
