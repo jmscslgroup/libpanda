@@ -8,21 +8,34 @@
 # example:
 # 
 
-BASEURL="http://ransom.isis.vanderbilt.edu:80/inrix/api/target.php"
+SP_BASE_URL="http://ransom.isis.vanderbilt.edu:80/inrix/api/target.php"
+LN_CTRL_URL="http://ransom.isis.vanderbilt.edu:80/inrix/api/lane_assignments.php?vin="
+
+SPEEDPLANNER_FILE="/etc/libpanda.d/speed_planner.json"
+LN_CTRL_FILE="/etc/libpanda.d/lane_control_allowable.json"
 
 VIN_FILE="/etc/libpanda.d/vin"
-SPEEDPLANNER_FILE="/etc/libpanda.d/speed_planner.json"
+VIN=$(<${VIN_FILE})
+while [[ $VIN = "circles" ]];
+do
+	sleep 1
+	VIN=$(<${VIN_FILE})
+done
 
 while true;
 do
-	sleep 13
+	sleep 10
 	
 	# TODO: replace with real string once file is created/generated correctly
 	PLANNER_STRING=$(echo "test_url" | head)
 	
-	FULL_COMMAND="curl --connect-timeout 10 -k ${BASEURL}"
+	FULL_COMMAND="curl --connect-timeout 10 -k ${SP_BASE_URL}"
 	echo "Performing command: ${FULL_COMMAND}"
 	$(${FULL_COMMAND} > ${SPEEDPLANNER_FILE})
+
+	FULL_COMMAND="curl --connect-timeout 10 -k ${LN_CTRL_URL}${VIN}"
+	echo "Performing command: ${FULL_COMMAND}"
+	$(${FULL_COMMAND} > ${LN_CTRL_FILE})
 	
 	source /opt/ros/noetic/setup.bash
 
