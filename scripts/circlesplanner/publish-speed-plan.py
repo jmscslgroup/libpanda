@@ -9,7 +9,8 @@ import time
 from std_msgs.msg import Int16, Float64, Bool
 
 
-is_westbound = False
+# is_westbound = False
+is_westbound = 0  # Side street (neither east nor west)
 can_update_time = None
 
 def wb_callback(data):
@@ -36,14 +37,28 @@ def wb_callback(data):
     # is_westbound=True
     max_headway = Int16()
 
-    if not os.path.exists(circles_planner_file) or os.stat(circles_planner_file).st_size == 0 or not is_westbound:
+    if not os.path.exists(circles_planner_file) or os.stat(circles_planner_file).st_size == 0:
     #if not os.path.exists(circles_planner_file) or os.stat(file_path).st_size == 0 or not is_westbound:
+        target_speed = 29
+        target_speed_200 = 29
+        target_speed_500 = 29
+        target_speed_1000 = 29
+        max_headway.data = 0
+        print('File missing or empty', circles_planner_file)
+    elif is_westbound == -1:  # Going eastbound
         target_speed = 30
         target_speed_200 = 30
         target_speed_500 = 30
         target_speed_1000 = 30
         max_headway.data = 0
-        print('Printing default message, sWestbound=', is_westbound,' or maybe missing file ', circles_planner_file)
+        print('Going eastbound, speed planner set to default of 30')
+    elif is_westbound == 0:  # Side street (neither east nor west)
+        target_speed = 15
+        target_speed_200 = 15
+        target_speed_500 = 15
+        target_speed_1000 = 15
+        max_headway.data = 0
+        print('On a side street, speed planner limited to 15')
     else:
         speed_planner = json.loads(open(circles_planner_file).read())
         pub_at = ast.literal_eval(speed_planner[0]['published_at'])
@@ -164,7 +179,8 @@ def main(gpsfile, i24_geo_file, circles_planner_file, myLat=None, myLong=None ):
     pos_pub = rospy.Publisher('/xpos', Float64, queue_size=10)
     lon_pub = rospy.Publisher('/longitude', Float64, queue_size=10)
     lat_pub = rospy.Publisher('/latitude', Float64, queue_size=10)
-    rospy.Subscriber('/is_westbound', Bool, wb_callback)
+    # rospy.Subscriber('/is_westbound', Bool, wb_callback)
+    rospy.Subscriber('/is_westbound', Int16, wb_callback)
 
     global sp_speed
     global sp_speed_200
