@@ -45,5 +45,10 @@ if [ ! -f /etc/libpanda.d/piStatus.json ]; then
 	touch /etc/libpanda.d/piStatus.json
 fi
 
+# Setup ACC wire status file:
+if [ ! -f /etc/libpanda.d/wireAccButtonConnected ]; then
+	echo "1" > /etc/libpanda.d/wireAccButtonConnected
+fi
+
 echo "Done."
 echo "========================="

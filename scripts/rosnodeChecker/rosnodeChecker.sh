@@ -24,7 +24,7 @@ live_tracker_alive=0
 nissan_target_to_buttons_alive=0
 
 #CONTROLS_ALLOWED_MSG=$(rostopic echo /car/libpanda/controls_allowed -n 1 | grep data | sed 's/data: //g' | tr -d '\t\r\n ')
-CONTROLS_ALLOWED_MSG=$(rosparam get /SP_CONTROL_ALLOWABLE | tr [:upper:] [:lower:])
+CONTROLS_ALLOWED_MSG=$(rosparam get /SP_CONTROL_REQUEST | tr [:upper:] [:lower:])
 
 for node in ${ROS_NODES[*]};
 do
@@ -45,11 +45,13 @@ done
 
 if [[ "$subs_alive" -eq "1" ]] && [[ "$vehicle_interface_alive" -eq "1" ]] && [[ "$live_tracker_alive" -eq "1" ]] && [[ "$nissan_target_to_buttons_alive" -eq "1" ]]; then
 	if [[ "$CONTROLS_ALLOWED_MSG" = "true" ]]; then
-		echo "nominal state - controls allowed!" > /etc/libpanda.d/logMessage
+		echo "nominal state - server says: controls allowable!" > /etc/libpanda.d/logMessage
 	else
-		echo "nominal state - controls not allowed!" > /etc/libpanda.d/logMessage
+		echo "nominal state - server says: controls not allowable!" > /etc/libpanda.d/logMessage
 	fi
 	#echo "nominal state!" > /etc/libpanda.d/logMessage
+	# echo " Running these hashes: " >> /etc/libpanda.d/logMessage
+	# cat /home/circles/libpanda/scripts/rosRepoShort.txt >> /etc/libpanda.d/logMessage
 else
 	echo "rosnode(s) are down"
 	echo "These rosnodes are down: " > /etc/libpanda.d/logMessage

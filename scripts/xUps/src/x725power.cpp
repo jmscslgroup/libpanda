@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 	pid_t  exitScriptPid = -1;
 
 	while(keepRunning) {
-		sleep(5); // only operate once every 5 seconds
+		sleep(2); // only operate once every 2 seconds
 
 
 		// The following two functions ensure that i2c is connected, otherwise continue and wait.
