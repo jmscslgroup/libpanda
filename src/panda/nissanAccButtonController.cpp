@@ -23,7 +23,7 @@ void writeToFileThenClose(const char* filename, const char* data) {
 };
 
 NissanAccButtonController::NissanAccButtonController() {
-	writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
+//	writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
 	
 	// State Variables:
 	gasPressed = true;
