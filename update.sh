@@ -36,11 +36,12 @@ echo "Updating libpanda..."
 cd scripts
 echo "Executing installMVTRosPackages..."
 ./installMVTRosPackages.sh
+
 echo "Uninstalling original can service if it exists..."
 ./uninstallRobotUpstart.sh
 
-echo "Executing install_rl_cruise_hybrid_planner..."
-./install_rl_cruise_hybrid_planner.sh
+echo "Executing installMVTController..."
+./installMVTController.sh
 
 # Do the following at the end of installs to ensure all other processes completed
 echo "Saving current pandaversion to /etc/libpanda.d/libpanda_version"

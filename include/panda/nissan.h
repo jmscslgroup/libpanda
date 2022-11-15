@@ -20,7 +20,7 @@
 
 // Stuff for ACC button presses:
 #define NISSAN_COMMAND_PEDAL_WAIT_TIME (1.0)	// The time in seconds to wait before pressing SET after pedals released
-#define NISSAN_COMMAND_SET_WAIT_TIME (1.0)		// The time to wait in seconds after pressing SET to enter controls_allowed
+#define NISSAN_COMMAND_SET_WAIT_TIME (2.0)		// The time to wait in seconds after pressing SET to enter controls_allowed
 #define NISSAN_TRANSITION_TO_BUTTON_TEST (30.0)		//
 #define NISSAN_TRANSITION_EXIT_BUTTON_TEST (0.25)		//
 #define NISSAN_DECIMATOR_PEDAL_WAIT (NISSAN_COMMAND_THREAD_RATE * NISSAN_COMMAND_PEDAL_WAIT_TIME)
@@ -28,9 +28,11 @@
 #define NISSAN_DECIMATOR_TRANSITION_EXIT_BUTTON_TEST (NISSAN_COMMAND_THREAD_RATE * NISSAN_TRANSITION_EXIT_BUTTON_TEST)
 
 // Stuff for a concurrent state machine for button chekcing:
-#define NISSAN_CHECK_BUTTON_RESPONSE (2.0)		// The time in seconds to wait for a button response on the CAN bus
+#define NISSAN_CHECK_BUTTON_RESPONSE (4.0)		// The time in seconds to wait for a button response on the CAN bus, time == 2x the loop in libpanda/scripts/xUps/x725power.cpp
 #define NISSAN_DECIMATOR_CHECK_BUTTON_RESPONSE (NISSAN_COMMAND_THREAD_RATE * NISSAN_CHECK_BUTTON_RESPONSE)
 
+#define NISSAN_HEARTBEAT_CONTROL_REQUEST_RATE (1.0)	// The mimimum rate needed for control request calls to allow control requests
+#define NISSAN_DECIMATOR_HEARTBEAT_CONTROL_REQUEST (NISSAN_COMMAND_THREAD_RATE / NISSAN_HEARTBEAT_CONTROL_REQUEST_RATE)
 
 // Nassan' reported CRUISE_STATE values, from reverse-engineering:
 //#define NISSAN_CRUISE_STATE_OFF (1)
@@ -73,6 +75,8 @@ private:
 	bool cruiseEngaged;
 	NissanButton buttonState;
 	NissanButton lastButtonSent;
+	bool controlRequest;
+	bool priorHeartBeatState;
 	
 	bool pedalTimerExpired;
 	bool busyButtons;
@@ -87,6 +91,7 @@ private:
 	int decimatorSetWaitTimer;
 	int decimatorTranstionToButtonTest;
 	int decimatorTranstionExitButtonTest;
+	int decimatorHeartbeatControlRequest;
 	
 	// Functional attributes:
 	
@@ -128,12 +133,13 @@ private:
 	
 	// and for concurrent state machine:
 	void intervalActionCheckButton();
-	void transitionToState( CheckButtonState newState );
-	void enterState( CheckButtonState oldState );
-	void exitState( CheckButtonState newState );
+	void transitionToCheckButtonState( CheckButtonState newState );
+	void enterCheckButtonState( CheckButtonState oldState );
+	void exitCheckButtonState( CheckButtonState newState );
 	
 	// Helper functions:
-	void sendButtonPress( NissanButton button );
+	void sendButtonPressAndCheckCanResponse( NissanButton button );
+	bool heartbeatControlRequestPassed();
 	
 protected:
 	NissanAccButtonController();
@@ -144,12 +150,15 @@ public:
 	
 	bool sendButton( NissanButton button );
 	
+	// Call this to designate that external control is ready
+	void requestControl( bool request );
 	
 	bool isHardwareConnectionGood();
 	// True when a button press is sending, false when complete or idle
 	bool busySendingPress();
 	
 	static const char* stateToName( const AccCommandState& state);
+	static const char* stateToName( const CheckButtonState& state);
 	static const char* accStateToName( int state );
 	
 };
