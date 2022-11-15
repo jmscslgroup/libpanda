@@ -24,7 +24,7 @@ live_tracker_alive=0
 nissan_target_to_buttons_alive=0
 
 #CONTROLS_ALLOWED_MSG=$(rostopic echo /car/libpanda/controls_allowed -n 1 | grep data | sed 's/data: //g' | tr -d '\t\r\n ')
-CONTROLS_ALLOWED_MSG=$(rosparam get /SP_CONTROL_ALLOWABLE | tr [:upper:] [:lower:])
+CONTROLS_ALLOWED_MSG=$(rosparam get /SP_CONTROL_REQUEST | tr [:upper:] [:lower:])
 
 for node in ${ROS_NODES[*]};
 do
