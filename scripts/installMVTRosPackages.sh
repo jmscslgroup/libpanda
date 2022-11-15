@@ -13,7 +13,11 @@ source ~/.bashrc
 
 ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositories.csv
 
-
+MAP_VALUE=$(cat /home/circles/libpanda/scripts/experimentalControllerMap.csv | grep `cat /etc/hostname` | awk -F',' '{print $3}')
+if [ "$MAP_VALUE" = "experimental" ]; then
+  #if experimental is true from grep
+  ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositoriesExperimental.csv
+fi
 
 cd ~
 if [ ! -d catkin_ws/src ]; then
@@ -80,12 +84,12 @@ do
     owner=$1
     repository=$2
     versionHash=$3
-    
+
 	cd ${repository}
 	GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 	sudo sh -c "echo -n ${GIT_VERSION} > /etc/libpanda.d/git_hashes/${repository}"
 	cd ..
-	
+
 	echo "Saved hash for ${owner}/${repository}"
 done < $ROS_PACKAGE_REPOSITORY_CSV
 
