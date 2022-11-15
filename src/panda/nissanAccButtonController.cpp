@@ -5,6 +5,8 @@
  */
 
 #include <cstring>
+#include <iostream>
+#include <fstream>
 
 #include "panda/nissan.h"
 
@@ -21,6 +23,19 @@ void writeToFileThenClose(const char* filename, const char* data) {
 	}
 	fclose(file);
 };
+
+int readIntFromFile(const char* filename) {
+	std::fstream my_file;
+	int result = -1;
+	my_file.open(filename, std::ios::in);
+	if ( my_file ) {
+		std::cout << "File created successfully!";
+		my_file >> result;
+		my_file.close();
+	}
+	return result;
+	
+}
 
 NissanAccButtonController::NissanAccButtonController() {
 //	writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "1\n");
@@ -45,6 +60,8 @@ NissanAccButtonController::NissanAccButtonController() {
 	
 	enterState(ACC_STATE_OFF);
 	enterCheckButtonState(CHECK_BUTTON_PASSED);
+	
+	decimatorTranstionToButtonTest = NISSAN_DECIMATOR_TRANSITION_TO_BUTTON_TEST * 29.0/30.0; // HACK for an immediate check after 1 second
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
@@ -405,11 +422,18 @@ void NissanAccButtonController::enterCheckButtonState( CheckButtonState newState
 			break;
 			
 		case CHECK_BUTTON_FAILED:
-			if (!checkButtonFailed) {
-				writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "0\n");
+			if( !checkButtonFailed ) {
+				if(readIntFromFile("/etc/libpanda.d/x725hasexternalpower") == 1) {
+					checkButtonFailed = true;
+					writeToFileThenClose(FILE_ORANGE_WIRE_CONNECTED, "0\n");
+					std::cerr << "ERROR! NissanAccButtonController: \"Orange\" wire disconnected from ACC buttons!" << std::endl;
+				} else {
+					std::cerr << "Info: NissanAccButtonController: \"Orange\" wire check failed but power is off!" << std::endl;
+					
+				}
+			} else {
+				
 			}
-			checkButtonFailed = true;
-			std::cerr << "ERROR! NissanAccButtonController: \"Orange\" wire disconnected from ACC buttons!" << std::endl;
 			break;
 	}
 	
