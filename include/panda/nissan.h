@@ -138,7 +138,7 @@ private:
 	void exitCheckButtonState( CheckButtonState newState );
 	
 	// Helper functions:
-	void sendButtonPress( NissanButton button );
+	void sendButtonPressAndCheckCanResponse( NissanButton button );
 	bool heartbeatControlRequestPassed();
 	
 protected:

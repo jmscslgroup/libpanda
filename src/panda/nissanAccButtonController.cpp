@@ -69,7 +69,7 @@ NissanAccButtonController::~NissanAccButtonController() {
 	potHandler.pressButton(NISSAN_BUTTON_OFF);
 }
 
-void NissanAccButtonController::sendButtonPress( NissanButton button ) {
+void NissanAccButtonController::sendButtonPressAndCheckCanResponse( NissanButton button ) {
 	busyButtons = true;
 	potHandler.pressButton(button);
 	busyButtons = false;
@@ -126,16 +126,16 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 	switch (newState) {
 		case ACC_STATE_OFF:
 			relayHandler.disarm();
-			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
-//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
+//			sendButtonPressAndCheckCanResponse(NISSAN_BUTTON_OFF);	// Just incase, shutoff with button checking logic
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff without button checking logic
 //			sendButton(nissan)
 			decimatorTranstionToButtonTest = 0;
 			break;
 			
 		case ACC_STATE_IDLE:
 			relayHandler.disarm();
-//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
-			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
+//			sendButtonPressAndCheckCanResponse(NISSAN_BUTTON_OFF);	// Just incase, shutoff with button checking logic
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff without button checking logic
 			decimatorPedalWaitTimer = 0;
 			break;
 			
@@ -154,7 +154,7 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 			
 		case ACC_STATE_BUTTON_TEST:
 			relayHandler.arm();
-			sendButtonPress(NISSAN_BUTTON_CANCEL);
+			sendButtonPressAndCheckCanResponse(NISSAN_BUTTON_CANCEL);
 			decimatorTranstionExitButtonTest = 0;
 			break;
 	}
@@ -387,7 +387,7 @@ bool NissanAccButtonController::sendButton( NissanButton button ) {
 		(controlRequest == true) &&	// This prevent race conditions
 		heartbeatControlRequestPassed()) {
 		//		printf("Sending a button! %d\n", (int)button);
-		sendButtonPress(button);
+		sendButtonPressAndCheckCanResponse(button);
 		
 		return 1;
 	}
