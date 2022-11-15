@@ -32,25 +32,24 @@ NissanAccButtonController::NissanAccButtonController() {
 	cruiseOn = false;
 	cruiseEngaged = false;
 	busyButtons = false;
+	controlRequest = false;
 	
 	// Other Initialization:
 	this->setIntervalActionRate(NISSAN_COMMAND_THREAD_RATE);
 	
-//	state = ACC_STATE_OFF;
-	//transitionToState(ACC_STATE_OFF);
-	
-//	potHandler.pressButton(NISSAN_BUTTON_OFF);	// Just incase
-//	lastButtonSent = NISSAN_BUTTON_OFF;
+	decimatorHeartbeatControlRequest = NISSAN_DECIMATOR_HEARTBEAT_CONTROL_REQUEST;	// start at failure
+	priorHeartBeatState = false;
 	
 	stateCheckButton = CHECK_BUTTON_PASSED;
 	checkButtonFailed = false;
 	
 	enterState(ACC_STATE_OFF);
-	enterState(CHECK_BUTTON_PASSED);
+	enterCheckButtonState(CHECK_BUTTON_PASSED);
 }
 
 NissanAccButtonController::~NissanAccButtonController() {
 	relayHandler.disarm();
+	potHandler.pressButton(NISSAN_BUTTON_OFF);
 }
 
 void NissanAccButtonController::sendButtonPress( NissanButton button ) {
@@ -61,7 +60,7 @@ void NissanAccButtonController::sendButtonPress( NissanButton button ) {
 	// Kickoff the button check timer, if not running:
 	if (stateCheckButton != CHECK_BUTTON_RUNNING &&
 		lastButtonSent != button) {
-		transitionToState(CHECK_BUTTON_RUNNING);
+		transitionToCheckButtonState(CHECK_BUTTON_RUNNING);
 	}
 	lastButtonSent = button;
 }
@@ -98,17 +97,17 @@ void NissanAccButtonController::transitionToState( AccCommandState newState ) {
 }
 
 void NissanAccButtonController::enterState( AccCommandState newState ) {
-//	exitState();
-//	std::cout << "NissanAccButtonController: Entering state " << stateToName(newState) << std::endl;
 	switch (newState) {
 		case ACC_STATE_OFF:
 			relayHandler.disarm();
-			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
+//			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
 			decimatorTranstionToButtonTest = 0;
 			break;
 			
 		case ACC_STATE_IDLE:
 			relayHandler.disarm();
+			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
 			decimatorPedalWaitTimer = 0;
 			break;
 			
@@ -167,6 +166,10 @@ void NissanAccButtonController::intervalAction() {
 		transitionToState(ACC_STATE_OFF);
 	}
 	
+	if (heartbeatControlRequestPassed()) {	// If heartbeat passes...
+		decimatorHeartbeatControlRequest++;	// Then bring it closer to failure
+	}
+	
 	switch (state) {
 		case ACC_STATE_OFF:
 			if (cruiseOn) {
@@ -185,12 +188,18 @@ void NissanAccButtonController::intervalAction() {
 //				// Timer expired, enter new state:
 //				transitionToState(ACC_STATE_SET_WAIT);
 //			}
-			if (cruiseEngaged == 1) {
+			if (cruiseEngaged == true &&
+				controlRequest == true ) {
 				transitionToState(ACC_STATE_SET_WAIT);
 			}
 			break;
 			
 		case ACC_STATE_SET_WAIT:
+			if (cruiseEngaged == false ||
+				controlRequest == false ||
+				!heartbeatControlRequestPassed()) {
+				transitionToState(ACC_STATE_IDLE);
+			}
 			if( decimatorSetWaitTimer++ > NISSAN_DECIMATOR_PEDAL_WAIT ) {
 				// Timer expired, enter new state:
 				transitionToState(ACC_STATE_CONTROLS_ALLOWED);
@@ -198,7 +207,9 @@ void NissanAccButtonController::intervalAction() {
 			break;
 			
 		case ACC_STATE_CONTROLS_ALLOWED:
-			if (cruiseEngaged == 0) {
+			if (cruiseEngaged == false ||
+				controlRequest == false ||
+				!heartbeatControlRequestPassed()) {
 				transitionToState(ACC_STATE_IDLE);
 			}
 			break;
@@ -270,7 +281,7 @@ void NissanAccButtonController::parseAccButtons(CanFrame* canFrame, NissanButton
 			*buttonState = (NissanButton)ACC_BTNS;
 			
 			if(stateCheckButton == CHECK_BUTTON_RUNNING) {
-				transitionToState(CHECK_BUTTON_PASSED);
+				transitionToCheckButtonState(CHECK_BUTTON_PASSED);
 			}
 //			printf("parseCruiseState(): Change detected: ACCEL_PEDAL_POSITION = %d\n", ACCEL_PEDAL_POSITION);
 			printf("parseAccButtons(): CAN change detected: buttonState = %d:%s\n", (int)*buttonState, nissanButtonToStr( *buttonState ));
@@ -344,7 +355,9 @@ bool NissanAccButtonController::sendButton( NissanButton button ) {
 	setAcceleration(0);	// HACK to clear heartbeat within button pressing scheme
 	setSteerTorque(0);	// HACK to clear heartbeat within button pressing scheme
 	if ((state == ACC_STATE_CONTROLS_ALLOWED) &&
-		(cruiseEngaged == true) ) {	// This prevent race conditions
+		(cruiseEngaged == true) &&	// This prevent race conditions
+		(controlRequest == true) &&	// This prevent race conditions
+		heartbeatControlRequestPassed()) {
 		//		printf("Sending a button! %d\n", (int)button);
 		sendButtonPress(button);
 		
@@ -361,7 +374,7 @@ void NissanAccButtonController::intervalActionCheckButton() {
 			
 		case CHECK_BUTTON_RUNNING:
 			if(decimaterCheckButtonResponse++ > NISSAN_DECIMATOR_CHECK_BUTTON_RESPONSE) {
-				transitionToState(CHECK_BUTTON_FAILED);
+				transitionToCheckButtonState(CHECK_BUTTON_FAILED);
 			}
 			break;
 			
@@ -370,14 +383,14 @@ void NissanAccButtonController::intervalActionCheckButton() {
 	}
 }
 
-void NissanAccButtonController::transitionToState( CheckButtonState newState ) {
-	exitState(stateCheckButton);
-	enterState(newState);
+void NissanAccButtonController::transitionToCheckButtonState( CheckButtonState newState ) {
+	exitCheckButtonState(stateCheckButton);
+	enterCheckButtonState(newState);
 }
 
 
 
-void NissanAccButtonController::enterState( CheckButtonState newState ) {
+void NissanAccButtonController::enterCheckButtonState( CheckButtonState newState ) {
 	switch (newState) {
 		case CHECK_BUTTON_PASSED:
 			if (checkButtonFailed) {
@@ -403,7 +416,7 @@ void NissanAccButtonController::enterState( CheckButtonState newState ) {
 	stateCheckButton = newState;
 }
 
-void NissanAccButtonController::exitState( CheckButtonState priorState ) {
+void NissanAccButtonController::exitCheckButtonState( CheckButtonState priorState ) {
 	switch (priorState) {
 		case CHECK_BUTTON_PASSED:
 			break;
@@ -425,3 +438,27 @@ bool NissanAccButtonController::busySendingPress() {
 	return busyButtons;
 }
 
+void NissanAccButtonController::requestControl( bool request ) {
+	controlRequest = request;
+	// Then reset the hearbeat counter
+	if (controlRequest == true) {
+		decimatorHeartbeatControlRequest = 0;	// Reset the heartbeat check
+	} else {
+		decimatorHeartbeatControlRequest = NISSAN_DECIMATOR_HEARTBEAT_CONTROL_REQUEST;
+	}
+}
+
+bool NissanAccButtonController::heartbeatControlRequestPassed() {
+	if(decimatorHeartbeatControlRequest < NISSAN_DECIMATOR_HEARTBEAT_CONTROL_REQUEST) {
+		if(priorHeartBeatState == false) {
+			priorHeartBeatState = true;
+			std::cout << "NissanAccButtonController::heartbeatControlRequestPassed(): Heartbeat state changed to a pass!" << std::endl;
+		}
+		return true;
+	}
+	if(priorHeartBeatState == true) {
+		priorHeartBeatState = false;
+		std::cout << "NissanAccButtonController::heartbeatControlRequestPassed(): Heartbeat failure, either timed out or value set to false." << std::endl;
+	}
+	return false;
+}
