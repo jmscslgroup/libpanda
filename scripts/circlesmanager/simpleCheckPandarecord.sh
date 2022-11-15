@@ -2,7 +2,9 @@
 # Author: Matt Bunting
 # Checks if the "can" service is running
 
-if systemctl status can > /dev/null; then
+systemctl status pandarecord > /dev/null
+retVal=$?
+if [ $retVal -ne 0 ]; then
 	#echo "Internet is online!"
 	exit 0
 fi

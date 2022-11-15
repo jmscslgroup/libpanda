@@ -70,7 +70,7 @@ class CirclesManager:
 			
 			if self.powerDisconnectTime < self.powerDisconnectTimeHysteresisWaitTime:
 				logging.info(" - Power disconnected, waiting for power reconnect -- " + str(self.powerDisconnectTimeHysteresisWaitTime - self.powerDisconnectTime))
-				continue
+				return
 				
 			logging.info(" - Power reconnect timeout, shutting down in " + str(self.powerOffTimeoutInSeconds - self.powerDisconnectTime))
 			
