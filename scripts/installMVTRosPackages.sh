@@ -20,7 +20,7 @@ if [ "$MAP_VALUE" = "experimental" ]; then
   ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositoriesExperimental.csv
 fi
 
-cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ":" substr($3,1,7)}' | tr '\n' ',' > /home/circles/libpanda/scripts/rosRepoShort.txt
+cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ": " substr($3,1,7)}' | tr '\n' ',' > /home/circles/libpanda/scripts/rosRepoShort.txt
 
 cd ~
 if [ ! -d catkin_ws/src ]; then
