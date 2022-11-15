@@ -158,6 +158,7 @@ public:
 	bool busySendingPress();
 	
 	static const char* stateToName( const AccCommandState& state);
+	static const char* stateToName( const CheckButtonState& state);
 	static const char* accStateToName( int state );
 	
 };

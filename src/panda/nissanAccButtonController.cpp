@@ -29,7 +29,7 @@ int readIntFromFile(const char* filename) {
 	int result = -1;
 	my_file.open(filename, std::ios::in);
 	if ( my_file ) {
-		std::cout << "File created successfully!";
+//		std::cout << "File created successfully!";
 		my_file >> result;
 		my_file.close();
 	}
@@ -94,6 +94,15 @@ const char* NissanAccButtonController::stateToName( const AccCommandState& state
 	return "";
 }
 
+const char* NissanAccButtonController::stateToName( const CheckButtonState& state) {
+	switch (state) {
+		case CHECK_BUTTON_RUNNING: return "CHECK_BUTTON_RUNNING";
+		case CHECK_BUTTON_FAILED: return "CHECK_BUTTON_FAILED";
+		case CHECK_BUTTON_PASSED: return "CHECK_BUTTON_PASSED";
+	}
+	return "";
+}
+
 const char* NissanAccButtonController::accStateToName( int state ) {
 	switch (state) {
 		case NISSAN_CRUISE_STATE_OFF: return "NISSAN_CRUISE_STATE_OFF";
@@ -117,14 +126,16 @@ void NissanAccButtonController::enterState( AccCommandState newState ) {
 	switch (newState) {
 		case ACC_STATE_OFF:
 			relayHandler.disarm();
-//			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
-			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
+			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
+//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
+//			sendButton(nissan)
 			decimatorTranstionToButtonTest = 0;
 			break;
 			
 		case ACC_STATE_IDLE:
 			relayHandler.disarm();
-			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
+//			potHandler.pressButton(NISSAN_BUTTON_OFF);	// low-level shutoff
+			sendButtonPress(NISSAN_BUTTON_OFF);	// Just incase
 			decimatorPedalWaitTimer = 0;
 			break;
 			
@@ -401,6 +412,7 @@ void NissanAccButtonController::intervalActionCheckButton() {
 }
 
 void NissanAccButtonController::transitionToCheckButtonState( CheckButtonState newState ) {
+	std::cout << "NissanAccButtonController::transitionToCheckButtonState(): Trnasitioning from " << stateToName(stateCheckButton) << " to " << stateToName(newState) << std::endl;
 	exitCheckButtonState(stateCheckButton);
 	enterCheckButtonState(newState);
 }
