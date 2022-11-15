@@ -32,6 +32,7 @@ class CirclesManager:
 	def __init__(self, powerOffTime=60):
 		self.powerOffTimeoutInSeconds = powerOffTime
 		self.powerDisconnectTime = 0
+		self.powerDisconnectTimeHysteresisWaitTime = 60
 
 	def loop(self):
 		#logging.info("in loop()")
@@ -66,7 +67,12 @@ class CirclesManager:
 
 		if not hasExternalPower:
 			self.powerDisconnectTime += 1.0/updateRate
-			logging.info(" - Power disconnected, shutting down in " + str(self.powerOffTimeoutInSeconds - self.powerDisconnectTime))
+			
+			if self.powerDisconnectTime < self.powerDisconnectTimeHysteresisWaitTime:
+				logging.info(" - Power disconnected, waiting for power reconnect -- " + str(self.powerDisconnectTimeHysteresisWaitTime - self.powerDisconnectTime))
+				continue
+				
+			logging.info(" - Power reconnect timeout, shutting down in " + str(self.powerOffTimeoutInSeconds - self.powerDisconnectTime))
 			
 			# Check for internet connectivity.
 			if os.system("simplePing") == 0:	# Error code 0 means success
