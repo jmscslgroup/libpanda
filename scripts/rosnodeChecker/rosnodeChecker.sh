@@ -44,7 +44,7 @@ do
 done
 
 if [[ "$subs_alive" -eq "1" ]] && [[ "$vehicle_interface_alive" -eq "1" ]] && [[ "$live_tracker_alive" -eq "1" ]] && [[ "$nissan_target_to_buttons_alive" -eq "1" ]]; then
-	if [[ "$CONTROLS_ALLOWED_MSG" -eq "true" ]]; then
+	if [[ "$CONTROLS_ALLOWED_MSG" = "true" ]]; then
 		echo "nominal state - controls allowed!" > /etc/libpanda.d/logMessage
 	else
 		echo "nominal state - controls not allowed!" > /etc/libpanda.d/logMessage
