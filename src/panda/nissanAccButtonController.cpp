@@ -70,15 +70,17 @@ NissanAccButtonController::~NissanAccButtonController() {
 }
 
 void NissanAccButtonController::sendButtonPressAndCheckCanResponse( NissanButton button ) {
+	// Kickoff the button check timer, if not running:
+	if (stateCheckButton != CHECK_BUTTON_RUNNING &&
+//		lastButtonSent != button) {
+		buttonState != button) { // Compare the button request to the button last read on CAN, then start timer if different
+		transitionToCheckButtonState(CHECK_BUTTON_RUNNING);
+	}
+	
 	busyButtons = true;
 	potHandler.pressButton(button);
 	busyButtons = false;
 	
-	// Kickoff the button check timer, if not running:
-	if (stateCheckButton != CHECK_BUTTON_RUNNING &&
-		lastButtonSent != button) {
-		transitionToCheckButtonState(CHECK_BUTTON_RUNNING);
-	}
 	lastButtonSent = button;
 }
 
