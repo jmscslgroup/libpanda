@@ -27,8 +27,13 @@
 #define PANDA_USB_H
 
 #include <iostream>
-//#include <libusb.h>	// for macOS catalina
+
+#ifdef __APPLE__
+#include <libusb.h>
+#else
 #include <libusb-1.0/libusb.h>
+#endif
+
 #include <vector>
 
 #include <string>

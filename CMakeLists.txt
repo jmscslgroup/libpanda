@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
+
 function( new_install LIBNAME )
 	# Install
 	if(BUILD_SHARED_LIBS)
@@ -112,6 +113,19 @@ set(LIBS  ${LIBS}
 
 set( DEPENDENCIES ${DEPENDENCIES} ${LIBS} )
 
+set(LIBS ${LIBS} ${LIBUSB_1_LIBRARIES}
+                                mogithread
+                                NMEAParserLib)
+
+# Check for wiringPi:
+if(EXISTS /usr/local/include/wiringPiSPI.h)
+	message("adding definition WIRING_PI_FOUND")
+	add_definitions(-DWIRING_PI_FOUND)
+	set(WIRING_PI_FOUND YES)
+        set(LIBS ${LIBS} wiringPi)
+endif()
+
+
 
 # Libraries:
 add_library(mogithread SHARED src/mogi/Thread.cpp include/mogi/thread.h )
@@ -123,12 +137,9 @@ add_library(${LIBNAME}-static STATIC ${c_sources})
 set_target_properties(${LIBNAME}-static PROPERTIES OUTPUT_NAME "${LIBNAME}")
 set_target_properties(${LIBNAME} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 set_target_properties(${LIBNAME}-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-target_link_libraries(${LIBNAME}    ${LIBUSB_1_LIBRARIES}
-                                mogithread
-                                NMEAParserLib
-                                wiringPi )
+target_link_libraries(${LIBNAME}    ${LIBUSB_1_LIBRARIES} ${LIBS} )
 
-set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} NMEAParserLib ncurses mogithread wiringPi )
+set( DEPENDENCIES ${DEPENDENCIES} ${LIBNAME} ncurses ${LIBS} )
 
 new_install( ${LIBNAME} )
 new_install( mogithread )

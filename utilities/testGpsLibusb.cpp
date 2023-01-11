@@ -25,7 +25,12 @@
 
 #include <iostream>
 #include <cstring> // memset
+
+#ifdef __APPLE__
+#include <libusb.h>
+#else
 #include <libusb-1.0/libusb.h>
+#endif
 
 #include "mogi/thread.h"
 

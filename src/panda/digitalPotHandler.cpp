@@ -12,10 +12,19 @@
 
 #include <time.h> // time debugging
 
+#ifdef WIRING_PI_FOUND
 #include <wiringPiSPI.h>
+#endif
 
 #include <cstdio>
 #include <iostream>
+
+#define DIGI_POT_TCON_R1A (0x01 << 6)
+#define DIGI_POT_TCON_R1W (0x01 << 5)
+#define DIGI_POT_TCON_R0A (0x01 << 2)
+#define DIGI_POT_TCON_R0W (0x01 << 1)
+
+#define STATUS_D_CHECK (0x1F << 5)
 
 using namespace std;
 using namespace Panda;
@@ -42,7 +51,7 @@ DigitalPotHandler::DigitalPotHandler() {
 	wiperState1 = -1;
 	wipersEngaged = false;
 	
-	
+#ifdef WIRING_PI_FOUND
 	cout << "DigitalPotHandler::DigitalPotHandler(): Initializing " << endl;
 	
 	fd = wiringPiSPISetup(CHANNEL, 500000);
@@ -67,7 +76,7 @@ DigitalPotHandler::DigitalPotHandler() {
 //	}
 //	printf("\n");
 	
-#define STATUS_D_CHECK (0x1F << 5)
+
 	
 	unsigned short digiResult = digitalPotBufferToRegister(buffer);
 	
@@ -98,10 +107,7 @@ DigitalPotHandler::DigitalPotHandler() {
 //	printf("\n");
 	
 	
-#define DIGI_POT_TCON_R1A (0x01 << 6)
-#define DIGI_POT_TCON_R1W (0x01 << 5)
-#define DIGI_POT_TCON_R0A (0x01 << 2)
-#define DIGI_POT_TCON_R0W (0x01 << 1)
+
 	
 	// Disconnect wiperH (turn into a rheostat)
 	buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
@@ -142,6 +148,9 @@ DigitalPotHandler::DigitalPotHandler() {
 //		printf("0x%02X ", buffer[i]);
 //	}
 //	printf("\n");
+#else
+	std::cerr << "wiringPi is not on this installation!  DigitalPotHanlder not operational" << std::endl;
+#endif
 }
 
 
@@ -196,13 +205,17 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 		printf("DigitalPotHandler::pressButton(): %d.%09ld Setting WIPER_0 and WIPER_1 to %f ohms, Effective resistance = %f ohms\n", (int)now.tv_sec, now.tv_nsec, resistance, resistance/2.0);
 		buffer[0] = (DIGI_POT_REG_WIPER_0 << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		digitalPotResistanceToBuffer(resistance, buffer);
+#ifdef WIRING_PI_FOUND
 		result = wiringPiSPIDataRW(CHANNEL, buffer, 2);
+#endif
 		wiperState0 = resistance;
 		
 //		printf("DigitalPotHandler::pressButton(): Setting WIPER_1 to %f ohms\n", resistance);
 		buffer[0] = (DIGI_POT_REG_WIPER_1 << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		digitalPotResistanceToBuffer(resistance, buffer);
+#ifdef WIRING_PI_FOUND
 		result = wiringPiSPIDataRW(CHANNEL, buffer, 2);
+#endif
 		wiperState1 = resistance;
 		
 //		printf("DigitalPotHandler::pressButton(): - Effective resistance = %f ohms\n", resistance/2.0);
@@ -222,7 +235,9 @@ void DigitalPotHandler::pressButton( NissanButton button ) {
 		buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 		buffer[0] |= 0x01;	//  reserved bit "forced to 1", may not be needed here
 		buffer[1] = 0xFF & ~DIGI_POT_TCON_R1A & ~DIGI_POT_TCON_R0A;	// 2nd part of 16-bit command
+#ifdef WIRING_PI_FOUND
 		result = wiringPiSPIDataRW(CHANNEL, buffer, 2);
+#endif
 		
 		wipersEngaged = true;
 	}
@@ -245,7 +260,9 @@ void DigitalPotHandler::releaseButton() {
 	buffer[0] = (DIGI_POT_REG_TCON << DIGI_POT_ADDR_SHIFT) | DIGI_POT_WRITE;	// READ is a 16-bit (not 8-bit) command
 	buffer[0] |= 0x01;	//  reserved bit "forced to 1", may not be needed here
 	buffer[1] = 0xFF & ~DIGI_POT_TCON_R1A & ~DIGI_POT_TCON_R0A & ~DIGI_POT_TCON_R0W & ~DIGI_POT_TCON_R1W ;	// 2nd part of 16-bit command
+#ifdef WIRING_PI_FOUND
 	result = wiringPiSPIDataRW(CHANNEL, buffer, 2);
+#endif
 	
 	wipersEngaged = false;
 	//	usleep(dTime * 1000000);

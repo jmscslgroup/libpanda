@@ -10,7 +10,9 @@
 #include <sys/ioctl.h>
 //#include <linux/i2c-dev.h>
 
+#ifdef WIRING_PI_FOUND
 #include <wiringPiSPI.h>
+#endif
 
 #include <cstdio>
 
@@ -181,7 +183,9 @@ ButtonSequence::ButtonSequence() {
 	tickTime = 1000;
 	
 	static const int CHANNEL = 0;
+#ifdef WIRING_PI_FOUND
 	file_spi = wiringPiSPISetup(CHANNEL, 500000);
+#endif
 	
 //	if ((file_i2c = open("/dev/i2c-1", O_RDWR)) < 0)
 //	{
