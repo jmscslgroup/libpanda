@@ -304,7 +304,7 @@ private:
     std::string gpsFilename;
     std::string canFilename;
     
-    char timeStamp[100];
+    char timeStamp[200];
     
     ZoneChecker* zoneChecker;
     
@@ -396,12 +396,11 @@ private:
                     std::cout << "inside zone!  safe to record" << std::endl;
 
                     if(recordingEnabled) {
-                        struct timeval sysTime;
-                        gettimeofday(&sysTime, NULL);
-                        sprintf(timeStamp, "%ld.%06d.csv", (int)sysTime.tv_sec,  (int)sysTime.tv_usec);
+//                        struct timeval sysTime;
+//                        gettimeofday(&sysTime, NULL);
+//                        sprintf(timeStamp, "%ld.%06d.csv", (int)sysTime.tv_sec,  (int)sysTime.tv_usec);
                         
-                        openGpsFile();
-                        openCanFile();
+                        openFiles();
                     }
                 }
                 recordingAllowed = true;
@@ -465,6 +464,18 @@ private:
         busyFileCan = false;
     }
     
+    void openFiles() {
+        time_t t = time(NULL);
+        struct tm tm = *localtime(&t);
+        
+        sprintf(timeStamp, "-%04d-%02d-%02d-%02d-%02d-%02d.csv", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour + tm.tm_isdst, tm.tm_min, tm.tm_sec);
+        
+        std::cout << "New timestamp appended: " << timeStamp << std::endl;
+        
+        openGpsFile();
+        openCanFile();
+    }
+    
 public:
     CsvRecorder( ) {
         busyFileGps = false;
@@ -486,8 +497,7 @@ public:
         
         recordingEnabled = true;
         if(recordingAllowed) {
-            openGpsFile();
-            openCanFile();
+            openFiles();
         }
     }
     
