@@ -304,6 +304,8 @@ private:
     std::string gpsFilename;
     std::string canFilename;
     
+    char timeStamp[100];
+    
     ZoneChecker* zoneChecker;
     
     FILE* csvGpsDump;
@@ -317,22 +319,28 @@ private:
     void openCanFile() {
         busyFileWaitCan();
         busyFileCan = true;
-        FILE* csvDumpTemp = fopen(canFilename.c_str(), "w");
+        std::stringstream newFileName;
+        newFileName << canFilename;
+        newFileName << timeStamp;
+        FILE* csvDumpTemp = fopen(newFileName.str().c_str(), "w");
         fprintf(csvDumpTemp, "Time,Bus,MessageID,Message,MessageLength\n");
         this->csvCanDump = csvDumpTemp;
         remove("/etc/libpanda.d/currentCan.csv");
-        symlink(canFilename.c_str(),"/etc/libpanda.d/currentCan.csv");
+        symlink(newFileName.str().c_str(),"/etc/libpanda.d/currentCan.csv");
         busyFileCan = false;
     }
     
     void openGpsFile() {
         busyFileWaitGps();
         busyFileGps = true;
-        FILE* csvDumpTemp = fopen(gpsFilename.c_str(), "w");
+        std::stringstream newFileName;
+        newFileName << gpsFilename;
+        newFileName << timeStamp;
+        FILE* csvDumpTemp = fopen(newFileName.str().c_str(), "w");
         fprintf(csvDumpTemp, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP,Systime\n");
         this->csvGpsDump = csvDumpTemp;
         remove("/etc/libpanda.d/currentGps.csv");
-        symlink(gpsFilename.c_str(),"/etc/libpanda.d/currentGps.csv");
+        symlink(newFileName.str().c_str(),"/etc/libpanda.d/currentGps.csv");
         busyFileGps = false;
     }
     
@@ -386,8 +394,15 @@ private:
             } else {
                 if(!recordingAllowed) {
                     std::cout << "inside zone!  safe to record" << std::endl;
-                    openGpsFile();
-                    openCanFile();
+
+                    if(recordingEnabled) {
+                        struct timeval sysTime;
+                        gettimeofday(&sysTime, NULL);
+                        sprintf(timeStamp, "%ld.%06d.csv", (int)sysTime.tv_sec,  (int)sysTime.tv_usec);
+                        
+                        openGpsFile();
+                        openCanFile();
+                    }
                 }
                 recordingAllowed = true;
             }
