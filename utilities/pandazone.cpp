@@ -192,6 +192,32 @@ public:
             center.x = region["data"]["center"][0].asDouble();
             center.y = region["data"]["center"][1].asDouble();
             makeCircle(center, region["data"]["radius"].asDouble());
+        } else if(region["type"].asString().compare("polygon") == 0 ){
+            if(region["data"].size() < 3) {
+                std::cerr << "Warning!  Polygon under definde with " << region["data"].size() << " vertices" << std::endl;
+                return;
+            }
+            Straight* straight = new Straight;
+            straight->start.x = region["data"][region["data"].size()-2][0].asDouble();
+            straight->start.y = region["data"][region["data"].size()-2][1].asDouble();
+            
+            int i;
+            for(i = 0; i < region["data"].size()-2; i++) {
+                
+                straight->end.x = region["data"][i][0].asDouble();
+                straight->end.y = region["data"][i][1].asDouble();
+                
+                edges.push_back(straight);
+                
+                Straight* prior = straight;
+                straight = new Straight;
+                straight->start = prior->end;
+            }
+            
+            straight->end.x = region["data"][i][0].asDouble();
+            straight->end.y = region["data"][i][1].asDouble();
+            
+            edges.push_back(straight);
         }
         
     }
@@ -216,7 +242,42 @@ public:
             if(distanceToCenter > zone->radius) {
                 return false;
             }
+        } else {
+            // polygon
+            int intersectCount = 0;
+            int i = 0;
+            for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it++, i++) {
+                Edge* edge = *it;
+                // Think of casting a ray horizontally, from left to right
+                // if both y are larger than the point, or both less, then it does not intersect
+                // Same if both are larger than x
+                if(edge->start.y > point.y &&
+                   edge->end.y > point.y) {
+                    continue;
+                } else if(edge->start.y < point.y &&
+                          edge->end.y < point.y) {
+                    continue;
+                } else if (edge->start.x > point.x &&
+                           edge->end.x > point.x) {
+                    continue;
+                }
+                
+                // Find intersection point, and see if intercetion point's x is larger than the point
+                double intersectX = (edge->start.x - edge->end.x)/(edge->start.y - edge->end.y) * (point.y - edge->end.y) + edge->end.x;
+                
+//                std::cout << "i: " << i << " interxectX: " << intersectX << "  point.x: " << point.x << std::endl;
+                if(intersectX <= point.x) {
+                    intersectCount++;
+                }
+                
+            }
+//            std::cout << "Intersect count result: " << intersectCount << std::endl;
+            if(intersectCount % 2 == 0) {
+                return false;
+            }
         }
+        
+        
         return true;
     }
     
@@ -262,18 +323,18 @@ public:
             polygon->print();
         }
         
-//        std::cout << "Check if point is inside:" << std::endl;
-//        Vertex point;
-//        point.x = 100;
-//        point.y = -3;
-//        Vertex point2;
-//        point2.x = -86.62;
-//        point2.y = 36.029;
-//        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-//            Polygon* polygon = *it;
-//            std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
-//            std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
-//        }
+        std::cout << "Check if point is inside:" << std::endl;
+        Vertex point;
+        point.x = -86.713167706175582;
+        point.y = 36.107;
+        Vertex point2;
+        point2.x = -86.792709236746688;
+        point2.y = 36.145815819708503;
+        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+            Polygon* polygon = *it;
+            std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
+            std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+        }
         
         
     }

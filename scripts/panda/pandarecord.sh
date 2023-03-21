@@ -15,6 +15,7 @@ if [ ! -d ${FOLDER_PRE}/${FOLDER_DATE} ]; then
 	echo "Creating ${FOLDER_PRE}/${FOLDER_DATE}..."
 	mkdir -p ${FOLDER_PRE}/${FOLDER_DATE}
 fi
-pandacord -g ${FOLDER}/${FILENAME_PRE}_GPS_Messages.csv -c ${FOLDER}/${FILENAME_PRE}_CAN_Messages.csv
+#pandacord -g ${FOLDER}/${FILENAME_PRE}_GPS_Messages.csv -c ${FOLDER}/${FILENAME_PRE}_CAN_Messages.csv
+pandazone -g ${FOLDER}/gps -c ${FOLDER}/can
 #echo FOLDER_DATE=${FOLDER_DATE}
 #echo FILENAME_PRE=${FILENAME_PRE}
