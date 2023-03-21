@@ -34,7 +34,10 @@
 #include <cmath>
 
 
+
 #include "panda.h"
+
+class Vertex;
 
 static volatile bool keepRunning = true;
 void killPanda(int killSignal) {
@@ -48,8 +51,8 @@ public:
 	int getNotificationCount() {
 		return notificationCount;
 	}
-
 private:
+
 	int notificationCount = 0;
 	void newDataNotification( Panda::CanFrame* canData ) {
 		notificationCount++;
@@ -57,7 +60,9 @@ private:
 			std::cerr << "c";
 			notificationCount = 0;
 		}
+        
 	}
+
 };
 
 // A simple concrete instance of a GPS listener
@@ -72,6 +77,7 @@ private:
 		}
 	}
 };
+
 
 
 // A simple concrete instance of a GPS listener
@@ -99,9 +105,9 @@ void printUsage(const char* binary) {
 	std::cout << "                   s: Synchronous" << std::endl;
 	std::cout << "                   i: Isochronous (not supported)" << std::endl;
 	std::cout << "   -g gpsfile  : Filename to output GPS data in CSV format" << std::endl;
-	std::cout << "   -n nmeafile : Filename to output GPS NMEA strings" << std::endl;
+//	std::cout << "   -n nmeafile : Filename to output GPS NMEA strings" << std::endl;
 	std::cout << "   -c csvfile  : Filename to output CSV format CAN data" << std::endl;
-	std::cout << "   -r canfile  : Filename to save raw messages from Panda CAN reads" << std::endl;
+//	std::cout << "   -r canfile  : Filename to save raw messages from Panda CAN reads" << std::endl;
 }
 
 int verboseFlag = false;
@@ -221,56 +227,317 @@ public:
     }
 };
 
-using namespace std;
-int main(int argc, char **argv) {
+class ZoneChecker {
+private:
     // Json parsing
     std::vector<Polygon*> polygons;
     
-    std::ifstream zoneFile;
-    zoneFile.open("/etc/libpanda.d/zone-testbed.json");
-    if( errno != 0) {
-        std::cerr << "Errror: " << std::strerror(errno) << std::endl;
-    } else {
-        Json::Value zoneDefinition;
-        zoneFile >> zoneDefinition;
-        zoneFile.close();
+public:
+    void open( const char* file) {
+        std::ifstream zoneFile;
+        zoneFile.open(file);
+        if( errno != 0) {
+            std::cerr << "Json Error: " << std::strerror(errno) << std::endl;
+        } else {
+            Json::Value zoneDefinition;
+            zoneFile >> zoneDefinition;
+            zoneFile.close();
+            
+            Json::StreamWriterBuilder builder;
+            const std::string output = Json::writeString(builder, zoneDefinition);
+            std::cout << output << std::endl;
+            std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
+            std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
+            std::cout << "Zonefile has " << zoneDefinition["regions"].size() << " regions" << std::endl;
+            
+            for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
+                std::cout << " - Region " << i << std::endl;
+                polygons.push_back(new Polygon(zoneDefinition["regions"][i]));
+            }
+        }
         
-        Json::StreamWriterBuilder builder;
-        const std::string output = Json::writeString(builder, zoneDefinition);
-        std::cout << output << std::endl;
-        std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
-        std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
-        std::cout << "Zonefile has " << zoneDefinition["regions"].size() << " regions" << std::endl;
+        std::cout << "Parsed polygons:" << std::endl;
+        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+            Polygon *polygon = *it;
+            polygon->print();
+        }
         
-        for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
-            std::cout << " - Region " << i << std::endl;
-            polygons.push_back(new Polygon(zoneDefinition["regions"][i]));
+//        std::cout << "Check if point is inside:" << std::endl;
+//        Vertex point;
+//        point.x = 100;
+//        point.y = -3;
+//        Vertex point2;
+//        point2.x = -86.62;
+//        point2.y = 36.029;
+//        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//            Polygon* polygon = *it;
+//            std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
+//            std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+//        }
+        
+        
+    }
+    
+    ~ ZoneChecker() {
+        // Cleanup
+        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+            delete *it;
         }
     }
     
-    std::cout << "Parsed polygons:" << std::endl;
-    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-        Polygon *polygon = *it;
-        polygon->print();
+    bool inZone(Vertex point) {
+        bool result = false;
+        
+        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+            Polygon* polygon = *it;
+            if(polygon->isInside(point)) {
+                return true;
+            }
+        }
+        
+        return result;
+    }
+};
+
+class CsvRecorder : public Panda::GpsListener, public Panda::CanListener {
+private:
+    std::string gpsFilename;
+    std::string canFilename;
+    
+    ZoneChecker* zoneChecker;
+    
+    FILE* csvGpsDump;
+    FILE* csvCanDump;
+    bool busyFileGps;
+    bool busyFileCan;
+    
+    bool recordingEnabled;
+    bool recordingAllowed;
+    
+    void openCanFile() {
+        busyFileWaitCan();
+        busyFileCan = true;
+        FILE* csvDumpTemp = fopen(canFilename.c_str(), "w");
+        fprintf(csvDumpTemp, "Time,Bus,MessageID,Message,MessageLength\n");
+        this->csvCanDump = csvDumpTemp;
+        remove("/etc/libpanda.d/currentCan.csv");
+        symlink(canFilename.c_str(),"/etc/libpanda.d/currentCan.csv");
+        busyFileCan = false;
     }
     
-    std::cout << "Check if point is inside:" << std::endl;
-    Vertex point;
-    point.x = 100;
-    point.y = -3;
-    Vertex point2;
-    point2.x = -86.62;
-    point2.y = 36.029;
-    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-        Polygon* polygon = *it;
-        std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
-        std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+    void openGpsFile() {
+        busyFileWaitGps();
+        busyFileGps = true;
+        FILE* csvDumpTemp = fopen(gpsFilename.c_str(), "w");
+        fprintf(csvDumpTemp, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP,Systime\n");
+        this->csvGpsDump = csvDumpTemp;
+        remove("/etc/libpanda.d/currentGps.csv");
+        symlink(gpsFilename.c_str(),"/etc/libpanda.d/currentGps.csv");
+        busyFileGps = false;
     }
     
-    // Cleanup
-    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-        delete *it;
+    void closeCanFile() {
+        busyFileWaitCan();
+        busyFileCan = true;
+        fclose(csvCanDump);
+        csvCanDump = NULL;
+        busyFileCan = false;
     }
+    
+    void closeGpsFile() {
+        busyFileWaitGps();
+        busyFileGps = true;
+        fclose(csvGpsDump);
+        csvGpsDump = NULL;
+        busyFileGps = false;
+    }
+    
+    
+    void busyFileWaitCan() {
+        while(busyFileCan) {
+            usleep(100);
+        }
+    }
+    void busyFileWaitGps() {
+        while(busyFileGps) {
+            usleep(1000);
+        }
+    }
+    
+    
+    
+    void newDataNotification( Panda::GpsData* gpsData ) {
+    
+        if(zoneChecker) {
+            // check if data still allowed:
+            Vertex pose;
+            
+            pose.x = gpsData->pose.longitude;
+            pose.y = gpsData->pose.latitude;
+            
+            if( !zoneChecker->inZone(pose) ) {
+                
+                if(recordingAllowed) {
+                    std::cout << "Not in zone!  Not recording" << std::endl;
+                    closeCanFile();
+                    closeGpsFile();
+                }
+                recordingAllowed = false;
+            } else {
+                if(!recordingAllowed) {
+                    std::cout << "inside zone!  safe to record" << std::endl;
+                    openGpsFile();
+                    openCanFile();
+                }
+                recordingAllowed = true;
+            }
+        }
+        
+        if(!(recordingEnabled && recordingAllowed)) {
+            return;
+        }
+        
+        busyFileWaitGps();
+        busyFileGps = true;
+        if (csvGpsDump) {
+            time_t gpsTime_t = mktime(&gpsData->time);
+    //        struct timeval gpsTime;
+    //        gpsTime.tv_sec = gpsTime_t;
+    //        gpsTime.tv_usec = (state.timeMilliseconds)*1000;
+            
+            // Get system time to check against GPS time skew
+            struct timeval sysTime;
+            gettimeofday(&sysTime, NULL);
+
+            fprintf(csvGpsDump, "%d.%06d,%c,%0.7f,%0.7f,%0.1f,%0.2f,%0.2f,%0.2f,%d.%06d\r\n",
+                    (unsigned int)gpsTime_t,
+                    (gpsData->timeMilliseconds)*1000,
+                    gpsData->info.status,
+                    gpsData->pose.longitude,
+                    gpsData->pose.latitude,
+                    gpsData->pose.altitude,
+                    gpsData->quality.HDOP,
+                    gpsData->quality.PDOP,
+                    gpsData->quality.VDOP,
+                    (unsigned int)sysTime.tv_sec,
+                    (int)sysTime.tv_usec);
+        }
+        busyFileGps = false;
+    }
+    
+    
+    void newDataNotification( Panda::CanFrame* frame ) {
+        if(!(recordingEnabled && recordingAllowed)) {
+            return;
+        }
+        
+        busyFileWaitCan();
+        busyFileCan = true;
+        if (csvCanDump != NULL) {
+            fprintf(csvCanDump, "%d.%06d,", (unsigned int)frame->sysTime.tv_sec, (int)frame->sysTime.tv_usec);
+            //        for (int i = 0; i < bufLength; i++) {
+            //            fprintf(csvDump, "%02x", converted[i]);
+            //        }
+            
+            fprintf(csvCanDump,"%d,%u,", (int)frame->bus, frame->messageID);
+            
+            for (int i =0; i < frame->dataLength; i++) {
+                fprintf(csvCanDump, "%02x", frame->data[i]);
+            }
+            fprintf(csvCanDump, ",%d\n", frame->dataLength);
+            
+        }
+        busyFileCan = false;
+    }
+    
+public:
+    CsvRecorder( ) {
+        busyFileGps = false;
+        busyFileCan = false;
+        
+        recordingAllowed = false;
+        recordingEnabled = false;
+        
+        zoneChecker = NULL;
+    }
+    
+    void setZoneChecker(ZoneChecker* checker) {
+        zoneChecker = checker;
+    }
+    
+    void saveToCsvFiles(const char* gps, const char* can) {
+        gpsFilename = gps;
+        canFilename = can;
+        
+        recordingEnabled = true;
+        if(recordingAllowed) {
+            openGpsFile();
+            openCanFile();
+        }
+    }
+    
+    void closeFiles() {
+        closeCanFile();
+        closeGpsFile();
+    }
+};
+
+using namespace std;
+int main(int argc, char **argv) {
+    
+    ZoneChecker zCheck;
+    zCheck.open("/etc/libpanda.d/zone-testbed.json");
+    
+    CsvRecorder mCsvRecorder;
+    mCsvRecorder.setZoneChecker(&zCheck);
+//    // Json parsing
+//    std::vector<Polygon*> polygons;
+//
+//    std::ifstream zoneFile;
+//    zoneFile.open("/etc/libpanda.d/zone-testbed.json");
+//    if( errno != 0) {
+//        std::cerr << "Errror: " << std::strerror(errno) << std::endl;
+//    } else {
+//        Json::Value zoneDefinition;
+//        zoneFile >> zoneDefinition;
+//        zoneFile.close();
+//
+//        Json::StreamWriterBuilder builder;
+//        const std::string output = Json::writeString(builder, zoneDefinition);
+//        std::cout << output << std::endl;
+//        std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
+//        std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
+//        std::cout << "Zonefile has " << zoneDefinition["regions"].size() << " regions" << std::endl;
+//
+//        for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
+//            std::cout << " - Region " << i << std::endl;
+//            polygons.push_back(new Polygon(zoneDefinition["regions"][i]));
+//        }
+//    }
+//
+//    std::cout << "Parsed polygons:" << std::endl;
+//    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//        Polygon *polygon = *it;
+//        polygon->print();
+//    }
+//
+//    std::cout << "Check if point is inside:" << std::endl;
+//    Vertex point;
+//    point.x = 100;
+//    point.y = -3;
+//    Vertex point2;
+//    point2.x = -86.62;
+//    point2.y = 36.029;
+//    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//        Polygon* polygon = *it;
+//        std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
+//        std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+//    }
+//
+//    // Cleanup
+//    for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//        delete *it;
+//    }
     
 	// Argument parsing
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
@@ -279,7 +546,7 @@ int main(int argc, char **argv) {
 	const char* canCsvFilename = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:g:c:r:n:vf", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:g:c:vf", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -290,9 +557,9 @@ int main(int argc, char **argv) {
 					case 'i': usbMode =  Panda::MODE_ISOCHRONOUS; break; };
 				break;
 			case 'g':    gpsFilename = optarg; break;
-			case 'n':   nmeaFilename = optarg; break;
+//			case 'n':   nmeaFilename = optarg; break;
 			case 'c': canCsvFilename = optarg; break;
-			case 'r': canRawFilename = optarg; break;
+//			case 'r': canRawFilename = optarg; break;
 			case 'f':  forceNissan = true; break;
 			default:
 				printUsage(argv[0]);
@@ -325,6 +592,8 @@ int main(int argc, char **argv) {
 	pandaHandler.getUsb().setOperatingMode(usbMode);
 	pandaHandler.addCanObserver(canObserver);
 	pandaHandler.addGpsObserver(myGpsObserver);
+    pandaHandler.addCanObserver(mCsvRecorder);
+    pandaHandler.addGpsObserver(mCsvRecorder);
 //	pandaHandler.addGpsObserver(mSetSystemTimeObserver);
 	pandaHandler.addGpsObserver(mGpsTracker);
 	pandaHandler.addHeartbeatObserver(mySimpleHealthObserver);
@@ -361,18 +630,20 @@ int main(int argc, char **argv) {
 	}
 
 
-	if (gpsFilename != NULL) {
-		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+	if (gpsFilename != NULL && canCsvFilename != NULL) {
+//		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+//        myGpsObserver.saveToCsvFile(gpsFilename);
+        mCsvRecorder.saveToCsvFiles(gpsFilename, canCsvFilename);
 	}
-	if (nmeaFilename != NULL) {
-		pandaHandler.getGps().saveToFile(nmeaFilename);
-	}
-	if (canCsvFilename != NULL) {
-		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
-	}
-	if (canRawFilename != NULL) {
-		pandaHandler.getCan().saveToFile(canRawFilename);
-	}
+//	if (nmeaFilename != NULL) {
+//		pandaHandler.getGps().saveToFile(nmeaFilename);
+//	}
+//	if (canCsvFilename != NULL) {
+//		pandaHandler.getCan().saveToCsvFile(canCsvFilename);
+//	}
+//	if (canRawFilename != NULL) {
+//		pandaHandler.getCan().saveToFile(canRawFilename);
+//	}
 	
 
 	std::cout << "Time is synced with GPS!" << std::endl;
