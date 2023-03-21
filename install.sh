@@ -62,6 +62,8 @@ if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
 
+sudo cp resources/zone-testbed.json /etc/libpanda.d/
+
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
 sudo cp scripts/vinParser.py /usr/sbin/vinParser.py
 sudo cp scripts/addWifiApSimple.sh /usr/sbin/addWifiApSimple

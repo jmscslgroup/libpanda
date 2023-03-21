@@ -101,11 +101,20 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_mo
 find_package(libusb-1.0 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Curses)
+find_package(Jsoncpp)
+
+if(NOT JSONCPP_FOUND)
+	message(" - Warning! JSONCPP not found!")
+else()
+
+	include_directories( ${JSONCPP_INCLUDE_DIRS} )
+	set( DEPENDENCIES ${DEPENDENCIES} ${JSONCPP_LIBRARIES} )
+endif()
 
 include_directories( "include"
                      "NMEAParser/Software/NMEAParserLib/include"
                      ${LIBUSB_1_INCLUDE_DIRS}
-                     ${CMAKE_THREAD_LIBS_INIT} )
+                     ${CMAKE_THREAD_LIBS_INIT}  )
 
 set(LIBS  ${LIBS}
           ${LIBUSB_1_LIBRARIES}

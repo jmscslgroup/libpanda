@@ -5,7 +5,7 @@ echo "--------------------------------------------------------"
 echo "Installing libpanda:"
 
 #build dependencies:
-declare -a depencencies=(build-essential libncurses5-dev libusb-1.0-0-dev cmake)
+declare -a depencencies=(build-essential libncurses5-dev libusb-1.0-0-dev libjsoncpp-dev cmake)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"

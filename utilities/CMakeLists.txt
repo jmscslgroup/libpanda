@@ -15,6 +15,10 @@ if(DEFINED WIRING_PI_FOUND)
 	set(UTILITIES ${UTILITIES} rawAccButtonTest.cpp)
 endif()
 
+if(DEFINED JSONCPP_FOUND)
+	set(UTILITIES ${UTILITIES} pandazone.cpp)
+endif()
+
 foreach( utilityfile ${UTILITIES} )
 	# Each utility will be the same name (without extension) as the cpp file.
 	get_filename_component(utilityname ${utilityfile} NAME_WE )
