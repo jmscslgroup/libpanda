@@ -17,6 +17,6 @@ if [ ! -d ${FOLDER_PRE}/${FOLDER_DATE} ]; then
 fi
 #pandacord -g ${FOLDER}/${FILENAME_PRE}_GPS_Messages.csv -c ${FOLDER}/${FILENAME_PRE}_CAN_Messages.csv
 #pandazone -g ${FOLDER}/gps -c ${FOLDER}/can
-pandazone -d ${FOLDER_PRE}/${VIN}
+pandazone -d ${FOLDER_PRE}/${VIN} -b
 #echo FOLDER_DATE=${FOLDER_DATE}
 #echo FILENAME_PRE=${FILENAME_PRE}

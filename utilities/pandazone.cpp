@@ -589,6 +589,9 @@ private:
     std::string gpsFilename;
     std::string canFilename;
     std::string dataDirectory;
+    bool beepNotification;
+    
+    Panda::MatthatBeep beeper;
     
     char timeStamp[200];
     
@@ -836,10 +839,18 @@ private:
     void entryAction() {
         switch (state) {
             case STATE_IDLE:
+                if(beepNotification) {
+                    std::cout << "BEEP BEEP!!" << std::endl;
+                    beeper.doubleBeep();
+                }
                 break;
                 
         case STATE_RECORDING:
                 openFiles();
+                if(beepNotification) {
+                    std::cout << "BEEP BEEP BEEP!!!" << std::endl;
+                    beeper.tripleBeep();
+                }
                 break;
         }
     }
@@ -867,6 +878,7 @@ public:
         busyFileGps = false;
         busyFileCan = false;
         
+        beepNotification = false;
 //        recordingAllowed = false;
         recordingEnabled = false;
         
@@ -879,6 +891,10 @@ public:
     
     void setZoneChecker(ZoneChecker* checker) {
         zoneChecker = checker;
+    }
+    
+    void enableBeep() {
+        beepNotification = true;
     }
     
 //    void saveToCsvFiles(const char* gps, const char* can) {
@@ -981,8 +997,9 @@ int main(int argc, char **argv) {
 //	const char* canCsvFilename = NULL;
     const char* dataDirectory = NULL;
 	const char* canRawFilename = NULL;
+    bool beepOnRecordChange = false;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:d:vf", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:d:vfb", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -998,12 +1015,17 @@ int main(int argc, char **argv) {
 //			case 'r': canRawFilename = optarg; break;
             case 'd': dataDirectory = optarg; break;
 			case 'f':  forceNissan = true; break;
+            case 'b': beepOnRecordChange = true; break;
 			default:
 				printUsage(argv[0]);
 				exit(EXIT_FAILURE);
 				break;
 		}
 	}
+    
+    if(beepOnRecordChange) {
+        mCsvRecorder.enableBeep();
+    }
 
 	const char filenamePandaStatus[] = "/etc/libpanda.d/pandaRecording";
 	const char filenameGpsStatus[] = "/etc/libpanda.d/pandaHaveGPS";
