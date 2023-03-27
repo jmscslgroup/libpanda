@@ -241,10 +241,10 @@ protected:
         for(int i = 0; i < vertexAngles.size(); i++) {
             sumAngles += vertexAngles[i];
         }
-        std::cout << "Sumangle:" << sumAngles*(180.0/M_PI) << " size: " << vertexAngles.size() << std::endl;
+//        std::cout << "Sumangle:" << sumAngles*(180.0/M_PI) << " size: " << vertexAngles.size() << std::endl;
         if(fabs(sumAngles/M_PI - (double)(vertexAngles.size()-2)) > 0.5  &&
            rightHanded) {
-            std::cout << "Sumangle too far off!  Changing handedness" << std::endl;
+//            std::cout << "Sumangle too far off!  Changing handedness" << std::endl;
             rightHanded = false;
             vertexAngles.clear();
             determingVertexAngles();
@@ -508,10 +508,13 @@ public:
             for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
 //                std::cout << " - Region " << i << std::endl;
                 Polygon* region = new Polygon(zoneDefinition["regions"][i]);
-                region->computeOffsetPolygon(-100);  // eight mile inward
+//                region->computeOffsetPolygon(-200);  // eight mile inward
 //                region->computeOffsetPolygon(111000.0);  // 1 degree
+                region->computeOffsetPolygon(-457.2);  // eight mile inward
                 polygons.push_back(region);
             }
+            
+            std::cout << "Loaded zonefile " << file << " with zone count " << polygons.size() << std::endl;
         }
         
 //        std::cout << "Parsed polygons:" << std::endl;
@@ -905,7 +908,8 @@ using namespace std;
 int main(int argc, char **argv) {
     
     ZoneChecker zCheck;
-    zCheck.open("/etc/libpanda.d/zone-testbed.json");
+//    zCheck.open("/etc/libpanda.d/zone-testbed.json");
+    zCheck.open("/etc/libpanda.d/zone-test.json");
     
 //    Vertex point1;
 //    point1.x = 10.5;
