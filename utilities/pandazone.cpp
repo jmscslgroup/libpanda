@@ -165,13 +165,14 @@ public:
 };
 
 class Polygon {
-private:
+protected:
     std::vector<Edge*> edges;
     std::vector<double> vertexAngles;
     std::vector<Straight> normals;
     bool rightHanded;
     
-    std::vector<Edge*> offsetEdges;
+    Polygon* hysteresisBoundary;
+   // std::vector<Edge*> offsetEdges;
     
     void makeCircle( const Vertex& center, const double& radius) {
         Arc* circle = new Arc;
@@ -195,6 +196,9 @@ private:
     }
     double magnitude(Edge& edge) {
         return sqrt(square(edge.start.x - edge.end.x) + square(edge.start.y - edge.end.y));
+    }
+    double magnitude(Vertex& vertex) {
+        return sqrt(square(vertex.x) + square(vertex.y));
     }
     
     void determingVertexAngles() {
@@ -266,10 +270,16 @@ private:
         }
     }
     
+    // for compute hysteresis
+    Polygon() {
+        
+    }
+    
 public:
     
     Polygon(Json::Value& region) {
         rightHanded = true;
+        hysteresisBoundary = NULL;
         std::cout << " - Type " << region["type"] << std::endl;
         
         if( region["type"].asString().compare("circle") == 0 ) {
@@ -312,15 +322,55 @@ public:
     }
     
     void computeOffsetPolygon(double offsetMeters) {
+        hysteresisBoundary = new Polygon;
         if(edges.size() == 1) { // is a circle?
             Arc* circle = new Arc;
             
             *circle = *(Arc*)(edges[0]);
             
-            circle->radius += offsetMeters;
+            circle->radius += offsetMeters/111000.0;
             
-            offsetEdges.push_back(circle);
+            hysteresisBoundary->edges.push_back(circle);
         } else if ( edges.size() >= 3 ) {
+            Edge* priorEdge = *(edges.end()-1);
+            Straight priorNormal = *(normals.end()-1);
+            
+            double offsetDegrees = offsetMeters/111000.0;
+            
+            for(int i = 0; i < edges.size(); i++) {
+                Edge* currentEdge = edges[i];
+                Straight currentNormal = normals[i];
+                
+                
+                Straight* offsetStraight = new Straight;
+                
+                Vertex sumNormals;
+                sumNormals.x = priorNormal.end.x + currentNormal.end.x;
+                sumNormals.y = priorNormal.end.y + currentNormal.end.y;
+                
+                Vertex sumNormalsNormal;
+                sumNormalsNormal.x = sumNormals.x/magnitude(sumNormals);
+                sumNormalsNormal.y = sumNormals.y/magnitude(sumNormals);
+                
+                double halfDist = magnitude(sumNormals)/2;
+                double d = halfDist + (1.0 - square(halfDist))/halfDist;
+                
+                offsetStraight->start.x = d * offsetDegrees * sumNormalsNormal.x + currentEdge->start.x;
+                offsetStraight->start.y = d * offsetDegrees * sumNormalsNormal.y + currentEdge->start.y;
+                
+                hysteresisBoundary->edges.push_back(offsetStraight);
+                priorEdge = currentEdge;
+                priorNormal = currentNormal;
+            }
+            
+            // All start vertices filled, now copy current start into prior end to complete:
+            priorEdge = *(hysteresisBoundary->edges.end()-1);
+            for(std::vector<Edge*>::iterator it = hysteresisBoundary->edges.begin(); it != hysteresisBoundary->edges.end(); it++) {
+                Edge* currentEdge = *it;
+                priorEdge->end = currentEdge->start;
+                priorEdge = currentEdge;
+            }
+            
             
         }
     }
@@ -341,11 +391,26 @@ public:
                 angleSum += vertexAngles[i];
                 std::cout << " - - - Normal " << normals[i].end.x << ", " << normals[i].end.y << std::endl;
               }
+        
         }
         
         if(vertexAngles.size() > 0) {
             std::cout << " - Angle sum in degrees: " << (180.0/3.1415926535897 * angleSum) << std::endl;
         }
+        
+        if(hysteresisBoundary) {
+            
+            std::cout << "!!!!! the follwoing is the hysteresis bound for the above pollygon:" << std::endl;
+            hysteresisBoundary->print();
+        }
+    }
+    
+    bool isInsideHysteresisBound(Vertex point) {
+        if(hysteresisBoundary) {
+            return hysteresisBoundary->isInside(point);
+        }
+        std::cout << "No hysteresis bound defined!  Checking against base zone instead" << std::endl;
+        return isInside( point);
     }
     
     bool isInside(Vertex point) {
@@ -356,7 +421,10 @@ public:
             
             double distanceToCenter = sqrt(pow(point.x - zone->center.x, 2.0) + pow(point.y - zone->center.y, 2.0));
             
+            
+//                std::cout << "Circle check" << std::endl;
             if(distanceToCenter > zone->radius) {
+//                std::cout << " - This is not inside circle!" << std::endl;
                 return false;
             }
         } else {
@@ -388,8 +456,9 @@ public:
                 }
                 
             }
-//            std::cout << "Intersect count result: " << intersectCount << std::endl;
+//            std::cout << "Intersect count result: " << intersectCount << " For edge count " << edges.size() << std::endl;
             if(intersectCount % 2 == 0) {
+//                std::cout << " - This is not inside!" << std::endl;
                 return false;
             }
         }
@@ -403,8 +472,11 @@ public:
             delete *it;
         }
         
-        for(std::vector<Edge*>::iterator it = offsetEdges.begin(); it != offsetEdges.end(); it++) {
-            delete *it;
+//        for(std::vector<Edge*>::iterator it = offsetEdges.begin(); it != offsetEdges.end(); it++) {
+//            delete *it;
+//        }
+        if(hysteresisBoundary) {
+            delete hysteresisBoundary;
         }
     }
 };
@@ -434,7 +506,10 @@ public:
             
             for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
                 std::cout << " - Region " << i << std::endl;
-                polygons.push_back(new Polygon(zoneDefinition["regions"][i]));
+                Polygon* region = new Polygon(zoneDefinition["regions"][i]);
+                region->computeOffsetPolygon(-100);  // eight mile inward
+//                region->computeOffsetPolygon(111000.0);  // 1 degree
+                polygons.push_back(region);
             }
         }
         
@@ -451,16 +526,21 @@ public:
         Vertex point2;
         point2.x = -86.792709236746688;
         point2.y = 36.145815819708503;
+        Vertex point3;
+        point3.x = 0.5;
+        point3.y = 1.5;
         for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
             Polygon* polygon = *it;
             std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
             std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+            std::cout << " - - IsInside point3: " << polygon->isInside(point3) << std::endl;
+//            std::cout << " - - Hyeteresiss point3: " << polygon->isInsideHysteresisBound(point3) << std::endl;
         }
         
         
     }
     
-    ~ ZoneChecker() {
+    ~ZoneChecker() {
         // Cleanup
         for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
             delete *it;
@@ -479,10 +559,29 @@ public:
         
         return result;
     }
+    
+    bool inHysteresisZone(Vertex point) {
+        bool result = false;
+        
+        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+            Polygon* polygon = *it;
+            if(polygon->isInsideHysteresisBound(point)) {
+                return true;
+            }
+        }
+        
+        return result;
+    }
 };
 
 class CsvRecorder : public Panda::GpsListener, public Panda::CanListener {
 private:
+    typedef enum {
+        STATE_RECORDING,
+        STATE_IDLE
+    } RecordingState;
+    RecordingState state;
+    
     std::string gpsFilename;
     std::string canFilename;
     
@@ -496,7 +595,7 @@ private:
     bool busyFileCan;
     
     bool recordingEnabled;
-    bool recordingAllowed;
+//    bool recordingAllowed;
     
     void openCanFile() {
         busyFileWaitCan();
@@ -557,7 +656,9 @@ private:
     
     
     void newDataNotification( Panda::GpsData* gpsData ) {
-    
+        if( !recordingEnabled ) {    // TODO this can never be set false by user
+            return;
+        }
         if(zoneChecker) {
             // check if data still allowed:
             Vertex pose;
@@ -565,33 +666,52 @@ private:
             pose.x = gpsData->pose.longitude;
             pose.y = gpsData->pose.latitude;
             
-            if( !zoneChecker->inZone(pose) ) {
-                
-                if(recordingAllowed) {
-                    std::cout << "Not in zone!  Not recording" << std::endl;
-                    closeCanFile();
-                    closeGpsFile();
-                }
-                recordingAllowed = false;
-            } else {
-                if(!recordingAllowed) {
-                    std::cout << "inside zone!  safe to record" << std::endl;
-
-                    if(recordingEnabled) {
-//                        struct timeval sysTime;
-//                        gettimeofday(&sysTime, NULL);
-//                        sprintf(timeStamp, "%ld.%06d.csv", (int)sysTime.tv_sec,  (int)sysTime.tv_usec);
-                        
-                        openFiles();
+            switch (state) {
+                case STATE_IDLE:
+                    if( zoneChecker->inHysteresisZone(pose) ) {
+                        transitionToState(STATE_RECORDING);
                     }
-                }
-                recordingAllowed = true;
+                    break;
+                    
+                    
+                case STATE_RECORDING:
+                    if( !zoneChecker->inZone(pose)) {
+                        transitionToState(STATE_IDLE);
+                    }
+                    break;
             }
+            
+//            if( !zoneChecker->inZone(pose) ) {
+//                if(recordingAllowed) {
+//                    std::cout << "Not in zone!  Not recording" << std::endl;
+//                    closeCanFile();
+//                    closeGpsFile();
+//                }
+//                recordingAllowed = false;
+//            } else {
+//                if(!recordingAllowed) {
+//                    std::cout << "inside zone!  safe to record" << std::endl;
+//
+//                    if(recordingEnabled) {
+////                        struct timeval sysTime;
+////                        gettimeofday(&sysTime, NULL);
+////                        sprintf(timeStamp, "%ld.%06d.csv", (int)sysTime.tv_sec,  (int)sysTime.tv_usec);
+//
+//                        openFiles();
+//                    }
+//
+//                }
+//                recordingAllowed = true;
+//            }
         }
         
-        if(!(recordingEnabled && recordingAllowed)) {
+        if(state != STATE_RECORDING) {
             return;
         }
+        
+//        if(!(recordingEnabled && recordingAllowed)) {
+//            return;
+//        }
         
         busyFileWaitGps();
         busyFileGps = true;
@@ -623,7 +743,10 @@ private:
     
     
     void newDataNotification( Panda::CanFrame* frame ) {
-        if(!(recordingEnabled && recordingAllowed)) {
+//        if(!(recordingEnabled && recordingAllowed)) {
+//            return;
+//        }
+        if(state != STATE_RECORDING) {
             return;
         }
         
@@ -637,7 +760,7 @@ private:
             
             fprintf(csvCanDump,"%d,%u,", (int)frame->bus, frame->messageID);
             
-            for (int i =0; i < frame->dataLength; i++) {
+            for (int i = 0; i < frame->dataLength; i++) {
                 fprintf(csvCanDump, "%02x", frame->data[i]);
             }
             fprintf(csvCanDump, ",%d\n", frame->dataLength);
@@ -658,15 +781,69 @@ private:
         openCanFile();
     }
     
+    void closeFiles() {
+        closeCanFile();
+        closeGpsFile();
+    }
+    
+    
+    const char* stateToStr(RecordingState& state) {
+        switch (state) {
+            case STATE_IDLE: return "STATE_IDLE";
+            case STATE_RECORDING: return "STATE_RECORDING";
+        }
+        return "";
+    }
+    
+    void transitionToState(RecordingState newState) {
+        std::cout << "INFO: CsvRecorder: Transitioning from state " << stateToStr(state) << " -> " << stateToStr(newState) << std::endl;
+        exitAction();
+        state = newState;
+        entryAction();
+    }
+    
+    void entryAction() {
+        switch (state) {
+            case STATE_IDLE:
+                break;
+                
+        case STATE_RECORDING:
+                openFiles();
+                break;
+        }
+    }
+    void doAction() {
+        
+    }
+    void exitAction() {
+        switch (state) {
+            case STATE_IDLE:
+                break;
+                
+        case STATE_RECORDING:
+                closeFiles();
+                break;
+        }
+        
+    }
+    
+    
+    
 public:
     CsvRecorder( ) {
+        state = STATE_IDLE;
+        
         busyFileGps = false;
         busyFileCan = false;
         
-        recordingAllowed = false;
+//        recordingAllowed = false;
         recordingEnabled = false;
         
         zoneChecker = NULL;
+    }
+    ~CsvRecorder( ) {
+        transitionToState(STATE_IDLE);
+        
     }
     
     void setZoneChecker(ZoneChecker* checker) {
@@ -678,15 +855,14 @@ public:
         canFilename = can;
         
         recordingEnabled = true;
-        if(recordingAllowed) {
-            openFiles();
-        }
+        
+//        recordingEnabled = true;
+//        if(recordingAllowed) {
+//            openFiles();
+//        }
     }
     
-    void closeFiles() {
-        closeCanFile();
-        closeGpsFile();
-    }
+    
 };
 
 using namespace std;
@@ -694,6 +870,18 @@ int main(int argc, char **argv) {
     
     ZoneChecker zCheck;
     zCheck.open("/etc/libpanda.d/zone-testbed.json");
+    
+    Vertex point1;
+    point1.x = 10.5;
+    point1.y = 0.5;
+    std::cout << std::endl << std::endl;
+    std::cout << zCheck.inHysteresisZone(point1) << " ";
+    point1.x = 1.5;
+    point1.y = 0.5;
+    std::cout <<  zCheck.inHysteresisZone(point1) << " ";
+    point1.x = 0.5;
+    point1.y = 0.5;
+    std::cout << zCheck.inHysteresisZone(point1) << std::endl;
     
     CsvRecorder mCsvRecorder;
     mCsvRecorder.setZoneChecker(&zCheck);
