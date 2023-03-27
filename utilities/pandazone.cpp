@@ -97,16 +97,17 @@ private:
  Argument setup
  */
 void printUsage(const char* binary) {
-	std::cout << "Usage: " << binary << " -[v] -[f] [-u usbmode] [-g gpsfile] [-c csvfile] [-n nmeafile]  [-r canfile]" << std::endl;
+	std::cout << "Usage: " << binary << " -[v] -[f] [-u usbmode] [-d directory]" << std::endl;
 	std::cout << "   -v          : Verbose mode" << std::endl;
 	std::cout << "   -f          : Forces Nissan VIN in configuration for Panda CAN FD" << std::endl;
 	std::cout << "   -u usbmode  : USB operating mode:" << std::endl;
 	std::cout << "                   a: Asynchronous" << std::endl;
 	std::cout << "                   s: Synchronous" << std::endl;
 	std::cout << "                   i: Isochronous (not supported)" << std::endl;
-	std::cout << "   -g gpsfile  : Filename to output GPS data in CSV format" << std::endl;
+//	std::cout << "   -g gpsfile  : Filename to output GPS data in CSV format" << std::endl;
 //	std::cout << "   -n nmeafile : Filename to output GPS NMEA strings" << std::endl;
-	std::cout << "   -c csvfile  : Filename to output CSV format CAN data" << std::endl;
+//	std::cout << "   -c csvfile  : Filename to output CSV format CAN data" << std::endl;
+    std::cout << "   -d directory: Directory for gps/can data dump" << std::endl;
 //	std::cout << "   -r canfile  : Filename to save raw messages from Panda CAN reads" << std::endl;
 }
 
@@ -280,7 +281,7 @@ public:
     Polygon(Json::Value& region) {
         rightHanded = true;
         hysteresisBoundary = NULL;
-        std::cout << " - Type " << region["type"] << std::endl;
+//        std::cout << " - Type " << region["type"] << std::endl;
         
         if( region["type"].asString().compare("circle") == 0 ) {
             Vertex center;
@@ -499,13 +500,13 @@ public:
             
             Json::StreamWriterBuilder builder;
             const std::string output = Json::writeString(builder, zoneDefinition);
-            std::cout << output << std::endl;
-            std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
-            std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
-            std::cout << "Zonefile has " << zoneDefinition["regions"].size() << " regions" << std::endl;
+//            std::cout << output << std::endl;
+//            std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
+//            std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
+//            std::cout << "Zonefile has " << zoneDefinition["regions"].size() << " regions" << std::endl;
             
             for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
-                std::cout << " - Region " << i << std::endl;
+//                std::cout << " - Region " << i << std::endl;
                 Polygon* region = new Polygon(zoneDefinition["regions"][i]);
                 region->computeOffsetPolygon(-100);  // eight mile inward
 //                region->computeOffsetPolygon(111000.0);  // 1 degree
@@ -513,29 +514,29 @@ public:
             }
         }
         
-        std::cout << "Parsed polygons:" << std::endl;
-        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-            Polygon *polygon = *it;
-            polygon->print();
-        }
+//        std::cout << "Parsed polygons:" << std::endl;
+//        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//            Polygon *polygon = *it;
+//            polygon->print();
+//        }
         
-        std::cout << "Check if point is inside:" << std::endl;
-        Vertex point;
-        point.x = -86.713167706175582;
-        point.y = 36.107;
-        Vertex point2;
-        point2.x = -86.792709236746688;
-        point2.y = 36.145815819708503;
-        Vertex point3;
-        point3.x = 0.5;
-        point3.y = 1.5;
-        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
-            Polygon* polygon = *it;
-            std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
-            std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
-            std::cout << " - - IsInside point3: " << polygon->isInside(point3) << std::endl;
-//            std::cout << " - - Hyeteresiss point3: " << polygon->isInsideHysteresisBound(point3) << std::endl;
-        }
+//        std::cout << "Check if point is inside:" << std::endl;
+//        Vertex point;
+//        point.x = -86.713167706175582;
+//        point.y = 36.107;
+//        Vertex point2;
+//        point2.x = -86.792709236746688;
+//        point2.y = 36.145815819708503;
+//        Vertex point3;
+//        point3.x = 0.5;
+//        point3.y = 1.5;
+//        for(std::vector<Polygon*>::iterator it = polygons.begin(); it != polygons.end(); it++) {
+//            Polygon* polygon = *it;
+//            std::cout << " - - IsInside point1: " << polygon->isInside(point) << std::endl;
+//            std::cout << " - - IsInside point2: " << polygon->isInside(point2) << std::endl;
+//            std::cout << " - - IsInside point3: " << polygon->isInside(point3) << std::endl;
+////            std::cout << " - - Hyeteresiss point3: " << polygon->isInsideHysteresisBound(point3) << std::endl;
+//        }
         
         
     }
@@ -584,6 +585,7 @@ private:
     
     std::string gpsFilename;
     std::string canFilename;
+    std::string dataDirectory;
     
     char timeStamp[200];
     
@@ -600,28 +602,28 @@ private:
     void openCanFile() {
         busyFileWaitCan();
         busyFileCan = true;
-        std::stringstream newFileName;
-        newFileName << canFilename;
-        newFileName << timeStamp;
-        FILE* csvDumpTemp = fopen(newFileName.str().c_str(), "w");
+//        std::stringstream newFileName;
+//        newFileName << canFilename;
+//        newFileName << timeStamp;
+        FILE* csvDumpTemp = fopen(canFilename.c_str(), "w");
         fprintf(csvDumpTemp, "Time,Bus,MessageID,Message,MessageLength\n");
         this->csvCanDump = csvDumpTemp;
         remove("/etc/libpanda.d/currentCan.csv");
-        symlink(newFileName.str().c_str(),"/etc/libpanda.d/currentCan.csv");
+        symlink(canFilename.c_str(),"/etc/libpanda.d/currentCan.csv");
         busyFileCan = false;
     }
     
     void openGpsFile() {
         busyFileWaitGps();
         busyFileGps = true;
-        std::stringstream newFileName;
-        newFileName << gpsFilename;
-        newFileName << timeStamp;
-        FILE* csvDumpTemp = fopen(newFileName.str().c_str(), "w");
+//        std::stringstream newFileName;
+//        newFileName << gpsFilename;
+//        newFileName << timeStamp;
+        FILE* csvDumpTemp = fopen(gpsFilename.c_str(), "w");
         fprintf(csvDumpTemp, "Gpstime,Status,Long,Lat,Alt,HDOP,PDOP,VDOP,Systime\n");
         this->csvGpsDump = csvDumpTemp;
         remove("/etc/libpanda.d/currentGps.csv");
-        symlink(newFileName.str().c_str(),"/etc/libpanda.d/currentGps.csv");
+        symlink(gpsFilename.c_str(),"/etc/libpanda.d/currentGps.csv");
         busyFileGps = false;
     }
     
@@ -773,9 +775,35 @@ private:
         time_t t = time(NULL);
         struct tm tm = *localtime(&t);
         
+        char mkdirCommand[1024];
+//        std::stringstream newFileName;
+//        newFileName << dataDirectory;
+//        newFileName << timeStamp;
+        
+        std::stringstream newDirectoryName;
+        sprintf(timeStamp, "/%04d_%02d_%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+        newDirectoryName << dataDirectory;
+        newDirectoryName << timeStamp;
+        
+        sprintf(mkdirCommand, "mkdir -p %s", newDirectoryName.str().c_str());
+        system(mkdirCommand);
+        
         sprintf(timeStamp, "-%04d-%02d-%02d-%02d-%02d-%02d.csv", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour + tm.tm_isdst, tm.tm_min, tm.tm_sec);
         
-        std::cout << "New timestamp appended: " << timeStamp << std::endl;
+        std::stringstream newFileName;
+        newFileName << newDirectoryName.str();
+        newFileName << "/gps";
+        newFileName << timeStamp;
+        gpsFilename = newFileName.str();
+        
+        newFileName.str(std::string());
+        newFileName << newDirectoryName.str();
+        newFileName << "/can";
+        newFileName << timeStamp;
+        canFilename = newFileName.str();
+        
+        std::cout << "GPS filename: " << gpsFilename << std::endl;
+        std::cout << "CAN filename: " << canFilename << std::endl;
         
         openGpsFile();
         openCanFile();
@@ -850,9 +878,17 @@ public:
         zoneChecker = checker;
     }
     
-    void saveToCsvFiles(const char* gps, const char* can) {
-        gpsFilename = gps;
-        canFilename = can;
+//    void saveToCsvFiles(const char* gps, const char* can) {
+    void saveToDirectory(const char* path) {
+//        gpsFilename = gps;
+//        canFilename = can;
+        
+        dataDirectory = path;
+        std::cout << "Provided path: " << dataDirectory << std::endl;
+         if(dataDirectory.size() > 1 && dataDirectory[dataDirectory.size()-1] == '/') {
+            dataDirectory.pop_back();
+        }
+        std::cout << "New path: " << dataDirectory << std::endl;
         
         recordingEnabled = true;
         
@@ -871,17 +907,17 @@ int main(int argc, char **argv) {
     ZoneChecker zCheck;
     zCheck.open("/etc/libpanda.d/zone-testbed.json");
     
-    Vertex point1;
-    point1.x = 10.5;
-    point1.y = 0.5;
-    std::cout << std::endl << std::endl;
-    std::cout << zCheck.inHysteresisZone(point1) << " ";
-    point1.x = 1.5;
-    point1.y = 0.5;
-    std::cout <<  zCheck.inHysteresisZone(point1) << " ";
-    point1.x = 0.5;
-    point1.y = 0.5;
-    std::cout << zCheck.inHysteresisZone(point1) << std::endl;
+//    Vertex point1;
+//    point1.x = 10.5;
+//    point1.y = 0.5;
+//    std::cout << std::endl << std::endl;
+//    std::cout << zCheck.inHysteresisZone(point1) << " ";
+//    point1.x = 1.5;
+//    point1.y = 0.5;
+//    std::cout <<  zCheck.inHysteresisZone(point1) << " ";
+//    point1.x = 0.5;
+//    point1.y = 0.5;
+//    std::cout << zCheck.inHysteresisZone(point1) << std::endl;
     
     CsvRecorder mCsvRecorder;
     mCsvRecorder.setZoneChecker(&zCheck);
@@ -936,12 +972,13 @@ int main(int argc, char **argv) {
     
 	// Argument parsing
 	Panda::UsbMode usbMode = Panda::MODE_ASYNCHRONOUS;
-	const char*    gpsFilename = NULL;
+//	const char*    gpsFilename = NULL;
 	const char*   nmeaFilename = NULL;
-	const char* canCsvFilename = NULL;
+//	const char* canCsvFilename = NULL;
+    const char* dataDirectory = NULL;
 	const char* canRawFilename = NULL;
 	int ch;
-	while ((ch = getopt_long(argc, argv, "u:g:c:vf", long_options, NULL)) != -1)
+	while ((ch = getopt_long(argc, argv, "u:d:vf", long_options, NULL)) != -1)
 	{
 		switch (ch)
 		{
@@ -951,10 +988,11 @@ int main(int argc, char **argv) {
 					case 's': usbMode =  Panda::MODE_SYNCHRONOUS; break;
 					case 'i': usbMode =  Panda::MODE_ISOCHRONOUS; break; };
 				break;
-			case 'g':    gpsFilename = optarg; break;
+//			case 'g':    gpsFilename = optarg; break;
 //			case 'n':   nmeaFilename = optarg; break;
-			case 'c': canCsvFilename = optarg; break;
+//			case 'c': canCsvFilename = optarg; break?;
 //			case 'r': canRawFilename = optarg; break;
+            case 'd': dataDirectory = optarg; break;
 			case 'f':  forceNissan = true; break;
 			default:
 				printUsage(argv[0]);
@@ -1025,11 +1063,16 @@ int main(int argc, char **argv) {
 	}
 
 
-	if (gpsFilename != NULL && canCsvFilename != NULL) {
-//		pandaHandler.getGps().saveToCsvFile(gpsFilename);
-//        myGpsObserver.saveToCsvFile(gpsFilename);
-        mCsvRecorder.saveToCsvFiles(gpsFilename, canCsvFilename);
-	}
+//	if (gpsFilename != NULL && canCsvFilename != NULL) {
+////		pandaHandler.getGps().saveToCsvFile(gpsFilename);
+////        myGpsObserver.saveToCsvFile(gpsFilename);
+//        mCsvRecorder.saveToCsvFiles(gpsFilename, canCsvFilename);
+//	}
+    
+    if( dataDirectory != NULL ) {
+        mCsvRecorder.saveToDirectory(dataDirectory);
+    }
+    
 //	if (nmeaFilename != NULL) {
 //		pandaHandler.getGps().saveToFile(nmeaFilename);
 //	}

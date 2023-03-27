@@ -6,7 +6,7 @@ FOLDER_PRE=/var/panda/CyverseData/JmscslgroupData/PandaData
 VIN=""
 # Note: does not remove spaces etc. should harden later TODO
 if [ -f /etc/libpanda.d/vin ]; then
-	VIN=_$(cat /etc/libpanda.d/vin)
+	VIN=$(cat /etc/libpanda.d/vin)
 fi
 FOLDER_DATE=$(date +%Y_%m_%d)
 FOLDER=${FOLDER_PRE}/${FOLDER_DATE}
@@ -16,6 +16,7 @@ if [ ! -d ${FOLDER_PRE}/${FOLDER_DATE} ]; then
 	mkdir -p ${FOLDER_PRE}/${FOLDER_DATE}
 fi
 #pandacord -g ${FOLDER}/${FILENAME_PRE}_GPS_Messages.csv -c ${FOLDER}/${FILENAME_PRE}_CAN_Messages.csv
-pandazone -g ${FOLDER}/gps -c ${FOLDER}/can
+#pandazone -g ${FOLDER}/gps -c ${FOLDER}/can
+pandazone -d ${FOLDER_PRE}/${VIN}
 #echo FOLDER_DATE=${FOLDER_DATE}
 #echo FILENAME_PRE=${FILENAME_PRE}
