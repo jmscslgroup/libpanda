@@ -135,6 +135,9 @@ class Vertex {
 public:
     double x;
     double y;
+    
+    Vertex() :
+    x(0), y(0) {};
 };
 
 class Edge {
@@ -164,6 +167,11 @@ public:
 class Polygon {
 private:
     std::vector<Edge*> edges;
+    std::vector<double> vertexAngles;
+    std::vector<Straight> normals;
+    bool rightHanded;
+    
+    std::vector<Edge*> offsetEdges;
     
     void makeCircle( const Vertex& center, const double& radius) {
         Arc* circle = new Arc;
@@ -182,9 +190,86 @@ private:
         edges.push_back(circle);
     }
     
+    double square(double x) {
+        return x*x;
+    }
+    double magnitude(Edge& edge) {
+        return sqrt(square(edge.start.x - edge.end.x) + square(edge.start.y - edge.end.y));
+    }
+    
+    void determingVertexAngles() {
+        Edge* priorEdge = *(edges.end()-1);
+        
+        for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it++) {
+            Edge* currentEdge = *it;
+            
+            Straight priorVector;
+            priorVector.end.x = priorEdge->end.x - priorEdge->start.x;
+            priorVector.end.y = priorEdge->end.y - priorEdge->start.y;
+            
+            Straight currentVector;
+            currentVector.end.x = currentEdge->end.x - currentEdge->start.x;
+            currentVector.end.y = currentEdge->end.y - currentEdge->start.y;
+            
+            // cross product for a-plane directiondirection
+            double z = priorVector.end.x * currentVector.end.y - priorVector.end.y * currentVector.end.x;
+            if(rightHanded) {
+                z = -z;
+            }
+            // dot product for use of arccos's domain
+            double dot = priorVector.end.x * currentVector.end.x + priorVector.end.y * currentVector.end.y;
+            double angle = acos( dot / (magnitude(priorVector) * magnitude(currentVector)));
+            if(z > 0) {
+//                angle += M_PI;
+//                angle = 2*M_PI - angle;
+                angle = M_PI + angle;
+            } else {
+                angle =  M_PI - angle;
+            }
+            
+            vertexAngles.push_back( angle );
+            
+            priorEdge = currentEdge;
+        }
+        
+        double sumAngles = 0;
+        for(int i = 0; i < vertexAngles.size(); i++) {
+            sumAngles += vertexAngles[i];
+        }
+        std::cout << "Sumangle:" << sumAngles*(180.0/M_PI) << " size: " << vertexAngles.size() << std::endl;
+        if(fabs(sumAngles/M_PI - (double)(vertexAngles.size()-2)) > 0.5  &&
+           rightHanded) {
+            std::cout << "Sumangle too far off!  Changing handedness" << std::endl;
+            rightHanded = false;
+            vertexAngles.clear();
+            determingVertexAngles();
+        }
+        
+        
+    }
+
+    void computeNormals() {
+        Straight normal;
+        
+        for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it++) {
+            Edge* edge = *it;
+            double mag = magnitude(*edge);
+            normal.end.x = (edge->end.y - edge->start.y)/mag;
+            normal.end.y = -(edge->end.x - edge->start.x)/mag;
+            
+            if(!rightHanded) {
+                normal.end.x = -normal.end.x;
+                normal.end.y = -normal.end.y;
+            }
+            
+            normals.push_back(normal);
+        }
+    }
+    
 public:
     
     Polygon(Json::Value& region) {
+        rightHanded = true;
         std::cout << " - Type " << region["type"] << std::endl;
         
         if( region["type"].asString().compare("circle") == 0 ) {
@@ -218,16 +303,48 @@ public:
             straight->end.y = region["data"][i][1].asDouble();
             
             edges.push_back(straight);
+            
+            determingVertexAngles();
+            
+            computeNormals();
         }
         
     }
     
+    void computeOffsetPolygon(double offsetMeters) {
+        if(edges.size() == 1) { // is a circle?
+            Arc* circle = new Arc;
+            
+            *circle = *(Arc*)(edges[0]);
+            
+            circle->radius += offsetMeters;
+            
+            offsetEdges.push_back(circle);
+        } else if ( edges.size() >= 3 ) {
+            
+        }
+    }
+    
     void print() {
+        double angleSum = 0;
         std::cout << " - This polygon had " << edges.size() << " edges" << std::endl;
-        for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it ++) {
-            Edge* edge = *it;
-            std::cout << " - Start " << edge->start.x << ", " << edge->start.y << std::endl;
-            std::cout << " -   End " << edge->end.x << ", " << edge->end.y << std::endl;
+//        for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it ++) {
+        for(int i = 0; i < edges.size(); i++) {
+            Edge* edge = edges[i];
+            std::cout << " - -  Start " << edge->start.x << ", " << edge->start.y << std::endl;
+            std::cout << " - -  End " << edge->end.x << ", " << edge->end.y << std::endl;
+            
+            
+            if( i < vertexAngles.size()) {
+                double angle = vertexAngles[i];
+                std::cout << " - - Angle " << angle << std::endl;
+                angleSum += vertexAngles[i];
+                std::cout << " - - - Normal " << normals[i].end.x << ", " << normals[i].end.y << std::endl;
+              }
+        }
+        
+        if(vertexAngles.size() > 0) {
+            std::cout << " - Angle sum in degrees: " << (180.0/3.1415926535897 * angleSum) << std::endl;
         }
     }
     
@@ -283,6 +400,10 @@ public:
     
     ~Polygon() {
         for(std::vector<Edge*>::iterator it = edges.begin(); it != edges.end(); it++) {
+            delete *it;
+        }
+        
+        for(std::vector<Edge*>::iterator it = offsetEdges.begin(); it != offsetEdges.end(); it++) {
             delete *it;
         }
     }
