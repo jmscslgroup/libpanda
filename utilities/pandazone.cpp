@@ -480,14 +480,56 @@ public:
             delete hysteresisBoundary;
         }
     }
+    
+    Json::Value toJson() {
+        Json::Value region;
+        if(edges.size() == 1) {
+            region["type"] = "circle";
+            region["data"]["radius"] = ((Arc*)edges[0])->radius * 111000.0;
+            region["data"]["center"][0] = ((Arc*)edges[0])->center.x;
+            region["data"]["center"][1] = ((Arc*)edges[0])->center.y;
+        } else {
+            region["type"] = "polygon";
+            for(int i = 0; i < edges.size(); i++) {
+                region["data"][i][0] = edges[i]->start.x;
+                region["data"][i][1] = edges[i]->start.y;
+            }
+            region["data"][(int)edges.size()][0] = edges[0]->start.x;    // needs to be connected
+            region["data"][(int)edges.size()][1] = edges[0]->start.y;
+        }
+        if(hysteresisBoundary) {
+            region["hysteresis"] = hysteresisBoundary->toJson();
+        }
+        return region;
+    }
 };
 
 class ZoneChecker {
 private:
     // Json parsing
     std::vector<Polygon*> polygons;
-    
+    std::string vin;
+    double offset;
 public:
+    void save(const char* filename) {
+        Json::Value zoneDefinition;
+        zoneDefinition["vin"] = vin;
+        zoneDefinition["offset"] = offset;
+        
+        for(int i = 0; i < polygons.size(); i++) {
+            
+            zoneDefinition["regions"][i] = polygons[i]->toJson();
+        }
+        
+        std::ofstream file_id;
+        file_id.open(filename);
+        
+        Json::StyledWriter styledWriter;
+        file_id << styledWriter.write(zoneDefinition);
+        
+        file_id.close();
+    }
+    
     void open( const char* file) {
         std::ifstream zoneFile;
         zoneFile.open(file);
@@ -500,6 +542,7 @@ public:
             
             Json::StreamWriterBuilder builder;
             const std::string output = Json::writeString(builder, zoneDefinition);
+            vin = zoneDefinition["vin"].asString();
 //            std::cout << output << std::endl;
 //            std::cout << "Zonefile created " << zoneDefinition["created_at"] << std::endl;
 //            std::cout << "Zonefile associated with VIN " << zoneDefinition["vin"] << std::endl;
@@ -508,9 +551,14 @@ public:
             for(int i = 0; i < zoneDefinition["regions"].size(); i++) {
 //                std::cout << " - Region " << i << std::endl;
                 Polygon* region = new Polygon(zoneDefinition["regions"][i]);
-//                region->computeOffsetPolygon(-200);  // eight mile inward
-//                region->computeOffsetPolygon(111000.0);  // 1 degree
-                region->computeOffsetPolygon(-457.2);  // eight mile inward
+                if(zoneDefinition.isMember("offset")) {
+                    offset =zoneDefinition["offset"].asDouble();
+                } else {
+    //                region->computeOffsetPolygon(-200);  // eight mile inward
+    //                region->computeOffsetPolygon(111000.0);  // 1 degree
+                    offset = -457.2;  // eight mile inward
+                }
+                region->computeOffsetPolygon(offset);
                 polygons.push_back(region);
             }
             
@@ -926,6 +974,7 @@ int main(int argc, char **argv) {
     ZoneChecker zCheck;
 //    zCheck.open("/etc/libpanda.d/zone-testbed.json");
     zCheck.open("/etc/libpanda.d/zone-test.json");
+    zCheck.save("zone-processed.json");
     
 //    Vertex point1;
 //    point1.x = 10.5;
