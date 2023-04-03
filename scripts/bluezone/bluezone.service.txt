@@ -1,0 +1,12 @@
+[Unit]
+Description=Bluetooth handling for privzone frontend support
+#After=can.service
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash /usr/local/sbin/bluezone
+#ExecStartPost=systemctl start rosnodeChecker
+
+[Install]
+WantedBy=multi-user.target
