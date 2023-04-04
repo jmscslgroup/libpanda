@@ -314,17 +314,37 @@ class CirclesInputCharacteristic(Characteristic):
         
         
     def complete(self, result):
+#        result = result[10:len(result)]
         print("complete string: " + result)
         print("complete type: " + str(type(result)))
-        inputJson = json.loads(result)
-        print("json parsed... ")
+        try:
+            inputJson = json.loads(result)
+        except:
+            self.service.set_status("File format error!")
+            return
+        
+#        print("json parsed... ")
+        if not "type" in inputJson:
+            self.service.set_status("Key error, missing 'type' in JSON!")
+            return
+            
+        if not "length" in inputJson:
+            self.service.set_status("Key error, missing 'length' in JSON!")
+            return
+        if not "contents" in inputJson:
+            self.service.set_status("Key error, missing 'length' in JSON!")
+            return
+#        if not "wubwub" in inputJson:
+#            self.service.set_status("Key error, missing 'wubwub' in JSON!")
+#            return
+            
         print("complete input type: " + inputJson["type"])
         print("complete input length: " + str(inputJson["length"]))
         print(" - checking length: " + str(len(inputJson["contents"])) )
         if len(inputJson["contents"]) == inputJson["length"]:
-            self.service.set_status("OK")
+            self.service.set_status("Upload Success!")
         else:
-            self.service.set_status("Length mismatch!")
+            self.service.set_status("Upload issue, length mismatch!")
     
 class CirclesInputDescriptor(Descriptor):
     CIRCLES_INPUT_DESCRIPTOR_UUID = "2905"
@@ -412,7 +432,7 @@ class CirclesStatusCharacteristic(Characteristic):
 #        if self.index+self.MAX_SEND >= len(self.buffer):
 #            value.append(dbus.Byte(0))
         self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
-        
+    
 #    def get_temperature(self):
 #        value = []
 #
@@ -437,7 +457,8 @@ class CirclesStatusCharacteristic(Characteristic):
 #
 #        return self.notifying
 #
-#    def StartNotify(self):
+    def StartNotify(self):
+        self.send_status("Hello from the Pi!")
 #        if self.notifying:
 #            return
 #
