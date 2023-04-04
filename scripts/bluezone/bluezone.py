@@ -24,6 +24,7 @@ Modified by Matt Bunting
 """
 
 import dbus
+import json
 
 from advertisement import Advertisement
 from service import Application, Service, Characteristic, Descriptor
@@ -53,7 +54,8 @@ class CirclesService(Service):
         Service.__init__(self, index, self.CIRCLES_SVC_UUID, True)
         self.add_characteristic(TempCharacteristic(self))
         self.add_characteristic(UnitCharacteristic(self))
-        self.add_characteristic(CirclesCharacteristic(self))
+        self.add_characteristic(CirclesOutputCharacteristic(self))
+        self.add_characteristic(CirclesInputCharacteristic(self))
         self.add_characteristic(CirclesCommandCharacteristic(self))
         self.add_characteristic(CirclesConfigCharacteristic(self))
 
@@ -72,7 +74,7 @@ class CirclesService(Service):
             chrcs = self.get_characteristics()
             for characteristic in chrcs:
                 print("checking: " + str(characteristic))
-                if type(characteristic) is CirclesCharacteristic:
+                if type(characteristic) is CirclesOutputCharacteristic:
                     print("type(characteristic) = " + str(type(characteristic)))
                     characteristic.StartNotify()
                     break
@@ -83,15 +85,16 @@ class CirclesService(Service):
             chrcs = self.get_characteristics()
             for characteristic in chrcs:
                 print("checking: " + str(characteristic))
-                if type(characteristic) is CirclesCharacteristic:
+                if type(characteristic) is CirclesOutputCharacteristic:
                     print("type(characteristic) = " + str(type(characteristic)))
                     characteristic.StopNotify()
                     break
             
         self.command = command
 
-class CirclesCharacteristic(Characteristic):
-    CIRCLES_CHARACTERISTIC_UUID = "00000002-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+# this is strucutred to send large amounts of data to the paired device
+class CirclesOutputCharacteristic(Characteristic):
+    CIRCLES_OUTPUT_CHARACTERISTIC_UUID = "00000002-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
     MAX_SEND = 500
     
     def __init__(self, service):
@@ -100,9 +103,9 @@ class CirclesCharacteristic(Characteristic):
 #        self.count = 10
 
         Characteristic.__init__(
-                self, self.CIRCLES_CHARACTERISTIC_UUID,
+                self, self.CIRCLES_OUTPUT_CHARACTERISTIC_UUID,
                 ["notify", "read"], service)
-        self.add_descriptor(CirclesDescriptor(self))
+        self.add_descriptor(CirclesOutputDescriptor(self))
                 
     def get_circles(self):
         value = []
@@ -176,24 +179,31 @@ class CirclesCharacteristic(Characteristic):
         return value
 
     def readZoneFile(self):
+        myJson = { 'type': 'zonefile'};
         file = open('/etc/libpanda.d/zone-processed.json')
-        self.buffer = file.read()
+#        self.buffer = file.read()
+        contents = file.read()
+        myJson['contents'] = contents
         file.close()
+        myJson['length'] = len(contents)
+        print("contents length: " + str(len(contents)))
+        
+        self.buffer = json.dumps(myJson)
         
 
-class CirclesDescriptor(Descriptor):
-    CIRCLES_DESCRIPTOR_UUID = "2910"
-    CIRCLES_DESCRIPTOR_VALUE = "CIRCLES descriptor"
+class CirclesOutputDescriptor(Descriptor):
+    CIRCLES_OUTPUT_DESCRIPTOR_UUID = "2910"
+    CIRCLES_OUTPUT_DESCRIPTOR_VALUE = "CIRCLES Output descriptor"
 
     def __init__(self, characteristic):
         Descriptor.__init__(
-                self, self.CIRCLES_DESCRIPTOR_UUID,
+                self, self.CIRCLES_OUTPUT_DESCRIPTOR_UUID,
                 ["read"],
                 characteristic)
 
     def ReadValue(self, options):
         value = []
-        desc = self.CIRCLES_DESCRIPTOR_VALUE
+        desc = self.CIRCLES_OUTPUT_DESCRIPTOR_VALUE
 
         for c in desc:
             value.append(dbus.Byte(c.encode()))
@@ -274,6 +284,63 @@ class CirclesCommandDescriptor(Descriptor):
         return value
         
         
+class CirclesInputCharacteristic(Characteristic):
+    CIRCLES_INPUT_CHARACTERISTIC_UUID = "00000005-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    
+    def __init__(self, service):
+        self.inputBuffer = ""
+        
+        Characteristic.__init__(
+                self, self.CIRCLES_INPUT_CHARACTERISTIC_UUID,
+                ["write"], service)
+        self.add_descriptor(CirclesInputDescriptor(self))
+        
+    def WriteValue(self, value, options):
+    # value is type dbus array.  string is located in first element of the array
+        #val = str(value[0]).upper()
+        val = ''.join([str(v) for v in value])
+#        print("CirclesCnfigmandCharacteristic.WriteValue(): received: " + str(value))
+        #print("CirclesInputCharacteristic.WriteValue(): received: " + val)
+        
+#        print("CirclesCommandCharacteristic.WriteValue(): received: " + str(value.decode("utf-8") ))
+        #self.service.set_command(val)
+        self.inputBuffer = self.inputBuffer + val
+        
+        
+        print("len(value) = " + str(len(value)))
+        if value[len(value)-1] == 0:
+            print("Null terminated string!")
+            self.complete(self.inputBuffer[0:len(self.inputBuffer)-1])
+            self.inputBuffer = ""
+        
+        
+    def complete(self, result):
+        print("complete string: " + result)
+        print("complete type: " + str(type(result)))
+        inputJson = json.loads(result)
+        print("json parsed... ")
+        print("complete input type: " + inputJson["type"])
+        print("complete input length: " + str(inputJson["length"]))
+        print(" - checking length: " + str(len(inputJson["contents"])) )
+    
+class CirclesInputDescriptor(Descriptor):
+    CIRCLES_INPUT_DESCRIPTOR_UUID = "2905"
+    CIRCLES_INPUT_DESCRIPTOR_VALUE = "Circles Input"
+
+    def __init__(self, characteristic):
+        Descriptor.__init__(
+                self, self.CIRCLES_INPUT_DESCRIPTOR_UUID,
+                ["read"],
+                characteristic)
+
+    def ReadValue(self, options):
+        value = []
+        desc = self.CIRCLES_INPUT_DESCRIPTOR_VALUE
+
+        for c in desc:
+            value.append(dbus.Byte(c.encode()))
+
+        return value
         
         
 class CirclesConfigCharacteristic(Characteristic):
@@ -374,7 +441,7 @@ class TempCharacteristic(Characteristic):
     def set_temperature_callback(self):
         if self.notifying:
             value = self.get_temperature()
-            print("Sending notificaiton: " + str(value))
+            #print("Sending notificaiton: " + str(value))
             self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
 
         return self.notifying
