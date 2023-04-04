@@ -54,10 +54,13 @@ class CirclesService(Service):
         Service.__init__(self, index, self.CIRCLES_SVC_UUID, True)
         self.add_characteristic(TempCharacteristic(self))
         self.add_characteristic(UnitCharacteristic(self))
-        self.add_characteristic(CirclesOutputCharacteristic(self))
+        self.outputCharacteristic = CirclesOutputCharacteristic(self)
+        self.add_characteristic(self.outputCharacteristic)
         self.add_characteristic(CirclesInputCharacteristic(self))
         self.add_characteristic(CirclesCommandCharacteristic(self))
         self.add_characteristic(CirclesConfigCharacteristic(self))
+        self.statusCharacteristic = CirclesStatusCharacteristic(self)
+        self.add_characteristic(self.statusCharacteristic)
 
     def is_farenheit(self):
         return self.farenheit
@@ -67,32 +70,24 @@ class CirclesService(Service):
         
     def get_command(self):
         return self.command
-        
+    
     def set_command(self, command):
         if command == "R":
             print("Read command!")
-            chrcs = self.get_characteristics()
-            for characteristic in chrcs:
-                print("checking: " + str(characteristic))
-                if type(characteristic) is CirclesOutputCharacteristic:
-                    print("type(characteristic) = " + str(type(characteristic)))
-                    characteristic.StartNotify()
-                    break
-                    
+            self.outputCharacteristic.send_zone_file()
             
         if command == "{example: 'data'}":
             print("Send command!")
-            chrcs = self.get_characteristics()
-            for characteristic in chrcs:
-                print("checking: " + str(characteristic))
-                if type(characteristic) is CirclesOutputCharacteristic:
-                    print("type(characteristic) = " + str(type(characteristic)))
-                    characteristic.StopNotify()
-                    break
+            self.outputCharacteristic.StopNotify()
             
         self.command = command
 
-# this is strucutred to send large amounts of data to the paired device
+    def set_status(self, s):
+        print("Setting status to " + str(s))
+        self.statusCharacteristic.send_status(s)
+        
+
+# this is structured to send large amounts of data to the paired device
 class CirclesOutputCharacteristic(Characteristic):
     CIRCLES_OUTPUT_CHARACTERISTIC_UUID = "00000002-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
     MAX_SEND = 500
@@ -144,13 +139,17 @@ class CirclesOutputCharacteristic(Characteristic):
 
         return self.notifying
         
+    def send_zone_file(self):
+        self.readZoneFile() # this sets the buffer
+        self.StartNotify()
+        
     def StartNotify(self):
         print("in StartNotify(self)")
-        if self.notifying:
+        if self.notifying or len(self.buffer) <= 0:
             return
 
-        self.buffer = "Hello buffer!"
-        self.readZoneFile()
+        #self.buffer = "Hello buffer!"
+        #self.readZoneFile()
         self.index = 0
 #        self.count = 5
         self.notifying = True
@@ -179,7 +178,7 @@ class CirclesOutputCharacteristic(Characteristic):
         return value
 
     def readZoneFile(self):
-        myJson = { 'type': 'zonefile'};
+        myJson = { 'type': 'zonefile' };
         file = open('/etc/libpanda.d/zone-processed.json')
 #        self.buffer = file.read()
         contents = file.read()
@@ -322,6 +321,10 @@ class CirclesInputCharacteristic(Characteristic):
         print("complete input type: " + inputJson["type"])
         print("complete input length: " + str(inputJson["length"]))
         print(" - checking length: " + str(len(inputJson["contents"])) )
+        if len(inputJson["contents"]) == inputJson["length"]:
+            self.service.set_status("OK")
+        else:
+            self.service.set_status("Length mismatch!")
     
 class CirclesInputDescriptor(Descriptor):
     CIRCLES_INPUT_DESCRIPTOR_UUID = "2905"
@@ -391,7 +394,86 @@ class CirclesConfigDescriptor(Descriptor):
 
         return value
         
+class CirclesStatusCharacteristic(Characteristic):
+    STATUS_CHARACTERISTIC_UUID = "00000006-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+
+    def __init__(self, service):
+        self.notifying = False
+
+        Characteristic.__init__(
+                self, self.STATUS_CHARACTERISTIC_UUID,
+                ["notify", "read"], service)
+        self.add_descriptor(CirclesStatusDescriptor(self))
         
+    def send_status(self, s):
+        value = []
+        for c in s:
+            value.append(dbus.Byte(c.encode()))
+#        if self.index+self.MAX_SEND >= len(self.buffer):
+#            value.append(dbus.Byte(0))
+        self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
+        
+#    def get_temperature(self):
+#        value = []
+#
+#        cpu = CPUTemperature()
+#        temp = cpu.temperature
+#        if self.service.is_farenheit():
+#            temp = (temp * 1.8) + 32
+#            unit = "F"
+#
+#        strtemp = str(round(temp, 1)) + " " + unit
+#        for c in strtemp:
+#            value.append(dbus.Byte(c.encode()))
+#
+#        #return value
+#        return value
+#
+#    def set_temperature_callback(self):
+#        if self.notifying:
+#            value = self.get_temperature()
+#            #print("Sending notificaiton: " + str(value))
+#            self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
+#
+#        return self.notifying
+#
+#    def StartNotify(self):
+#        if self.notifying:
+#            return
+#
+#        self.notifying = True
+#
+#        value = self.get_temperature()
+#        print("Startin notificaiton: " + str(value))
+#        self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
+#        self.add_timeout(NOTIFY_TIMEOUT, self.set_temperature_callback)
+#
+#    def StopNotify(self):
+#        self.notifying = False
+#
+#    def ReadValue(self, options):
+#        value = self.get_temperature()
+#
+#        return value
+
+class CirclesStatusDescriptor(Descriptor):
+    STATUS_DESCRIPTOR_UUID = "2906"
+    STATUS_DESCRIPTOR_VALUE = "Circles Status"
+
+    def __init__(self, characteristic):
+        Descriptor.__init__(
+                self, self.STATUS_DESCRIPTOR_UUID,
+                ["read"],
+                characteristic)
+
+    def ReadValue(self, options):
+        value = []
+        desc = self.STATUS_DESCRIPTOR_VALUE
+
+        for c in desc:
+            value.append(dbus.Byte(c.encode()))
+
+        return value
         
 
 #class ThermometerService(Service):
