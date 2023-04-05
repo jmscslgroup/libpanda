@@ -25,6 +25,8 @@ Modified by Matt Bunting
 
 import dbus
 import json
+import subprocess
+import time
 
 from advertisement import Advertisement
 from service import Application, Service, Characteristic, Descriptor
@@ -55,6 +57,8 @@ class CirclesService(Service):
         self.add_characteristic(TempCharacteristic(self))
         self.add_characteristic(UnitCharacteristic(self))
         self.outputCharacteristic = CirclesOutputCharacteristic(self)
+        self.outputCharacteristic.wifi_contents()
+        
         self.add_characteristic(self.outputCharacteristic)
         self.add_characteristic(CirclesInputCharacteristic(self))
         self.add_characteristic(CirclesCommandCharacteristic(self))
@@ -79,6 +83,14 @@ class CirclesService(Service):
         if command == "{example: 'data'}":
             print("Send command!")
             self.outputCharacteristic.StopNotify()
+            
+        if command == "W":
+            print("Wifi command!")
+            self.outputCharacteristic.send_wifi()
+                    
+        if command == "S":
+            print("Wifi scan!")
+            self.outputCharacteristic.send_wifi_scan()
             
         self.command = command
 
@@ -143,6 +155,91 @@ class CirclesOutputCharacteristic(Characteristic):
         self.readZoneFile() # this sets the buffer
         self.StartNotify()
         
+            
+    def send_wifi(self):
+        wifiObject = {}
+        wifiObject["type"] = "wifi"
+        contents = self.wifi_contents()
+        wifiObject["contents"] = contents
+        wifiObject["length"] = len(contents)
+        self.buffer = json.dumps(wifiObject)
+        print("self.buffer: " + self.buffer)
+        self.StartNotify()
+        
+    def __wifi_scan_attempt(self):
+        self.scan_count += 1
+        self.service.set_status("Scanning wifi... " + str(self.scan_count))
+        cmd = "sudo iwlist wlan0 scanning | grep ESSID | sed 's/.*ESSID://' | awk '!/\\\\x00/' | awk '!/\\\"\\\"/' | sed 's/\\\"//g' | sort | uniq"
+        try:
+            result = subprocess.check_output(cmd, shell=True).decode("utf-8").split("\n")[0:-1]
+            print("Scan result: " + str(result))
+            if len(result) == 0:
+                time.sleep(1)
+                result = self.__wifi_scan_attempt()
+                
+        except subprocess.CalledProcessError as grepexc:
+            print("error code", grepexc.returncode, grepexc.output)
+            if self.scan_count == 5:
+                self.service.set_status("Unable to scan wifi!")
+                return []
+            else:
+                time.sleep(1)
+                result = self.__wifi_scan_attempt()
+        return result
+        
+    def wifi_scan(self):
+        self.scan_count = 0
+        result = { 'scan_result' : self.__wifi_scan_attempt() }
+        if len(result['scan_result']) > 0:
+            self.service.set_status("Scan complete!")
+            
+        
+        return json.dumps(result)
+        
+    def __set_wifi_scan(self):
+        print("in __set_wifi_scan(self): building repsonse...")
+        
+        wifiObject = {}
+        wifiObject["type"] = "wifi_scan"
+        contents = self.wifi_scan()
+        wifiObject["contents"] = contents
+        wifiObject["length"] = len(contents)
+        self.buffer = json.dumps(wifiObject)
+        print(" - self.buffer: " + self.buffer)
+        self.StartNotify()
+        return False    # HACK
+        
+    def send_wifi_scan(self):
+        print("in send_wifi_scan(self): starting callback...")
+        self.add_timeout(50, self.__set_wifi_scan) # HACK
+
+    def wifi_contents(self):
+        contents = { "todo": "someday" }
+        
+#        contents['current'] = os.system("iwgetid -r")
+#        printf("wifi check: " + subprocess.check_output("iwgetid -r").decode("utf-8"))
+        try:
+            contents['current'] = subprocess.check_output("iwgetid -r", shell=True).decode("utf-8").strip("\n")
+        except subprocess.CalledProcessError as grepexc:
+#            print("error code", grepexc.returncode, grepexc.output)
+            contents['current'] = "Not Connected"
+            
+        print("- current : " + contents['current'])
+        
+        rawConfigured = subprocess.check_output("wpa_cli list_networks -i wlan0", shell=True).decode("utf-8")
+                
+        print("- rawConfigured : " + rawConfigured)
+        #print("wpa_cli result: " + rawConfigured)
+        contents['configured'] = []
+        configuredArray = rawConfigured.split("\n")[1:-1]
+#        print("configuredArray length " + str(len(configuredArray)))
+        for line in configuredArray:
+            ssid = line.split("\t")[1]
+            print("- wpa_cli ssid: " + ssid)
+            contents['configured'].append( ssid )
+        
+        return json.dumps(contents)
+
     def StartNotify(self):
         print("in StartNotify(self)")
         if self.notifying or len(self.buffer) <= 0:
@@ -159,8 +256,8 @@ class CirclesOutputCharacteristic(Characteristic):
 #        value = self.get_circles() + ": " + str(self.count)
         #print("Startin notificaiton: " + str(value))
         #self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
-        self.send(self.buffer[self.index:self.MAX_SEND+self.index])
-        self.index += self.MAX_SEND
+#        self.send(self.buffer[self.index:self.MAX_SEND+self.index])
+#        self.index += self.MAX_SEND
         #self.send(" 123")
         print("in StartNotify(self): starting callback...")
         self.add_timeout(50, self.set_circles_callback)
@@ -458,19 +555,19 @@ class CirclesStatusCharacteristic(Characteristic):
 #        return self.notifying
 #
     def StartNotify(self):
+        if self.notifying:
+            return
+
+        self.notifying = True
         self.send_status("Hello from the Pi!")
-#        if self.notifying:
-#            return
-#
-#        self.notifying = True
 #
 #        value = self.get_temperature()
 #        print("Startin notificaiton: " + str(value))
 #        self.PropertiesChanged(GATT_CHRC_IFACE, {"Value": value}, [])
 #        self.add_timeout(NOTIFY_TIMEOUT, self.set_temperature_callback)
 #
-#    def StopNotify(self):
-#        self.notifying = False
+    def StopNotify(self):
+        self.notifying = False
 #
 #    def ReadValue(self, options):
 #        value = self.get_temperature()
