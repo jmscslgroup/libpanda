@@ -94,6 +94,8 @@ cd ../autoUpdate
 sudo ./install.sh
 cd ../rosnodeChecker
 sudo ./install.sh
+cd ../bluezone
+sudo ./install.sh
 # not installing live tracker python version
 # cd ../live-tracker-raspberry-pi
 # sudo ./install.sh
