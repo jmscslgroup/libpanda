@@ -1,11 +1,14 @@
 [Unit]
 Description=Bluetooth handling for privzone frontend support
 #After=can.service
-After=bluetooth
+#After=bluetooth.target
+After=dbus-org.bluez.service	# TODO: find the proper service here, this fails on boot on at least the first try
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/bash /usr/local/sbin/bluezone
+Restart=on-failure
+RestartSec=1s
 
 [Install]
 WantedBy=multi-user.target
