@@ -16,7 +16,7 @@ fi
 if systemctl is-active --quiet hostapd; then
 echo "AP is active"
 else
-echo "AP is INactive"
+echo "AP is Inactive"
 echo "Starting AP"
 
 fi
