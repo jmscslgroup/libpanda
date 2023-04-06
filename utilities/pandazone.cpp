@@ -45,6 +45,16 @@ void killPanda(int killSignal) {
 	keepRunning = false;
 }
 
+void printTenThenNewLine(const char* s)  {
+    static int characterCount = 0;
+    if(characterCount++ > 100) { // Oops it's not 10 anymore *shrugs*
+        characterCount = 0;
+        std::cerr << s << std::endl;
+    } else {
+        std::cerr << s;
+    }
+}
+
 // A simple concrete instance of a CAN listener
 class SimpleCanObserver : public Panda::CanListener {
 public:
@@ -57,7 +67,8 @@ private:
 	void newDataNotification( Panda::CanFrame* canData ) {
 		notificationCount++;
 		if(notificationCount > 1000) {
-			std::cerr << "c";
+//			std::cerr << "c";
+            printTenThenNewLine("c");
 			notificationCount = 0;
 		}
         
@@ -72,7 +83,8 @@ private:
 	void newDataNotification( Panda::GpsData* gpsData ) {
 		notificationCount++;
 		if(notificationCount > 10) {
-			std::cerr << "g";
+//			std::cerr << "g";
+            printTenThenNewLine("g");
 			notificationCount = 0;
 		}
 	}
@@ -87,7 +99,8 @@ private:
 	void notificationHeartbeat(const PandaHealth& health)  {
 		notificationCount++;
 		if(notificationCount > 2) {
-			std::cerr << "h";
+//			std::cerr << "h";
+            printTenThenNewLine("h");
 			notificationCount = 0;
 		}
 	}
@@ -1125,7 +1138,9 @@ int main(int argc, char **argv) {
 		while ( !mSetSystemTimeObserver.hasTimeBeenSet() &&
 			   keepRunning == true ) {
 			if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
-				std::cerr << ".";
+//				std::cerr << ".";
+                printTenThenNewLine(".");
+                
 				lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
 			}
 			usleep(10000);
@@ -1172,7 +1187,8 @@ int main(int argc, char **argv) {
 		// GPS status checking:
 		pandaHandler.getUsb().sendHeartBeat();
 		if (pandaHandler.getGps().getData().successfulParseCount-lastNmeaMessageCount > 100) {
-			std::cerr << ".";
+//			std::cerr << ".";
+            printTenThenNewLine(".");
 			lastNmeaMessageCount = pandaHandler.getGps().getData().successfulParseCount;
 			gpsHeartbeat = 0;
 			writeToFileThenClose(filenameGpsStatus, "1\n");
