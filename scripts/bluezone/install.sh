@@ -27,8 +27,18 @@ fi
 if [ ! -d /var/panda/cputemp ];
 then
     mkdir -p /var/panda
+        
+    CURRENT_DIR=`pwd`
     cd /var/panda/
-    git clone https://github.com/Douglas6/cputemp
+#    git clone https://github.com/Douglas6/cputemp
+    git clone https://github.com/jmscslgroup/cputemp   # moved to a fork to fix issues
+    cd ${CURRENT_DIR}
+else
+    # update existing:
+    CURRENT_DIR=`pwd`
+    cd /var/panda/cputemp
+    git pull
+    cd ${CURRENT_DIR}
 fi
 
 # we need experimental mode for BLE GATT stuff
