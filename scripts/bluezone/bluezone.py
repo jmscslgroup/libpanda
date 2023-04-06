@@ -406,8 +406,9 @@ class CirclesInputCharacteristic(Characteristic):
         print("len(value) = " + str(len(value)))
         if value[len(value)-1] == 0:
             print("Null terminated string!")
-            self.complete(self.inputBuffer[0:len(self.inputBuffer)-1])
+            completeString = self.inputBuffer[0:len(self.inputBuffer)-1]
             self.inputBuffer = ""
+            self.complete(completeString)
         
         
     def complete(self, result):
@@ -438,10 +439,52 @@ class CirclesInputCharacteristic(Characteristic):
         print("complete input type: " + inputJson["type"])
         print("complete input length: " + str(inputJson["length"]))
         print(" - checking length: " + str(len(inputJson["contents"])) )
-        if len(inputJson["contents"]) == inputJson["length"]:
-            self.service.set_status("Upload Success!")
-        else:
+        if len(inputJson["contents"]) != inputJson["length"]:
+#            self.service.set_status("Upload Success!")
+#        else:
             self.service.set_status("Upload issue, length mismatch!")
+            
+        self.__handleGoodJsonRead(inputJson)
+        
+    def __handleGoodJsonRead(self, inputJson):
+        if inputJson["type"] == "wifi_add":
+            self.handleWifiAdd(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "zonefile":
+            self.handleZoneFile(json.loads(inputJson["contents"]))
+        else:
+            self.service.set_status("Unregognized type: " + inputJson["type"])
+    
+    def handleWifiAdd(self, contents):
+        print(" - Adding wifi with SSID: " + contents["ssid"])
+        print(" -                   PSK: " + contents["psk"])
+        
+        self.service.set_status("Wifi add Acknowledged")
+        self.wifiContents = contents
+        self.add_timeout(50, self.__add_wifi) # HACK
+    
+    def handleZoneFile(self, contents):
+        print(" - Zone file with VIN: " + contents["vin"])
+        self.service.set_status("Zonefile Acknowledged")
+        
+        
+    def __add_wifi(self):
+        try:
+            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
+            
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            
+            if grepexc.returncode == 2:
+                self.service.set_status("Cannot connect, wrong password?")
+            elif grepexc.returncode == 1:
+                self.service.set_status("wpa_cli issue...")
+                
+            return
+        print("Script succeeded!")
+        print("Result text:" + result.decode("utf-8"))
+#        print("Result code:" + str(result.returncode))
+        self.service.set_status("Wifi complete!")
+        
     
 class CirclesInputDescriptor(Descriptor):
     CIRCLES_INPUT_DESCRIPTOR_UUID = "2905"
