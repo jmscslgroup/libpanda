@@ -49,6 +49,7 @@ sed -i 's/.PairableTimeout = .*/PairableTimeout = 0/' /etc/bluetooth/main.conf
 
 sudo cp bluezone.sh /usr/local/sbin/bluezone
 sudo cp bluezone.py /usr/local/sbin/bluezone.py
+sudo cp bzwifihelper.sh /usr/local/sbin/bzwifihelper
 
 sudo cp bluezone.service.txt /etc/systemd/system/bluezone.service
 sudo chmod 655 /etc/systemd/system/bluezone.service

@@ -478,7 +478,7 @@ class CirclesInputCharacteristic(Characteristic):
         
     def __add_wifi(self):
         try:
-            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh mk \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
+            result = subprocess.check_output("bzwifihelper mk \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
             
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
