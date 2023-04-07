@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 INTERACTIVE=True
 
 list_wlan_interfaces() {
@@ -14,9 +14,9 @@ list_wlan_interfaces() {
 
 do_wifi_ssid_passphrase() {
   RET=0
-  if [ "$INTERACTIVE" = True ] && [ -z "$(get_wifi_country)" ]; then
-    do_wifi_country
-  fi
+#  if [ "$INTERACTIVE" = True ] && [ -z "$(get_wifi_country)" ]; then
+#    do_wifi_country
+#  fi
 
   if systemctl -q is-active dhcpcd; then
     IFACE="$(list_wlan_interfaces | head -n 1)"
@@ -88,8 +88,10 @@ do_wifi_ssid_passphrase() {
 
   if systemctl -q is-active dhcpcd; then
     echo "systemctl -q is-active dhcpcd -> true"
-    wpa_cli -i "$IFACE" list_networks \
-     | tail -n +2 | cut -f -2 | grep -P "\t$ssid$" | cut -f1 \
+    #wpa_cli -i "$IFACE" list_networks \
+    # | tail -n +2 | cut -f -2 | grep -P "\t$ssid$" | cut -f1 \
+    # | while read -r ID; do
+    echo -e "$(wpa_cli -i "$IFACE" list_networks \ | tail -n +2 | cut -f -2)"  | grep -P "\t$ssid$" | cut -f1 \
      | while read -r ID; do
       wpa_cli -i "$IFACE" remove_network "$ID" > /dev/null 2>&1
     done
@@ -178,8 +180,12 @@ delete_network() {
          -e 's;);\\);g'   \
          -e 's;";\\\\\";g')"
          
-    wpa_cli -i "$IFACE" list_networks \
-     | tail -n +2 | cut -f -2 | grep -P "\t$ssid$" | cut -f1 \
+#    wpa_cli -i "$IFACE" list_networks \
+#     | tail -n +2 | cut -f -2 | grep -P "\t$ssid$" | cut -f1 \
+#     | while read -r ID; do
+     
+    echo -e "$(wpa_cli -i "$IFACE" list_networks | tail -n +2 | cut -f -2)" | \
+         grep -P "\t$ssid$" | cut -f1 \
      | while read -r ID; do
      echo "$ID"
       wpa_cli -i "$IFACE" remove_network "$ID" > /dev/null 2>&1
@@ -220,10 +226,10 @@ if [ "$CMD" = "mk" ]; then
     do_wifi_ssid_passphrase "$SSID" "$PSK"
 elif [ "$CMD" = "rm" ]; then
     delete_network "$SSID"
-    return 0
+    exit 0
 else
     echo "Usage: $0 [mk|rm] <SSID> <PSK>"
-    return
+    exit 1
 fi
 
 #retval=$( do_wifi_ssid_passphrase "$1" "$2" )
@@ -237,33 +243,53 @@ if [ $retval -eq 0 ]; then
     
      i=1
 #     for i in 1 2 3 4 5 6 7 8 9 10
+    
+    retval=2
      while [ "$i" -lt 21 ];
      do
-        iwconfig 2>&1 | grep -q "$SSID"
+#        echo -en "$(iwconfig 2>&1)" | grep -q "$SSID"
+#        echo -en "$(iwconfig)"
+#        echo -en "$(iwconfig)" | grep -q "$SSID"
+#        iwconfig | printf "%s"
+#        iwconfig | printf "%s" | grep -q "$SSID"
+#        echo -e "$(iwconfig | grep "ESSID" | sed 's/.*ESSID://' | sed 's/\"//g')"
+        echo -e "$(iwconfig | grep "ESSID" | sed 's/.*ESSID://' | sed 's/\"//g')" | grep -q "$SSID"
         if [ $? -eq 0 ]; then
             echo "Success!"
-            wpa_cli -i wlan0 select_network any > /dev/null 2>&1
-            wpa_cli -i wlan0 save_config > /dev/null 2>&1
-            return 0
+#            wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+#            wpa_cli -i wlan0 save_config > /dev/null 2>&1
+#            exit 0
+            retval=0
+            break
         fi
         sleep 1
         echo "Waiting... $i"
         i=$((i + 1))
      done
-     echo "Unable to connect, wrong psk?"
+     
+     if [ $retval -eq 2 ]; then
+        echo "Unable to connect, wrong psk?"
+     fi
                  
-    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
-    wpa_cli -i wlan0 save_config > /dev/null 2>&1
-     return 2
+#    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+#    wpa_cli -i wlan0 save_config > /dev/null 2>&1
+#     return 2
 else
      echo "Wifi configuration failed"
                  
-    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
-    wpa_cli -i wlan0 save_config > /dev/null 2>&1
-     return 1
+#    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+#    wpa_cli -i wlan0 save_config > /dev/null 2>&1
+#     return 1
+    retval=1
 fi
 
-return 0
+
+#wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+wpa_cli -i wlan0 enable_network all > /dev/null 2>&1
+wpa_cli -i wlan0 save_config > /dev/null 2>&1
+
+echo "retval=$retval"
+exit ${retval}
 
 
 

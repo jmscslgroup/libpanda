@@ -171,7 +171,8 @@ class CirclesOutputCharacteristic(Characteristic):
         self.service.set_status("Scanning wifi... " + str(self.scan_count))
         cmd = "sudo iwlist wlan0 scanning | grep ESSID | sed 's/.*ESSID://' | awk '!/\\\\x00/' | awk '!/\\\"\\\"/' | sed 's/\\\"//g' | sort | uniq"
         try:
-            result = subprocess.check_output(cmd, shell=True).decode("utf-8").split("\n")[0:-1]
+            result = subprocess.check_output(cmd, shell=True).decode("utf-8").encode('latin1').decode('unicode_escape').encode('latin1').decode('utf8').split("\n")[0:-1]
+#            result = subprocess.check_output(cmd, shell=True, encoding='utf-8').split("\n")[0:-1]
             print("Scan result: " + str(result))
             if len(result) == 0:
                 time.sleep(1)
@@ -219,14 +220,15 @@ class CirclesOutputCharacteristic(Characteristic):
 #        contents['current'] = os.system("iwgetid -r")
 #        printf("wifi check: " + subprocess.check_output("iwgetid -r").decode("utf-8"))
         try:
-            contents['current'] = subprocess.check_output("iwgetid -r", shell=True).decode("utf-8").strip("\n")
+#            contents['current'] = subprocess.check_output("iwgetid -r", shell=True).decode("utf-8").encode('latin1').decode('unicode_escape').encode('latin1').decode('utf8').strip("\n")
+            contents['current'] = subprocess.check_output("iwgetid -r", shell=True, encoding='utf-8').strip("\n")
         except subprocess.CalledProcessError as grepexc:
 #            print("error code", grepexc.returncode, grepexc.output)
             contents['current'] = "Not Connected"
             
         print("- current : " + contents['current'])
         
-        rawConfigured = subprocess.check_output("wpa_cli list_networks -i wlan0", shell=True).decode("utf-8")
+        rawConfigured = subprocess.check_output("wpa_cli list_networks -i wlan0", shell=True).decode("utf-8").encode('latin1').decode('unicode_escape').encode('latin1').decode('utf8')
                 
         print("- rawConfigured : " + rawConfigured)
         #print("wpa_cli result: " + rawConfigured)
@@ -384,7 +386,7 @@ class CirclesInputCharacteristic(Characteristic):
     CIRCLES_INPUT_CHARACTERISTIC_UUID = "00000005-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
     
     def __init__(self, service):
-        self.inputBuffer = ""
+        self.inputBuffer = bytearray(b'')
         
         Characteristic.__init__(
                 self, self.CIRCLES_INPUT_CHARACTERISTIC_UUID,
@@ -392,22 +394,37 @@ class CirclesInputCharacteristic(Characteristic):
         self.add_descriptor(CirclesInputDescriptor(self))
         
     def WriteValue(self, value, options):
+        print("In CirclesInputCharacteristic::WriteValue()")
     # value is type dbus array.  string is located in first element of the array
         #val = str(value[0]).upper()
-        val = ''.join([str(v) for v in value])
-#        print("CirclesCnfigmandCharacteristic.WriteValue(): received: " + str(value))
-        #print("CirclesInputCharacteristic.WriteValue(): received: " + val)
-        
-#        print("CirclesCommandCharacteristic.WriteValue(): received: " + str(value.decode("utf-8") ))
-        #self.service.set_command(val)
-        self.inputBuffer = self.inputBuffer + val
-        
-        
+        print("value: " + str(value))
+        bvalue = bytearray(value)
+        print("Made byte array ")
+        print(" - byte array: " + str(bvalue))
+#        print(bvalue.decode('u'))
+        print(" - string: " + str(bvalue.decode('utf-8')))
+#        for v in value:
+#            print(str(int(v)))
+#            print(str(v.decode('utf-8')))
+#
+#        val = ''.join([str(v) for v in value])
+##        print("CirclesCnfigmandCharacteristic.WriteValue(): received: " + str(value))
+#        #print("CirclesInputCharacteristic.WriteValue(): received: " + val)
+#
+##        print("CirclesCommandCharacteristic.WriteValue(): received: " + str(value.decode("utf-8") ))
+#        #self.service.set_command(val)
+#        self.inputBuffer = self.inputBuffer + val
+#        self.inputBuffer = self.inputBuffer + bvalue.decode('utf-8')
         print("len(value) = " + str(len(value)))
+        print("len(self.inputBuffer) = " + str(len(self.inputBuffer)))
+        self.inputBuffer = self.inputBuffer + bvalue
+        print("new len(self.inputBuffer) = " + str(len(self.inputBuffer)))
+        
+        
         if value[len(value)-1] == 0:
             print("Null terminated string!")
-            completeString = self.inputBuffer[0:len(self.inputBuffer)-1]
-            self.inputBuffer = ""
+            completeString = (self.inputBuffer[0:len(self.inputBuffer)-1]).decode('utf-8')
+            self.inputBuffer = bytearray(b'')
             self.complete(completeString)
         
         
@@ -478,26 +495,31 @@ class CirclesInputCharacteristic(Characteristic):
         
     def __add_wifi(self):
         try:
-            result = subprocess.check_output("bzwifihelper mk \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
+            print("Running:")
+            cmd = ("bzwifihelper mk \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"")
+            print(cmd)
+#            result = subprocess.check_output(cmd, shell=True)
+            result = subprocess.check_output(["bzwifihelper", "mk", self.wifiContents["ssid"], self.wifiContents["psk"]], encoding='utf-8')
+#            result = subprocess.check_output("bzwifihelper mk \"" + "Matt's iPhone" + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
             
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
             
             if grepexc.returncode == 2:
-                self.service.set_status("Cannot connect, wrong password?")
+                self.service.set_status("Cannot connect, wrong password? grepexc.returncode = " + str(grepexc.returncode))
             elif grepexc.returncode == 1:
                 self.service.set_status("wpa_cli issue...")
                 
             return
         print("Script succeeded!")
-        print("Result text:" + result.decode("utf-8"))
+        print("Result text:" + result)
 #        print("Result code:" + str(result.returncode))
         self.service.set_status("Wifi complete!")
         
                 
     def __remove_wifi(self):
         try:
-            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh rm \"" + self.wifiContents["ssid"] + "\"", shell=True)
+            result = subprocess.check_output("bzwifihelper rm \"" + self.wifiContents["ssid"] + "\"", shell=True, encoding='utf-8')
             
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
@@ -509,7 +531,7 @@ class CirclesInputCharacteristic(Characteristic):
                 
             return
         print("Script succeeded!")
-        print("Result text:" + result.decode("utf-8"))
+        print("Result text:" + result)
 #        print("Result code:" + str(result.returncode))
         self.service.set_status("Wifi removed!")
         
