@@ -154,9 +154,78 @@ do_wifi_ssid_passphrase() {
   return "$RET"
 }
 
+delete_network() {
+    SSID="$1"
+  if systemctl -q is-active dhcpcd; then
+    IFACE="$(list_wlan_interfaces | head -n 1)"
+    echo "Found interface $IFACE"
+    
+      # Escape special characters for embedding in regex below
+  ssid="$(echo "$SSID" \
+   | sed 's;\\;\\\\;g' \
+   | sed -e 's;\.;\\\.;g' \
+         -e 's;\*;\\\*;g' \
+         -e 's;\+;\\\+;g' \
+         -e 's;\?;\\\?;g' \
+         -e 's;\^;\\\^;g' \
+         -e 's;\$;\\\$;g' \
+         -e 's;\/;\\\/;g' \
+         -e 's;\[;\\\[;g' \
+         -e 's;\];\\\];g' \
+         -e 's;{;\\{;g'   \
+         -e 's;};\\};g'   \
+         -e 's;(;\\(;g'   \
+         -e 's;);\\);g'   \
+         -e 's;";\\\\\";g')"
+         
+    wpa_cli -i "$IFACE" list_networks \
+     | tail -n +2 | cut -f -2 | grep -P "\t$ssid$" | cut -f1 \
+     | while read -r ID; do
+     echo "$ID"
+      wpa_cli -i "$IFACE" remove_network "$ID" > /dev/null 2>&1
+    done
+    
+    if [ -z "$IFACE" ]; then
+      if [ "$INTERACTIVE" = True ]; then
+#        whiptail --msgbox "No wireless interface found" 20 60
+        echo "No wireless interface found"
+      fi
+      return 1
+    fi
+    
+    if ! wpa_cli -i "$IFACE" status > /dev/null 2>&1; then
+      if [ "$INTERACTIVE" = True ]; then
+#        whiptail --msgbox "Could not communicate with wpa_supplicant" 20 60
+        echo "Could not communicate with wpa_supplicant"
+      fi
+      return 1
+    fi
+    
+    wpa_cli -i "$IFACE" save_config > /dev/null 2>&1
+    echo "$IFACE_LIST" | while read -r IFACE; do
+      wpa_cli -i "$IFACE" reconfigure > /dev/null 2>&1
+    done
+    
+    return 0
+  fi
+  return 1
+}
 
+CMD=$1
+SSID=$2
+PSK=$3
 #echo "Running: do_wifi_ssid_passphrase $1 $2"
-do_wifi_ssid_passphrase "$1" "$2"
+
+if [ "$CMD" = "mk" ]; then
+    do_wifi_ssid_passphrase "$SSID" "$PSK"
+elif [ "$CMD" = "rm" ]; then
+    delete_network "$SSID"
+    return 0
+else
+    echo "Usage: $0 [mk|rm] <SSID> <PSK>"
+    return
+fi
+
 #retval=$( do_wifi_ssid_passphrase "$1" "$2" )
 retval=$?
 
@@ -170,9 +239,11 @@ if [ $retval -eq 0 ]; then
 #     for i in 1 2 3 4 5 6 7 8 9 10
      while [ "$i" -lt 21 ];
      do
-        iwconfig 2>&1 | grep -q "$1"
+        iwconfig 2>&1 | grep -q "$SSID"
         if [ $? -eq 0 ]; then
             echo "Success!"
+            wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+            wpa_cli -i wlan0 save_config > /dev/null 2>&1
             return 0
         fi
         sleep 1
@@ -180,9 +251,15 @@ if [ $retval -eq 0 ]; then
         i=$((i + 1))
      done
      echo "Unable to connect, wrong psk?"
+                 
+    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+    wpa_cli -i wlan0 save_config > /dev/null 2>&1
      return 2
 else
      echo "Wifi configuration failed"
+                 
+    wpa_cli -i wlan0 select_network any > /dev/null 2>&1
+    wpa_cli -i wlan0 save_config > /dev/null 2>&1
      return 1
 fi
 

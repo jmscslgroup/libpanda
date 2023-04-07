@@ -449,6 +449,8 @@ class CirclesInputCharacteristic(Characteristic):
     def __handleGoodJsonRead(self, inputJson):
         if inputJson["type"] == "wifi_add":
             self.handleWifiAdd(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "wifi_remove":
+            self.handleWifiRemove(json.loads(inputJson["contents"]))
         elif inputJson["type"] == "zonefile":
             self.handleZoneFile(json.loads(inputJson["contents"]))
         else:
@@ -456,11 +458,18 @@ class CirclesInputCharacteristic(Characteristic):
     
     def handleWifiAdd(self, contents):
         print(" - Adding wifi with SSID: " + contents["ssid"])
-        print(" -                   PSK: " + contents["psk"])
+#        print(" -                   PSK: " + contents["psk"])
         
         self.service.set_status("Wifi add Acknowledged")
         self.wifiContents = contents
         self.add_timeout(50, self.__add_wifi) # HACK
+            
+    def handleWifiRemove(self, contents):
+        print(" - Removing wifi with SSID: " + contents["ssid"])
+        
+        self.service.set_status("Removing Wifi Association...")
+        self.wifiContents = contents
+        self.add_timeout(50, self.__remove_wifi) # HACK
     
     def handleZoneFile(self, contents):
         print(" - Zone file with VIN: " + contents["vin"])
@@ -469,7 +478,7 @@ class CirclesInputCharacteristic(Characteristic):
         
     def __add_wifi(self):
         try:
-            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
+            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh mk \"" + self.wifiContents["ssid"] + "\" \"" + self.wifiContents["psk"] + "\"", shell=True)
             
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
@@ -484,6 +493,25 @@ class CirclesInputCharacteristic(Characteristic):
         print("Result text:" + result.decode("utf-8"))
 #        print("Result code:" + str(result.returncode))
         self.service.set_status("Wifi complete!")
+        
+                
+    def __remove_wifi(self):
+        try:
+            result = subprocess.check_output("/home/matt/libpanda/scripts/bluezone/rpi-cfg.sh rm \"" + self.wifiContents["ssid"] + "\"", shell=True)
+            
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            
+#            if grepexc.returncode == 2:
+#                self.service.set_status("Cannot connect, wrong password?")
+            if grepexc.returncode == 1:
+                self.service.set_status("wpa_cli issue...")
+                
+            return
+        print("Script succeeded!")
+        print("Result text:" + result.decode("utf-8"))
+#        print("Result code:" + str(result.returncode))
+        self.service.set_status("Wifi removed!")
         
     
 class CirclesInputDescriptor(Descriptor):
