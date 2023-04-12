@@ -80,6 +80,11 @@ class CirclesService(Service):
             print("Read command!")
             self.outputCharacteristic.send_zone_file()
             
+                
+        if command == "P":
+            print("Read procesed command!")
+            self.outputCharacteristic.send_zone_file_processed()
+            
         if command == "{example: 'data'}":
             print("Send command!")
             self.outputCharacteristic.StopNotify()
@@ -152,7 +157,12 @@ class CirclesOutputCharacteristic(Characteristic):
         return self.notifying
         
     def send_zone_file(self):
-        self.readZoneFile() # this sets the buffer
+        self.readZoneFile('/etc/libpanda.d/zone.json') # this sets the buffer
+        self.StartNotify()
+        
+            
+    def send_zone_file_processed(self):
+        self.readZoneFile('/etc/libpanda.d/zone-processed.json') # this sets the buffer
         self.StartNotify()
         
             
@@ -295,9 +305,10 @@ class CirclesOutputCharacteristic(Characteristic):
 
         return value
 
-    def readZoneFile(self):
+    def readZoneFile(self, filename):
         myJson = { 'type': 'zonefile' };
-        file = open('/etc/libpanda.d/zone-processed.json')
+#        file = open('/etc/libpanda.d/zone-processed.json')
+        file = open(filename)
 #        self.buffer = file.read()
         contents = file.read()
         myJson['contents'] = contents
@@ -509,7 +520,10 @@ class CirclesInputCharacteristic(Characteristic):
     
     def handleZoneFile(self, contents):
         print(" - Zone file with VIN: " + contents["vin"])
-        self.service.set_status("Zonefile Acknowledged")
+        file = open('/etc/libpanda.d/zone.json', 'w')
+        file.write(json.dumps(contents))
+        file.close()
+        self.service.set_status("Zonefile Acknowledged, Reboot required")
         
         
     def __add_wifi(self):
