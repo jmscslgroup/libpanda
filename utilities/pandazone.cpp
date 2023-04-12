@@ -298,7 +298,7 @@ public:
     Polygon(Json::Value& region) {
         rightHanded = true;
         hysteresisBoundary = NULL;
-//        std::cout << " - Type " << region["type"] << std::endl;
+        std::cout << " - Type " << region["type"] << std::endl;
         
         if( region["type"].asString().compare("circle") == 0 ) {
             Vertex center;
@@ -310,7 +310,7 @@ public:
                 std::cerr << "Warning!  Polygon under defined with " << region["data"].size() << " vertices" << std::endl;
                 return;
             }
-//            std::cout << "This polygon has " << region["data"].size() << " elements, so total vertices: " << region["data"].size()-1 << std::endl;
+            std::cout << "This polygon has " << region["data"].size() << " elements, so total vertices: " << region["data"].size()-1 << std::endl;
             Straight* straight = new Straight;
             straight->start.x = region["data"][region["data"].size()-2][0].asDouble();
             straight->start.y = region["data"][region["data"].size()-2][1].asDouble();
@@ -407,6 +407,8 @@ public:
             
             
         }
+        
+        std::cout << " - H size: " << hysteresisBoundary->edges.size() << std::endl;
     }
     
     void print() {
@@ -517,11 +519,13 @@ public:
     Json::Value toJson() {
         Json::Value region;
         if(edges.size() == 1) {
+            std::cout << " - formatting Circle" << std::endl;
             region["type"] = "circle";
             region["data"]["radius"] = ((Arc*)edges[0])->radius * 111000.0;
             region["data"]["center"][0] = ((Arc*)edges[0])->center.x;
             region["data"]["center"][1] = ((Arc*)edges[0])->center.y;
         } else {
+            std::cout << " - formatting polygon" << std::endl;
             region["type"] = "polygon";
             for(int i = 0; i < edges.size(); i++) {
                 region["data"][i][0] = edges[i]->start.x;
@@ -550,17 +554,22 @@ public:
         zoneDefinition["offset"] = offset;
         
         for(int i = 0; i < polygons.size(); i++) {
-            
+            std::cout << "In polygon #" << i << std::endl;
             zoneDefinition["regions"][i] = polygons[i]->toJson();
         }
         
         std::ofstream file_id;
         file_id.open(filename);
+        if( file_id.fail() ) {
+            std::cerr << "Failed to write to " << filename << " permissions issue?" << std::endl;
+            return;
+        }
         
         Json::StyledWriter styledWriter;
         file_id << styledWriter.write(zoneDefinition);
         
         file_id.close();
+        
     }
     
     void open( const char* file) {
@@ -763,11 +772,11 @@ private:
                 case STATE_IDLE:
                     if( zoneChecker->zoneIsInclusive() ) {
                         if( zoneChecker->inHysteresisZone(pose) ) {
-                            transitionToState(STATE_RECORDING);
+                            transitionToState(STATE_RECORDING); // Inclusive zone and we have entered the boundary
                         }
                     } else {
                         if( ! zoneChecker->inHysteresisZone(pose) ) {
-                            transitionToState(STATE_RECORDING);
+                            transitionToState(STATE_RECORDING); // Exclusive zone and we have left the boundary
                         }
                     }
                     break;
@@ -775,12 +784,12 @@ private:
                     
                 case STATE_RECORDING:
                     if( zoneChecker->zoneIsInclusive() ) {
-                        if( !zoneChecker->inZone(pose)) {
-                            transitionToState(STATE_IDLE);
+                        if( ! zoneChecker->inZone(pose)) {
+                            transitionToState(STATE_IDLE);  // Inclusive zone and we have left the boundary
                         }
                     } else {
                         if( zoneChecker->inZone(pose)) {
-                            transitionToState(STATE_IDLE);
+                            transitionToState(STATE_IDLE);  // Exclusive zone and we have entered the boundary
                         }
                     }
                     break;
