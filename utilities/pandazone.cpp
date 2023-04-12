@@ -281,8 +281,8 @@ protected:
             }
             
             
-            std::cout << "Normal: " << normal.end.x << ", " << normal.end.y << std::endl;
-            std::cout << " - mag: " << mag << std::endl;
+//            std::cout << "Normal: " << normal.end.x << ", " << normal.end.y << std::endl;
+//            std::cout << " - mag: " << mag << std::endl;
             
             normals.push_back(normal);
         }
@@ -310,7 +310,7 @@ public:
                 std::cerr << "Warning!  Polygon under defined with " << region["data"].size() << " vertices" << std::endl;
                 return;
             }
-            std::cout << "This polygon has " << region["data"].size() << " elements, so total vertices: " << region["data"].size()-1 << std::endl;
+//            std::cout << "This polygon has " << region["data"].size() << " elements, so total vertices: " << region["data"].size()-1 << std::endl;
             Straight* straight = new Straight;
             straight->start.x = region["data"][region["data"].size()-2][0].asDouble();
             straight->start.y = region["data"][region["data"].size()-2][1].asDouble();
@@ -319,11 +319,11 @@ public:
             
             int i;
             for(i = 0; i < region["data"].size()-1; i++) {
-                std::cout << "straight->start.x = " << straight->start.x;
+//                std::cout << "straight->start.x = " << straight->start.x;
                 straight->end.x = region["data"][i][0].asDouble();
                 straight->end.y = region["data"][i][1].asDouble();
                 
-                    std::cout << ", end.x = " << straight->end.x << std::endl;
+//                    std::cout << ", end.x = " << straight->end.x << std::endl;
                 
                 edges.push_back(straight);
                 
@@ -333,7 +333,7 @@ public:
             }
             delete straight;
             
-            std::cout << "Resulting edge count: " << edges.size() << std::endl;
+//            std::cout << "Resulting edge count: " << edges.size() << std::endl;
 //            straight->end.x = region["data"][i][0].asDouble();
 //            straight->end.y = region["data"][i][1].asDouble();
 //
@@ -364,7 +364,7 @@ public:
             Straight priorNormal = normals[normals.size()-1];
             
             double offsetDegrees = offsetMeters/111000.0;
-            std::cout << "Offset of " << offsetDegrees << std::endl;
+//            std::cout << "Offset of " << offsetDegrees << std::endl;
             for(int i = 0; i < edges.size(); i++) {
                 Edge* currentEdge = edges[i];
                 Straight currentNormal = normals[i];
@@ -376,7 +376,7 @@ public:
                 sumNormals.x = priorNormal.end.x + currentNormal.end.x;
                 sumNormals.y = priorNormal.end.y + currentNormal.end.y;
                 
-                std::cout << "magnitude(sumNormals) = " << magnitude(sumNormals) << std::endl;
+//                std::cout << "magnitude(sumNormals) = " << magnitude(sumNormals) << std::endl;
                 
                 Vertex sumNormalsNormal;
                 sumNormalsNormal.x = sumNormals.x/magnitude(sumNormals);
@@ -402,7 +402,7 @@ public:
                 priorEdge->end = currentEdge->start;
                 
                 priorEdge = currentEdge;
-                std::cout << " - -priorEdge->end.x = " << priorEdge->end.x << std::endl;
+//                std::cout << " - -priorEdge->end.x = " << priorEdge->end.x << std::endl;
             }
             
             
