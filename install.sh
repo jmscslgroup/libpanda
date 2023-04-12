@@ -10,7 +10,7 @@ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 git submodule init
 git submodule update
 
-declare -a depencencies=( bmon scons )
+declare -a depencencies=( bmon scons usbmuxd )
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
