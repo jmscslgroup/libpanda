@@ -280,6 +280,10 @@ protected:
                 normal.end.y = -normal.end.y;
             }
             
+            
+            std::cout << "Normal: " << normal.end.x << ", " << normal.end.y << std::endl;
+            std::cout << " - mag: " << mag << std::endl;
+            
             normals.push_back(normal);
         }
     }
@@ -303,18 +307,23 @@ public:
             makeCircle(center, region["data"]["radius"].asDouble());
         } else if(region["type"].asString().compare("polygon") == 0 ){
             if(region["data"].size() < 3) {
-                std::cerr << "Warning!  Polygon under definde with " << region["data"].size() << " vertices" << std::endl;
+                std::cerr << "Warning!  Polygon under defined with " << region["data"].size() << " vertices" << std::endl;
                 return;
             }
+            std::cout << "This polygon has " << region["data"].size() << " elements, so total vertices: " << region["data"].size()-1 << std::endl;
             Straight* straight = new Straight;
             straight->start.x = region["data"][region["data"].size()-2][0].asDouble();
             straight->start.y = region["data"][region["data"].size()-2][1].asDouble();
+//            straight->start.x = region["data"][0][0].asDouble();
+//            straight->start.y = region["data"][0][1].asDouble();
             
             int i;
-            for(i = 0; i < region["data"].size()-2; i++) {
-                
+            for(i = 0; i < region["data"].size()-1; i++) {
+                std::cout << "straight->start.x = " << straight->start.x;
                 straight->end.x = region["data"][i][0].asDouble();
                 straight->end.y = region["data"][i][1].asDouble();
+                
+                    std::cout << ", end.x = " << straight->end.x << std::endl;
                 
                 edges.push_back(straight);
                 
@@ -322,11 +331,14 @@ public:
                 straight = new Straight;
                 straight->start = prior->end;
             }
+            delete straight;
             
-            straight->end.x = region["data"][i][0].asDouble();
-            straight->end.y = region["data"][i][1].asDouble();
-            
-            edges.push_back(straight);
+            std::cout << "Resulting edge count: " << edges.size() << std::endl;
+//            straight->end.x = region["data"][i][0].asDouble();
+//            straight->end.y = region["data"][i][1].asDouble();
+//
+//            std::cout << ", end.x = " << straight->end.x << std::endl;
+//            edges.push_back(straight);
             
             determingVertexAngles();
             
@@ -346,11 +358,13 @@ public:
             
             hysteresisBoundary->edges.push_back(circle);
         } else if ( edges.size() >= 3 ) {
-            Edge* priorEdge = *(edges.end()-1);
-            Straight priorNormal = *(normals.end()-1);
+//            Edge* priorEdge = *(edges.end()-1);
+//            Straight priorNormal = *(normals.end()-1);
+            Edge* priorEdge = edges[edges.size()-1];
+            Straight priorNormal = normals[normals.size()-1];
             
             double offsetDegrees = offsetMeters/111000.0;
-            
+            std::cout << "Offset of " << offsetDegrees << std::endl;
             for(int i = 0; i < edges.size(); i++) {
                 Edge* currentEdge = edges[i];
                 Straight currentNormal = normals[i];
@@ -361,6 +375,8 @@ public:
                 Vertex sumNormals;
                 sumNormals.x = priorNormal.end.x + currentNormal.end.x;
                 sumNormals.y = priorNormal.end.y + currentNormal.end.y;
+                
+                std::cout << "magnitude(sumNormals) = " << magnitude(sumNormals) << std::endl;
                 
                 Vertex sumNormalsNormal;
                 sumNormalsNormal.x = sumNormals.x/magnitude(sumNormals);
@@ -378,11 +394,15 @@ public:
             }
             
             // All start vertices filled, now copy current start into prior end to complete:
-            priorEdge = *(hysteresisBoundary->edges.end()-1);
+//            priorEdge = *(hysteresisBoundary->edges.end()-1);
+            priorEdge = hysteresisBoundary->edges[hysteresisBoundary->edges.size() - 1];
             for(std::vector<Edge*>::iterator it = hysteresisBoundary->edges.begin(); it != hysteresisBoundary->edges.end(); it++) {
                 Edge* currentEdge = *it;
+                
                 priorEdge->end = currentEdge->start;
+                
                 priorEdge = currentEdge;
+                std::cout << " - -priorEdge->end.x = " << priorEdge->end.x << std::endl;
             }
             
             
@@ -986,8 +1006,8 @@ int main(int argc, char **argv) {
     
     ZoneChecker zCheck;
 //    zCheck.open("/etc/libpanda.d/zone-testbed.json");
-    zCheck.open("/etc/libpanda.d/zone-test.json");
-    zCheck.save("zone-processed.json");
+    zCheck.open("/etc/libpanda.d/zone.json");
+    zCheck.save("/etc/libpanda.d/zone-processed.json");
     
 //    Vertex point1;
 //    point1.x = 10.5;
