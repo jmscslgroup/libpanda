@@ -62,7 +62,7 @@ if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
 
-sudo cp resources/zone-testbed.json /etc/libpanda.d/
+sudo cp resources/zone-testbed.json /etc/libpanda.d/zone.json
 sudo cp resources/zone-test.json /etc/libpanda.d/
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
