@@ -585,7 +585,7 @@ public:
 //                std::cout << " - Region " << i << std::endl;
                 Polygon* region = new Polygon(zoneDefinition["regions"][i]);
                 if(zoneDefinition.isMember("offset")) {
-                    offset =zoneDefinition["offset"].asDouble();
+                    offset = zoneDefinition["offset"].asDouble();
                 } else {
     //                region->computeOffsetPolygon(-200);  // eight mile inward
     //                region->computeOffsetPolygon(111000.0);  // 1 degree
@@ -656,6 +656,10 @@ public:
         }
         
         return result;
+    }
+    
+    bool zoneIsInclusive() {
+        return offset < 0;
     }
 };
 
@@ -757,15 +761,27 @@ private:
             
             switch (state) {
                 case STATE_IDLE:
-                    if( zoneChecker->inHysteresisZone(pose) ) {
-                        transitionToState(STATE_RECORDING);
+                    if( zoneChecker->zoneIsInclusive() ) {
+                        if( zoneChecker->inHysteresisZone(pose) ) {
+                            transitionToState(STATE_RECORDING);
+                        }
+                    } else {
+                        if( ! zoneChecker->inHysteresisZone(pose) ) {
+                            transitionToState(STATE_RECORDING);
+                        }
                     }
                     break;
                     
                     
                 case STATE_RECORDING:
-                    if( !zoneChecker->inZone(pose)) {
-                        transitionToState(STATE_IDLE);
+                    if( zoneChecker->zoneIsInclusive() ) {
+                        if( !zoneChecker->inZone(pose)) {
+                            transitionToState(STATE_IDLE);
+                        }
+                    } else {
+                        if( zoneChecker->inZone(pose)) {
+                            transitionToState(STATE_IDLE);
+                        }
                     }
                     break;
             }
