@@ -215,7 +215,7 @@ class CirclesOutputCharacteristic(Characteristic):
         self.add_timeout(50, self.__set_wifi_scan) # HACK
 
     def wifi_contents(self):
-        contents = { "todo": "someday" }
+        contents = { }
         
 #        contents['current'] = os.system("iwgetid -r")
 #        printf("wifi check: " + subprocess.check_output("iwgetid -r").decode("utf-8"))
@@ -239,6 +239,25 @@ class CirclesOutputCharacteristic(Characteristic):
             ssid = line.split("\t")[1]
             print("- wpa_cli ssid: " + ssid)
             contents['configured'].append( ssid )
+        
+        # get ifaces:
+        interfaces = [];
+        cmd = "ls /sys/class/net/ -l | tail -n +2 | cut -d ' ' -f 9"
+        try:
+            interfaces = subprocess.check_output(cmd, shell=True, encoding='utf-8').split("\n")[0:-1]
+        except:
+            interfaces = ['wlan0', 'eth0', 'lo']; # the usual suspects
+            
+            
+        # get IP of interfaces:
+        for interface in interfaces:
+            contents[interface] = {}
+            cmd = "ifconfig " + interface + " | grep inet | grep -v inet6 | sed 's/^[[:space:]]*//g' | tr -s ' ' | cut -d ' ' -f 2"
+            try:
+                contents[interface]['IP'] = subprocess.check_output(cmd, shell=True, encoding='utf-8').strip("\n")
+            except:
+                contents[interface]['IP'] = ""
+            print("- IP of interface " + interface + ": " + contents[interface]['IP'])
         
         return json.dumps(contents)
 
