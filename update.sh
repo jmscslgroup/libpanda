@@ -30,7 +30,7 @@ echo "Update needed, Git hash mismatch: $INSTALLED_LIBPANDA_GIT_VERSION != $CURR
 #sudo systemctl stop can
 #sudo sh -c "echo 'ROS has been stopped for update!' > /etc/libpanda.d/logMessage"
 echo "Stopping app..."
-libpanda-app-manager -k
+sudo libpanda-app-manager -k
 sudo sh -c "echo 'App has been stopped for update!' > /etc/libpanda.d/logMessage"
 
 echo "Updating libpanda..."
@@ -47,7 +47,8 @@ echo "Updating libpanda..."
 #./installMVTController.sh
 echo "Updating Apps..."
 cd apps
-./update.sh
+sudo ./update.sh
+cd ..
 
 # Do the following at the end of installs to ensure all other processes completed
 echo "Saving current pandaversion to /etc/libpanda.d/libpanda_version"
@@ -57,6 +58,6 @@ sudo sh -c "pandaversion > /etc/libpanda.d/libpanda_version"
 #sudo systemctl start can
 #sudo systemctl start rosnodeChecker
 echo "Starting app..."
-libpanda-app-manager -s
+sudo libpanda-app-manager -s
 
 echo "libpanda update.sh done."
