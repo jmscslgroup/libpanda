@@ -62,6 +62,9 @@ if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
 
+sudo sh -c "echo `pwd` > /etc/libpanda.d/libpanda_src_dir"
+sudo sh -c "echo $USER > /etc/libpanda.d/libpanda_usr"
+
 sudo cp resources/zone-testbed.json /etc/libpanda.d/zone.json
 sudo cp resources/zone-test.json /etc/libpanda.d/
 

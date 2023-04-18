@@ -10,7 +10,11 @@ fi
 
 source /opt/ros/noetic/setup.bash
 
-cd /home/circles/libpanda # likely unnecessary
+#pwd
+LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
+echo "Entering $LIBPANDA_SRC for update..."
+cd $LIBPANDA_SRC # likely unnecessary
+#pwd
 git pull
 
 INSTALLED_LIBPANDA_GIT_VERSION=$(cat /etc/libpanda.d/libpanda_version)

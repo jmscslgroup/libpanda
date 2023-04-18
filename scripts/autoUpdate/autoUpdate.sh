@@ -34,7 +34,10 @@ echo "Updating..." > /etc/libpanda.d/logMessage
 #systemctl stop can
 #su -c "cd /home/circles/libpanda && git pull && ./install.sh" circles
 #systemctl start can
-su -c "cd /home/circles/libpanda && ./update.sh" circles
+LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
+PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
+#su -c "cd /home/circles/libpanda && ./update.sh" circles
+su -c "cd $LIBPANDA_SRC && ./update.sh" $PI_USER
 echo "Updating done!"
 echo "Updating done!" > /etc/libpanda.d/logMessage
 

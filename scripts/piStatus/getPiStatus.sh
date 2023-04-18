@@ -4,6 +4,7 @@
 
 echo "System booting up..." > /etc/libpanda.d/logMessage
 
+LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
 
 while :
 do
@@ -26,9 +27,9 @@ do
 
   ORANGE_WIRE_CONNECTED=$(echo $(cat /etc/libpanda.d/wireAccButtonConnected)|tr -d '\r')
   LOG_MESSAGE=$(echo $(cat /etc/libpanda.d/logMessage)|tr -d '\r')
-#  LIBPANDA_GIT_HASH=$(cd /home/circles/libpanda && git rev-parse HEAD)
+#  LIBPANDA_GIT_HASH=$(cd $LIBPANDA_SRC && git rev-parse HEAD)
   LIBPANDA_GIT_HASH=$(cat /etc/libpanda.d/libpanda_version | awk -F',' '{print "libpanda: " substr($1,1,7)}')
-  ROS_REPOS_GIT_HASHES=$(cat /home/circles/libpanda/scripts/rosRepoShort.txt)
+  ROS_REPOS_GIT_HASHES=$(cat $LIBPANDA_SRC/scripts/rosRepoShort.txt)
   LIBPANDA_GIT_HASH=$(echo "$LIBPANDA_GIT_HASH $ROS_REPOS_GIT_HASHES")
 
   FREE_RAM=$(awk '/MemFree/ { printf "%.3fG", $2/1024/1024 }' /proc/meminfo)

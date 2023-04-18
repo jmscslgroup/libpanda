@@ -11,16 +11,17 @@ echo "Installing/Updating Vandertest ROS packages"
 
 source ~/.bashrc
 
-ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositories.csv
+$LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
+ROS_PACKAGE_REPOSITORY_CSV=$LIBPANDA_SRC/scripts/rosRepositories.csv
 
-MAP_VALUE=$(cat /home/circles/libpanda/scripts/experimentalControllerMap.csv | grep `cat /etc/hostname` | awk -F',' '{print $3}')
+MAP_VALUE=$(cat $LIBPANDA_SRC/scripts/experimentalControllerMap.csv | grep `cat /etc/hostname` | awk -F',' '{print $3}')
 if [ "$MAP_VALUE" = "experimental" ]; then
   #if experimental is true from grep
   echo "Running experimental control hashes."
-  ROS_PACKAGE_REPOSITORY_CSV=/home/circles/libpanda/scripts/rosRepositoriesExperimental.csv
+  ROS_PACKAGE_REPOSITORY_CSV=$LIBPANDA_SRC/scripts/rosRepositoriesExperimental.csv
 fi
 
-cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ": " substr($3,1,7)}' | tr '\n' ',' > /home/circles/libpanda/scripts/rosRepoShort.txt
+cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ": " substr($3,1,7)}' | tr '\n' ',' > $LIBPANDA_SRC/scripts/rosRepoShort.txt
 
 cd ~
 if [ ! -d catkin_ws/src ]; then
