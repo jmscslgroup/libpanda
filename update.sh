@@ -25,30 +25,38 @@ fi
 echo "Update needed, Git hash mismatch: $INSTALLED_LIBPANDA_GIT_VERSION != $CURRENT_LIBPANDA_GIT_VERSION"
 
 
-echo "Stopping can_to_ros..."
-sudo systemctl stop rosnodeChecker
-sudo systemctl stop can
-sudo sh -c "echo 'ROS has been stopped for update!' > /etc/libpanda.d/logMessage"
+#echo "Stopping can_to_ros..."
+#sudo systemctl stop rosnodeChecker
+#sudo systemctl stop can
+#sudo sh -c "echo 'ROS has been stopped for update!' > /etc/libpanda.d/logMessage"
+echo "Stopping app..."
+libpanda-app-manager -k
+sudo sh -c "echo 'App has been stopped for update!' > /etc/libpanda.d/logMessage"
 
 echo "Updating libpanda..."
 ./install.sh
 
-cd scripts
-echo "Executing installMVTRosPackages..."
-./installMVTRosPackages.sh
-
-echo "Uninstalling original can service if it exists..."
-./uninstallRobotUpstart.sh
-
-echo "Executing installMVTController..."
-./installMVTController.sh
+#cd scripts
+#echo "Executing installMVTRosPackages..."
+#./installMVTRosPackages.sh
+#
+#echo "Uninstalling original can service if it exists..."
+#./uninstallRobotUpstart.sh
+#
+#echo "Executing installMVTController..."
+#./installMVTController.sh
+echo "Updating Apps..."
+cd apps
+./update.sh
 
 # Do the following at the end of installs to ensure all other processes completed
 echo "Saving current pandaversion to /etc/libpanda.d/libpanda_version"
 sudo sh -c "pandaversion > /etc/libpanda.d/libpanda_version"
 
-echo "Starting can_to_ros..."
-sudo systemctl start can
-sudo systemctl start rosnodeChecker
+#echo "Starting can_to_ros..."
+#sudo systemctl start can
+#sudo systemctl start rosnodeChecker
+echo "Starting app..."
+libpanda-app-manager -s
 
 echo "libpanda update.sh done."

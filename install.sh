@@ -100,7 +100,8 @@ sudo ./install.sh
 # cd ../live-tracker-raspberry-pi
 # sudo ./install.sh
 # cd ../..
-cd ../
+cd ../../apps
+sudo ./install.sh
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
