@@ -4,7 +4,7 @@
 echo "========================="
 echo "Installing bluezone"
 
-declare -a depencencies=(git)
+declare -a depencencies=(git python3-dbus)
 toInstall=()
 echo "Dependencies:" ${depencencies[@]}
 for dependency in "${depencencies[@]}"
@@ -57,6 +57,9 @@ sudo chmod 655 /etc/systemd/system/bluezone.service
 systemctl daemon-reload
 
 systemctl enable bluezone.service
+
+
+grep -qxF "bluetoothctl discoverable on" /etc/rc.local || echo "bluetoothctl discoverable on" >> /etc/rc.local
 
 echo "Done."
 echo "========================="
