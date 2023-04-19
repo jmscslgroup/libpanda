@@ -1,0 +1,12 @@
+[Unit]
+Description=Joystick to ADAS Commander
+Wants=network.service
+
+[Service]
+Type=simple
+Restart=never
+ExecStart=`cat /etc/libpanda.d/libpanda_src_dir`/build/simpleSend
+
+
+[Install]
+WantedBy=multi-user.target
