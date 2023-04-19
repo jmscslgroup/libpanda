@@ -54,6 +54,7 @@ do_app_uninstall () {
 
     $APP_DIR/$APP_TO_REMOVE/stop.sh
     $APP_DIR/$APP_TO_REMOVE/uninstall.sh
+    echo "None" > $CURRENT_APP_FILE
 }
 
 do_app_install () {
