@@ -62,10 +62,11 @@ if [ ! -d /etc/libpanda.d ]; then
 	sudo mkdir /etc/libpanda.d
 fi
 
-sudo sh -c "echo `pwd` > /etc/libpanda.d/libpanda_src_dir"
+SRC_DIR=`pwd`   # this install is run from this directory
+sudo sh -c "echo $SRC_DIR > /etc/libpanda.d/libpanda_src_dir"
 sudo sh -c "echo $USER > /etc/libpanda.d/libpanda_usr"
 
-sudo cp resources/zone-testbed.json /etc/libpanda.d/zone.json
+sudo cp resources/zone-testbed.json /etc/libpanda.d/zone-default.json
 sudo cp resources/zone-test.json /etc/libpanda.d/
 
 sudo cp scripts/vinToHostname.sh /usr/sbin/vinToHostname
@@ -78,33 +79,21 @@ if [[ ! -f "/etc/libpanda.d/vin" ]]; then
 fi
 
 ./build.sh
-cd scripts
-cd xUps
-sudo ./install.sh
-cd ../circles-ui
-sudo ./install.sh
-cd ../circlesmanager
-sudo ./install.sh
-cd ../gps-tracker
-sudo ./install.sh
-cd ../experiments
-./install.sh
-cd ../circlesplanner
-sudo ./install.sh
-cd ../piStatus
-sudo ./install.sh
-cd ../autoUpdate
-sudo ./install.sh
-cd ../rosnodeChecker
-sudo ./install.sh
-cd ../bluezone
-sudo ./install.sh
+cd $SRC_DIR/scripts/xUps && sudo ./install.sh
+cd $SRC_DIR/scripts/circles-ui && sudo ./install.sh
+cd $SRC_DIR/scripts/circlesmanager && sudo ./install.sh
+cd $SRC_DIR/scripts/gps-tracker && sudo ./install.sh
+cd $SRC_DIR/scripts/experiments && ./install.sh
+cd $SRC_DIR/scripts/circlesplanner && sudo ./install.sh
+cd $SRC_DIR/scripts/piStatus && sudo ./install.sh
+cd $SRC_DIR/scripts/autoUpdate && sudo ./install.sh
+cd $SRC_DIR/scripts/rosnodeChecker && sudo ./install.sh
+cd $SRC_DIR/scripts/bluezone && sudo ./install.sh
 # not installing live tracker python version
 # cd ../live-tracker-raspberry-pi
 # sudo ./install.sh
 # cd ../..
-cd ../../apps
-sudo ./install.sh
+cd $SRC_DIR/apps && sudo ./install.sh
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
