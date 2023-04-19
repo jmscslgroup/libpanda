@@ -572,11 +572,12 @@ public:
         
     }
     
-    void open( const char* file) {
+    int open( const char* file) {
         std::ifstream zoneFile;
         zoneFile.open(file);
         if( errno != 0) {
             std::cerr << "Json Error: " << std::strerror(errno) << std::endl;
+            return -1;
         } else {
             Json::Value zoneDefinition;
             zoneFile >> zoneDefinition;
@@ -631,7 +632,7 @@ public:
 ////            std::cout << " - - Hyeteresiss point3: " << polygon->isInsideHysteresisBound(point3) << std::endl;
 //        }
         
-        
+        return 0;
     }
     
     ~ZoneChecker() {
@@ -1031,7 +1032,10 @@ int main(int argc, char **argv) {
     
     ZoneChecker zCheck;
 //    zCheck.open("/etc/libpanda.d/zone-testbed.json");
-    zCheck.open("/etc/libpanda.d/zone.json");
+    if(zCheck.open("/etc/libpanda.d/zone.json")) {
+        std::cout << "Warning!  No zonefile defined, using default zonefile instead..." << std::endl;
+        zCheck.open("/etc/libpanda.d/zone-default.json");
+    }
     zCheck.save("/etc/libpanda.d/zone-processed.json");
     
 //    Vertex point1;
