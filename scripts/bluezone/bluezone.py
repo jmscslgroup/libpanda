@@ -42,11 +42,11 @@ class CirclesAdvertisement(Advertisement):
         self.add_local_name("CIRCLES")
         self.include_tx_power = True
  #       self.add_service_uuid("00000001-710e-4a5b-8d75-3e5b444bc3cf")
-        self.add_service_uuid("00000001-3d3d-3d3d-3d3d-3d3d3d3d3d3d")
+        self.add_service_uuid("00000001-4d3d-3d3d-3d3d-3d3d3d3d3d3d")
 #        self.add_solicit_uuid("00000001-710e-4a5b-8d75-3e5b444bc3cf")
 
 class CirclesService(Service):
-    CIRCLES_SVC_UUID = "00000001-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    CIRCLES_SVC_UUID = "00000001-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
 
     def __init__(self, index):
         self.farenheit = True
@@ -110,7 +110,7 @@ class CirclesService(Service):
 
 # this is structured to send large amounts of data to the paired device
 class CirclesOutputCharacteristic(Characteristic):
-    CIRCLES_OUTPUT_CHARACTERISTIC_UUID = "00000002-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    CIRCLES_OUTPUT_CHARACTERISTIC_UUID = "00000002-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
     MAX_SEND = 500
     
     def __init__(self, service):
@@ -384,7 +384,7 @@ class CirclesOutputDescriptor(Descriptor):
         
         
 class CirclesCommandCharacteristic(Characteristic):
-    CIRCLES_COMMAND_CHARACTERISTIC_UUID = "00000003-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    CIRCLES_COMMAND_CHARACTERISTIC_UUID = "00000003-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
 
     def __init__(self, service):
         Characteristic.__init__(
@@ -456,7 +456,7 @@ class CirclesCommandDescriptor(Descriptor):
         
         
 class CirclesInputCharacteristic(Characteristic):
-    CIRCLES_INPUT_CHARACTERISTIC_UUID = "00000005-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    CIRCLES_INPUT_CHARACTERISTIC_UUID = "00000005-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
     
     def __init__(self, service):
         self.inputBuffer = bytearray(b'')
@@ -543,6 +543,8 @@ class CirclesInputCharacteristic(Characteristic):
             self.handleWifiRemove(json.loads(inputJson["contents"]))
         elif inputJson["type"] == "zonefile":
             self.handleZoneFile(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "app_enable":
+            self.handleAppEnable(json.loads(inputJson["contents"]))
         else:
             self.service.set_status("Unregognized type: " + inputJson["type"])
     
@@ -567,7 +569,21 @@ class CirclesInputCharacteristic(Characteristic):
         file.write(json.dumps(contents))
         file.close()
         self.service.set_status("Zonefile Acknowledged, Reboot required")
+    
+    def handleAppEnable(self, contents):
+        print(" - Enabling App: " + contents["app"] )
         
+        if contents["app"] == "None":
+            cmd = "libpanda-app-manager -u"
+        else:
+            cmd = "libpanda-app-manager -i " + contents["app"]
+            
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+            self.service.set_status("App " + contents["app"] + " enabled!")
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            self.service.set_status("Error enabling app " + contents["app"])
         
     def __add_wifi(self):
         try:
@@ -633,7 +649,7 @@ class CirclesInputDescriptor(Descriptor):
         
         
 class CirclesConfigCharacteristic(Characteristic):
-    CIRCLES_CONFIG_CHARACTERISTIC_UUID = "00000004-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    CIRCLES_CONFIG_CHARACTERISTIC_UUID = "00000004-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
 
     def __init__(self, service):
         Characteristic.__init__(
@@ -681,7 +697,7 @@ class CirclesConfigDescriptor(Descriptor):
         return value
         
 class CirclesStatusCharacteristic(Characteristic):
-    STATUS_CHARACTERISTIC_UUID = "00000006-3d3d-3d3d-3d3d-3d3d3d3d3d3d"
+    STATUS_CHARACTERISTIC_UUID = "00000006-4d3d-3d3d-3d3d-3d3d3d3d3d3d"
 
     def __init__(self, service):
         self.notifying = False
