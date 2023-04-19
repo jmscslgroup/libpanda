@@ -15,10 +15,18 @@ CURRENT_APP=$(cat $CURRENT_APP_FILE)
 
 
 do_descriptions () {
+    echo -e "App\tService\tEnabled\tRunning\tDescription"
     for APP in $APPS;
     do
         DESCRIPTION=$(cat $APP_DIR/$APP/description.txt)
-        echo "${APP} \"${DESCRIPTION}\""
+        ENABLED=$([[ "$APP" == "$CURRENT_APP" ]] && echo "yes" || echo "no")
+        SERVICE=$(cat $APP_DIR/$APP/service)
+        if [ "$ENABLED" = "yes" ]; then
+            RUNNING=$(systemctl status $SERVICE | grep "running" > /dev/null 2>&1 && echo "yes" || echo "no")
+        else
+            RUNNING="no"
+        fi
+        echo -e "${APP}\t$SERVICE\t$ENABLED\t$RUNNING\t\"${DESCRIPTION}\""
     done
 }
 
@@ -31,7 +39,8 @@ do_stop_app () {
 }
 
 do_status () {
-    systemctl status $CURRENT_APP | grep Active | sed "s/.*Active: //g"
+    SERVICE=$(cat $APP_DIR/$CURRENT_APP/service)
+    systemctl status $SERVICE | grep Active | sed "s/.*Active: //g"
 }
 
 do_app_uninstall () {

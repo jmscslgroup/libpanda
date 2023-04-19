@@ -97,6 +97,10 @@ class CirclesService(Service):
             print("Wifi scan!")
             self.outputCharacteristic.send_wifi_scan()
             
+        if command == "A":
+            print("App command!")
+            self.outputCharacteristic.send_app_info()
+            
         self.command = command
 
     def set_status(self, s):
@@ -208,7 +212,7 @@ class CirclesOutputCharacteristic(Characteristic):
         return json.dumps(result)
         
     def __set_wifi_scan(self):
-        print("in __set_wifi_scan(self): building repsonse...")
+        print("in __set_wifi_scan(self): building response...")
         
         wifiObject = {}
         wifiObject["type"] = "wifi_scan"
@@ -223,6 +227,45 @@ class CirclesOutputCharacteristic(Characteristic):
     def send_wifi_scan(self):
         print("in send_wifi_scan(self): starting callback...")
         self.add_timeout(50, self.__set_wifi_scan) # HACK
+
+
+    def app_info(self):
+        result = []
+        cmd = "libpanda-app-manager -d"
+        try:
+            output = subprocess.check_output(cmd, shell=True).decode("utf-8").encode('latin1').decode('unicode_escape').encode('latin1').decode('utf8').split("\n")[1:-1]
+            for line in output:
+                columns = line.split("\t");
+                print("Split tab: " + str(columns))
+                result.append({
+                    "app": columns[0],
+                    "service": columns[1],
+                    "enabled": columns[2],
+                    "running": columns[3],
+                    "description": columns[4].replace('\"', '')
+                })
+        except subprocess.CalledProcessError as grepexc:
+            print("error code", grepexc.returncode, grepexc.output)
+        print("Result: " + str(result))
+        return json.dumps(result)
+
+    def __set_app_info(self):
+        print("in __set_app_info(self): building response...")
+        
+        wifiObject = {}
+        wifiObject["type"] = "app_info"
+        contents = self.app_info()
+        wifiObject["contents"] = contents
+        wifiObject["length"] = len(contents)
+        self.buffer = json.dumps(wifiObject)
+        print(" - self.buffer: " + self.buffer)
+        self.StartNotify()
+        return False    # HACK
+        
+    def send_app_info(self):
+        print("in send_app_info(self): starting callback...")
+        self.add_timeout(50, self.__set_app_info) # HACK
+        
 
     def wifi_contents(self):
         contents = { }
