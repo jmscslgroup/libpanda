@@ -5,7 +5,7 @@ Wants=network.service
 [Service]
 Type=simple
 Restart=never
-ExecStart=`cat /etc/libpanda.d/libpanda_src_dir`/build/simpleSend
+ExecStart=/usr/local/sbin/simpleSend
 
 
 [Install]
