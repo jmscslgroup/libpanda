@@ -33,7 +33,7 @@ from service import Application, Service, Characteristic, Descriptor
 from gpiozero import CPUTemperature
 
 GATT_CHRC_IFACE = "org.bluez.GattCharacteristic1"
-NOTIFY_TIMEOUT = 5000
+NOTIFY_TIMEOUT = 1000
 
 class CirclesAdvertisement(Advertisement):
     def __init__(self, index):
