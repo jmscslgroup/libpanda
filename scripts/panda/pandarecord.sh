@@ -19,5 +19,6 @@ fi
 #pandacord -g ${FOLDER}/${FILENAME_PRE}_GPS_Messages.csv -c ${FOLDER}/${FILENAME_PRE}_CAN_Messages.csv
 #pandazone -g ${FOLDER}/gps -c ${FOLDER}/can
 pandazone -d ${FOLDER_PRE}/${VIN} -b    # The -b makes beeps on file recording start/stop
+pandazone -d ${FOLDER_PRE}/${VIN}    # The -b makes beeps on file recording start/stop
 #echo FOLDER_DATE=${FOLDER_DATE}
 #echo FILENAME_PRE=${FILENAME_PRE}
