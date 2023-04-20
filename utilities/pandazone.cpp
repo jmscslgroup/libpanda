@@ -575,9 +575,9 @@ public:
     int open( const char* file) {
         std::ifstream zoneFile;
         zoneFile.open(file);
-        if( errno != 0) {
+        if( !zoneFile || errno != 0) {
             std::cerr << "Json Error: " << std::strerror(errno) << std::endl;
-            return -1;
+            return 1;
         } else {
             Json::Value zoneDefinition;
             zoneFile >> zoneDefinition;
