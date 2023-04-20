@@ -174,7 +174,7 @@ sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 
 
 # Add the vuDevices to the network:
-if grep -Fq "vuDevices" /etc/wpa_supplicant/wpa_supplicant.conf
+if sudo grep -Fq "vuDevices" /etc/wpa_supplicant/wpa_supplicant.conf
 then
 	echo "WiFi AP SSID vuDevices network already configured"
 else
