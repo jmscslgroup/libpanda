@@ -101,6 +101,14 @@ class CirclesService(Service):
             print("App command!")
             self.outputCharacteristic.send_app_info()
             
+        if command == "As":
+            print("App Stop command!")
+            self.outputCharacteristic.send_app_stop()
+            
+        if command == "Ar":
+            print("App Restart command!")
+            self.outputCharacteristic.send_app_restart()
+            
         self.command = command
 
     def set_status(self, s):
@@ -266,6 +274,23 @@ class CirclesOutputCharacteristic(Characteristic):
         print("in send_app_info(self): starting callback...")
         self.add_timeout(50, self.__set_app_info) # HACK
         
+            
+    def send_app_stop(self):
+        cmd = "libpanda-app-manager -k"
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+            self.service.set_status("App command success!")
+        except subprocess.CalledProcessError as grepexc:
+            self.service.set_status("Error stopping app: " + str(grepexc.returncode))
+                
+    def send_app_restart(self):
+        cmd = "libpanda-app-manager -k && libpanda-app-manager -s"
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+            self.service.set_status("App command success!")
+        except subprocess.CalledProcessError as grepexc:
+            self.service.set_status("Error restarting app: " + str(grepexc.returncode))
+    
 
     def wifi_contents(self):
         contents = { }
