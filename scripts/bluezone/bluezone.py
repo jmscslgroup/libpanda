@@ -328,14 +328,18 @@ class CirclesOutputCharacteristic(Characteristic):
             
             
         # get IP of interfaces:
+        contents["interfaces"] = []
         for interface in interfaces:
-            contents[interface] = {}
+            iface = {}
+#            contents["interfaces"][interface] = {}
+            iface['name'] = interface
             cmd = "ifconfig " + interface + " | grep inet | grep -v inet6 | sed 's/^[[:space:]]*//g' | tr -s ' ' | cut -d ' ' -f 2"
             try:
-                contents[interface]['IP'] = subprocess.check_output(cmd, shell=True, encoding='utf-8').strip("\n")
+                iface['IP'] = subprocess.check_output(cmd, shell=True, encoding='utf-8').strip("\n")
             except:
-                contents[interface]['IP'] = ""
-            print("- IP of interface " + interface + ": " + contents[interface]['IP'])
+                iface['IP'] = ""
+            contents["interfaces"].append(iface)
+            print("- IP of interface " + iface['name'] + ": " + iface['IP'])
         
         return json.dumps(contents)
 
@@ -605,7 +609,8 @@ class CirclesInputCharacteristic(Characteristic):
             
         try:
             result = subprocess.check_output(cmd, shell=True)
-            self.service.set_status("App " + contents["app"] + " enabled!")
+#            self.service.set_status("App " + contents["app"] + " enabled!")
+            self.service.set_status("App command success!")
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
             self.service.set_status("Error enabling app " + contents["app"])
