@@ -169,7 +169,11 @@ class CirclesOutputCharacteristic(Characteristic):
         return self.notifying
         
     def send_zone_file(self):
-        self.readZoneFile('/etc/libpanda.d/zone.json') # this sets the buffer
+        try:
+            self.readZoneFile('/etc/libpanda.d/zone.json') # this sets the buffer
+        except IOError:
+            self.readZoneFile('/etc/libpanda.d/zone-default.json') # this sets the buffer
+            
         self.StartNotify()
         
             
