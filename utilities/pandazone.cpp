@@ -894,25 +894,25 @@ private:
 //        newFileName << timeStamp;
         
         std::stringstream newDirectoryName;
-        sprintf(timeStamp, "/%04d_%02d_%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+        sprintf(timeStamp, "/%04d_%02d_%02d/", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
         newDirectoryName << dataDirectory;
         newDirectoryName << timeStamp;
         
         sprintf(mkdirCommand, "mkdir -p %s", newDirectoryName.str().c_str());
         system(mkdirCommand);
         
-        sprintf(timeStamp, "-%04d-%02d-%02d-%02d-%02d-%02d.csv", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour + tm.tm_isdst, tm.tm_min, tm.tm_sec);
+        sprintf(timeStamp, "%04d-%02d-%02d-%02d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour + tm.tm_isdst, tm.tm_min, tm.tm_sec);
         
         std::stringstream newFileName;
         newFileName << newDirectoryName.str();
-        newFileName << "/gps";
         newFileName << timeStamp;
+        newFileName << "-GPS.csv";
         gpsFilename = newFileName.str();
         
         newFileName.str(std::string());
         newFileName << newDirectoryName.str();
-        newFileName << "/can";
         newFileName << timeStamp;
+        newFileName << "-CAN.csv";
         canFilename = newFileName.str();
         
         std::cout << "GPS filename: " << gpsFilename << std::endl;
