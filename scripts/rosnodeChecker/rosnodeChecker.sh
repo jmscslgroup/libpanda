@@ -51,7 +51,7 @@ if [[ "$subs_alive" -eq "1" ]] && [[ "$vehicle_interface_alive" -eq "1" ]] && [[
 	fi
 	#echo "nominal state!" > /etc/libpanda.d/logMessage
 	# echo " Running these hashes: " >> /etc/libpanda.d/logMessage
-	# cat /home/circles/libpanda/scripts/rosRepoShort.txt >> /etc/libpanda.d/logMessage
+	# cat /home/.../libpanda/scripts/rosRepoShort.txt >> /etc/libpanda.d/logMessage
 else
 	echo "rosnode(s) are down"
 	echo "These rosnodes are down: " > /etc/libpanda.d/logMessage

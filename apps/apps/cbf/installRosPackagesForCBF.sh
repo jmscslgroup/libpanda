@@ -11,7 +11,7 @@ echo "Installing/Updating CBF ROS packages"
 
 source ~/.bashrc
 
-$LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
+LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
 ROS_PACKAGE_REPOSITORY_CSV=/etc/libpanda.d/apps/cbf/rosRepositories.csv
 
 cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ": " substr($3,1,7)}' | tr '\n' ',' > $LIBPANDA_SRC/scripts/rosRepoShort.txt
@@ -56,10 +56,10 @@ done < $ROS_PACKAGE_REPOSITORY_CSV
 
 # Build:
 cd ~/catkin_ws
+source devel/setup.sh
 catkin_make
 
 # ROS upstart install:
-source devel/setup.sh
 rosrun robot_upstart install can_to_ros/launch/vehicle_interface.launch --user root
 
 echo "Enabling can_to_ros startup script"

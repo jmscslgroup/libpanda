@@ -85,7 +85,7 @@ class CirclesManager:
 				os.system("systemctl stop --no-block can")
 				time.sleep(5)
 				os.system("echo \"- - - - running irsyncCyverse...\"")
-				os.system("runuser -l circles -c 'irsyncCyverse -f'")
+				os.system("runuser -l `cat /etc/libpanda.d/libpanda_usr` -c 'irsyncCyverse -f'")
 				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync
 					hasExternalPower = bool(int(getFileContents( fileX725HasExtenalPower )))
 					if not hasExternalPower:

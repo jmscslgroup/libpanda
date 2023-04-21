@@ -4,6 +4,8 @@
 echo "--------------------------------------------------------"
 echo "Installing libpanda:"
 
+PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
+
 #build dependencies:
 declare -a depencencies=(build-essential libncurses5-dev libusb-1.0-0-dev libjsoncpp-dev cmake)
 toInstall=()
@@ -43,7 +45,7 @@ cd ../..
 # Install configuration files and welcome msg
 cd scripts/
 #cp irsyncCyverse.sh /home/${SUDO_USER}/irsyncCyverse.sh
-cp irsyncCyverse.sh /home/circles/irsyncCyverse.sh
+cp irsyncCyverse.sh /home/$PI_USER/irsyncCyverse.sh
 sudo cp irsyncCyverse.sh /usr/local/sbin/irsyncCyverse
 
 #cp setVin.sh /home/${SUDO_USER}/setVin.sh
