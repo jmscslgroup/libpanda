@@ -228,6 +228,7 @@ void ToyotaHandler::sendLka() {
 	if (getControlsAllowed() && !heartbeatSteeringPass()) {
 		hudLkaAlertToSend = true;
 	}
+    hudRepeatedBeepsToSend = false;
 	
 	Panda::CanFrame frame = buildLkasHud(hudLkaAlertToSend, hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeepsToSend);
 //	printf("LKAS_HUD: "); printFrame(frame);
