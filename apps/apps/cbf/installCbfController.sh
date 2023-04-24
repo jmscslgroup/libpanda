@@ -2,7 +2,8 @@
 # Author: Matt Bunting
 
 #LAUNCH_FILE=cbftest.launch
-LAUNCH_FILE=vehicle_control_integrated_cbf.launch
+#LAUNCH_FILE=vehicle_control_integrated_cbf.launch
+LAUNCH_FILE=vehicle_control_integrated_cbf_with_error.launch
 
 echo "----------------------------"
 if [[ $EUID == 0 ]];
