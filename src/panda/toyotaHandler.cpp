@@ -54,6 +54,7 @@ ToyotaHandler::ToyotaHandler() {
 	hudLeftLane = 2;
 	hudRightLane = 2;
 	hudTwoBeeps = 0;
+    hudRepeatedBeeps = false;
 	
 	// Default Steer:
 	steerTorqueControl = 0.0;
@@ -221,14 +222,13 @@ void ToyotaHandler::sendLka() {
 //		health.controls_allowed ) {
 		getControlsAllowed() ) {
 		hudRepeatedBeepsToSend = true;
-	}
+    }
 	
 	bool hudLkaAlertToSend = hudLdaAlert;
 //	if (health.controls_allowed && !heartbeatSteeringPass()) {
 	if (getControlsAllowed() && !heartbeatSteeringPass()) {
 		hudLkaAlertToSend = true;
 	}
-    hudRepeatedBeepsToSend = false;
 	
 	Panda::CanFrame frame = buildLkasHud(hudLkaAlertToSend, hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeepsToSend);
 //	printf("LKAS_HUD: "); printFrame(frame);
