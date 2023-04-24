@@ -4,6 +4,10 @@ echo "Uninstalling services pandarecord, can (if installed)"
 
 #source ~/catkin_ws/devel/setup.sh
 
+LIBPANDA_USER=$(cat /etc/libpanda.d/libpanda_usr)
+
+source /home/$LIBPANDA_USER/.bashrc
+
 # check to see if pandarecord.service is installed
 if [ "x"`systemctl list-units | grep -c pandarecord.service` = "x1" ]; then
 	echo "Uninstalling pandarecord.service"
