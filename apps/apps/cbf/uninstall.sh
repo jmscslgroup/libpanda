@@ -4,8 +4,8 @@ echo "=========================="
 echo "Removing App cbf"
 
     
-    LIBPANDA_USER=$(cat /etc/libpanda.d/libpanda_usr)
-
+LIBPANDA_USER=$(cat /etc/libpanda.d/libpanda_usr)
+ 
 # Disable the installed services:
 echo " - Disabling startup scripts..."
 systemctl disable can
@@ -17,7 +17,7 @@ cd
 if [ "x"`systemctl list-units | grep -c can.service` = "x1" ]; then
     echo "Uninstalling can.service"
 
-    source /home/$LIBPANDA_USER/.bashrc
+    source /home/$LIBPANDA_USER/catkin_ws/devel/setup.bash
     rosrun robot_upstart uninstall can
 fi
 
