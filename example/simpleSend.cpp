@@ -107,9 +107,9 @@ int main(int argc, char **argv) {
 	unsigned char hudLaneRight = 2;
 	
 //	int printPandaHealthDecimator = 0;
-	
+    int steerTorqueToSend = 0;
 	while(keepRunning) {
-		usleep(1000000.0/10.0);	// run at ~10 Hz
+		usleep(1000000.0/100.0);	// run at ~50 Hz
 
 //		if(printPandaHealthDecimator++ >= 10) {	// run at 1Hz
 //			printPandaHealthDecimator = 0;
@@ -152,18 +152,30 @@ int main(int argc, char **argv) {
 		//const int TOYOTA_ISO_MIN_ACCEL = -3500;       // -3.5 m/s2
 		double acceleration = 0.0;
 		double joystickValue = mJoystickState.getLY();	// getLY() returns a range of -1.0:1.0
-		if (joystickValue > 0) {
-			acceleration = 1.5 * joystickValue;
-		} else if (joystickValue < 0) {
-			acceleration = 3.0 * joystickValue;
-		}
+        
+//		if (joystickValue > 0) {
+//			acceleration = 1.5 * joystickValue;
+//		} else if (joystickValue < 0) {
+//			acceleration = 3.0 * joystickValue;
+//		}
+        
+        acceleration = 4.5*((joystickValue + 1.0)/2.0 ) - 3.0; // This function means joystick at rest = -0.75 m/s/s
 		
 		// Steering torque command.  Deosn't yet work, unknown units
 		// The following is a hard-coded limit in the Panda firmware:
 		//const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
 		joystickValue = mJoystickState.getRX();	// getRX() returns a range of -1.0:1.0
-		int steerTorque = 1500 * joystickValue;	// range: -1500:1500
+		double steerTorque = 1500 * joystickValue;	// range: -1500:1500
 		
+        if(steerTorqueToSend < steerTorque) {
+            double diff = steerTorque - steerTorqueToSend;
+            steerTorqueToSend += diff > 5 ? 5 : diff;
+        } else if (steerTorqueToSend > steerTorque) {
+            double diff = steerTorque - steerTorqueToSend;
+            steerTorqueToSend += diff < -5 ? -5 : diff;
+        }
+//        if(
+//        steerTorqueToSend += (steerTorque - steerTorqueToSend)/200.0;
 		
 		// Send the Steering and Scceleration commands:
 		// Holding circle tests the heartbeat (stopping it)
@@ -172,9 +184,10 @@ int main(int argc, char **argv) {
 //			toyotaHandler.setAcceleration(acceleration);
 ////			toyotaHandler.setSteerTorque(steerTorque);
 //			toyotaHandler.setSteerTorque(0);
+            std::cout << "Sending steerTorque = " << steerTorqueToSend << std::endl;
 			pandaController->getController()->setAcceleration(acceleration);
-//			pandaController->getController()->setSteerTorque(steerTorque);
-			pandaController->getController()->setSteerTorque(0);
+			pandaController->getController()->setSteerTorque(steerTorqueToSend);
+//			pandaController->getController()->setSteerTorque(0);
 		}
 		
 		// Debug Joystick:

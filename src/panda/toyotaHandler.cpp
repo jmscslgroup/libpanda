@@ -43,9 +43,11 @@ ToyotaHandler::ToyotaHandler() {
 	decimatorLka = 0;
 	decimatorTrackB = 0;
 	decimatorSteer = 0;
+    decimatorLta = 0;
 	decimatorAcc = 0;
 	
 	counterSteer = 0;
+    counterLta = 0;
 	counterTrackB = 0;
 	
 	// Default HUD:
@@ -93,6 +95,16 @@ ToyotaHandler::ToyotaHandler() {
 
 //void ToyotaHandler::newDataNotification(CanFrame* canFrame) {
 bool ToyotaHandler::checkControlsAllowed(CanFrame* canFrame) {
+    if (canFrame->messageID == 740) {
+        if(canFrame->bus == 192) {
+            
+            printf("From car 740 STEERING_LKA: "); printFrame(*canFrame);
+            
+        }
+    }
+//    if (canFrame->messageID == 401) {
+//        printf("From car 401 STEERING_LTA: "); printFrame(*canFrame);
+//    }
 	if (canFrame->messageID == 466) {
 		//printf("Got message 466:\n");
 		gas_released = ((*(unsigned long*)canFrame->data) >> (4+1-1)) & 0x01;
@@ -198,13 +210,18 @@ void ToyotaHandler::intervalAction() {
 	
 	if (decimatorTrackB++ >= TOYOTA_DECIMATOR_MAX_TRACK_B) {	// 40Hz
 		decimatorTrackB = 0;
-		sendTrackB();
+//		sendTrackB();
 	}
 
 	if(decimatorSteer++ >= TOYOTA_DECIMATOR_MAX_STEER) { // 100Hz
 		decimatorSteer = 0;
 		sendSteer();
 	}
+    
+    if(decimatorLta++ >= TOYOTA_DECIMATOR_MAX_LTA) { // 50Hz
+        decimatorLta = 0;
+        sendLta();
+    }
 	
 	if (decimatorAcc++ >= TOYOTA_DECIMATOR_MAX_ACC) {	// 30 Hz
 		decimatorAcc = 0;
@@ -231,7 +248,7 @@ void ToyotaHandler::sendLka() {
 	}
 	
 	Panda::CanFrame frame = buildLkasHud(hudLkaAlertToSend, hudLeftLane, hudRightLane, hudBarrier, hudTwoBeeps, hudRepeatedBeepsToSend);
-//	printf("LKAS_HUD: "); printFrame(frame);
+//	printf("ToyotaHandler::sendLka(): "); printFrame(frame);
 //	pandaHandler->getCan().sendMessage(frame);
 	sendCan(frame);
 }
@@ -243,7 +260,7 @@ void ToyotaHandler::sendTrackB() {
 	
 	//printf("TRACK_B_1: "); printFrame(frame);
 //	pandaHandler->getCan().sendMessage(frame);
-	sendCan(frame);
+//	sendCan(frame);
 }
 
 void ToyotaHandler::sendSteer() {
@@ -253,7 +270,8 @@ void ToyotaHandler::sendSteer() {
 //	if (health.controls_allowed && heartbeatSteeringPass()) {
 	if (getControlsAllowed() && heartbeatSteeringPass()) {
 		steerRequest = true;
-		steerLkaState = 0; // Real LKA steering control data shows this to be 0
+//		steerLkaState = 0; // Real LKA steering control data shows this to be 0
+        steerLkaState = 5;
 		steerTorqueControlToSend = steerTorqueControl;	// Send the user steer torque
 	} else {
 		steerRequest = false;
@@ -263,7 +281,17 @@ void ToyotaHandler::sendSteer() {
 	Panda::CanFrame frame = buildSteeringLKA( counterSteer++, steerTorqueControlToSend, steerRequest, steerLkaState );
 	//printf("STEERING_LKA at %d: ", (int) steer_torque); printFrame(frame);
 //	pandaHandler->getCan().sendMessage(frame);
+    
+//    printf("ToyotaHandler::sendSteer(): "); printFrame(frame);
 	sendCan(frame);
+}
+
+void ToyotaHandler::sendLta() {
+    Panda::CanFrame frame = buildSteeringLTA( counterLta++, 0, 0 );
+
+//    printf("ToyotaHandler::sendLta(): "); printFrame(frame);
+    
+    sendCan(frame);
 }
 
 void ToyotaHandler::sendAcc() {

@@ -41,6 +41,7 @@
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
 #define TOYOTA_RATE_TRACK_B (40.0)			// Rate of the TRACK_B_1 command
 #define TOYOTA_RATE_STEER (100.0)			// Rate of the STEERING_LKA command
+#define TOYOTA_RATE_LTA (50.0)                // Rate of the STEERING_LTA command
 #define TOYOTA_RATE_ACC (30.0)				// Rate of the ACC_CONTROL command
 
 //#define TOYOTA_DECIMATOR_MAX_HEARTBEAT (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_HEARTBEAT)
@@ -48,12 +49,13 @@
 #define TOYOTA_DECIMATOR_MAX_LKA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LKA)
 #define TOYOTA_DECIMATOR_MAX_TRACK_B (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_TRACK_B)
 #define TOYOTA_DECIMATOR_MAX_STEER (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_STEER)
+#define TOYOTA_DECIMATOR_MAX_LTA (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_LTA)
 #define TOYOTA_DECIMATOR_MAX_ACC (TOYOTA_COMMAND_THREAD_RATE/TOYOTA_RATE_ACC)
 
 namespace Panda {
 
 /*!
- \brief Constructs the LKAS_HUS command that works on a Toyota RAV4.
+ \brief Constructs the LKAS_HUD command that works on a Toyota RAV4.
  \param lkaAlert Will invoke a "Please grab steering wheel" notification on the car HUD.
  \param leftlane Can be 0-3, and will show different left lane visuals on the HUD.
  \param rightlane Can be 0-3, and will show different right lane visuals on the HUD.
@@ -73,7 +75,10 @@ CanFrame buildLkasHud(bool lkaAlert, unsigned char leftLane, unsigned char right
  \return A constructed STEERING_LKA CanFrame.
  */
 CanFrame buildSteeringLKA( unsigned char count, int16_t steerTorque, bool steerRequest, unsigned char lkaState );
+CanFrame buildSteeringLTA( unsigned char count, int16_t steer, bool steerRequest );
 
+// also parses checksum
+bool toyotaParseSteeringLKA(CanFrame* frame, unsigned char* count, int16_t* steerTorque, bool* steerRequest, unsigned char* lkaState );
 /*!
  \brief Constructs the ACC_CONTROL command, used for sending cruise cntrol accelerations.
  \param permitBraking Unsure of purpose outside of name.  Should be 1 when sending control commands, perhaps.
@@ -193,6 +198,7 @@ private:
 	void sendLka();
 	void sendTrackB();
 	void sendSteer();
+    void sendLta();
 	void sendAcc();
 	
 	// This will max the LKA decimator to trigger an instant send.
@@ -216,10 +222,12 @@ private:
 	int decimatorLka;
 	int decimatorTrackB;
 	int decimatorSteer;
+    int decimatorLta;
 	int decimatorAcc;
 	
 	// For building proper CanFrames for steering and track B:
 	unsigned char counterSteer;
+    unsigned char counterLta;
 	unsigned char counterTrackB;
 	
 	// HUD:

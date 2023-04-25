@@ -5,6 +5,23 @@
 
 
 #include "panda/nissan.h"
+#include "panda/toyota.h"
+
+
+// to_signed, MAX are from panda firmware source:
+#define MAX(a,b) \
+ ({ __typeof__ (a) _a = (a); \
+     __typeof__ (b) _b = (b); \
+   (_a > _b) ? _a : _b; })
+
+// convert a trimmed integer to signed 32 bit int
+int to_signed(int d, int bits) {
+  int d_signed = d;
+  if (d >= (1 << MAX((bits - 1), 0))) {
+    d_signed = d - (1 << MAX(bits, 0));
+  }
+  return d_signed;
+}
 
 void printCanFrame(Panda::CanFrame& frame) {
 	fprintf(stderr, " - Message ID: %04x\n", frame.messageID);
@@ -784,5 +801,189 @@ int main(int argc, char **argv) {
 	Panda::nissanPedalThrottle(frame, &ACCEL_PEDAL_POSITION);
 	printf("Result of parse: ACCEL_PEDAL_POSITION = %d\n", (int)ACCEL_PEDAL_POSITION);
 	
+    
+    
+    
+    std::cout << "\n\n------------- Toyota Time -------------" << std::endl;
+    std::cout << "\n\n------------- Building an LKA message 740 -------------" << std::endl;
+    frame.messageID = 740;
+    frame.bus = 2;
+    frame.dataLength = 5;
+    memset(frame.data, 0, 5);
+    frame.data[0] = 0xC2;
+    frame.data[1] = 0x00;
+    frame.data[2] = 0x00;
+    frame.data[3] = 0x00;
+    frame.data[4] = 0xAD;
+    
+    length = Panda::canFrameToBuffer(frame, testPack, 2);
+    
+    for    (int i = 0; i < length; i++) {
+        if ( i % 16 == 0) {
+            printf("\n");
+        }
+        printf("0x%02X ", testPack[i]);
+    }
+    printf("\n");
+    
+    printCanFrame(frame);
+    
+    unsigned char count;
+    int16_t steerTorque;
+    bool steerRequest;
+    unsigned char lkaState;
+    
+    printf("Parsing LKA...");
+    if(Panda::toyotaParseSteeringLKA(&frame, &count, &steerTorque, &steerRequest, &lkaState)) {
+        printf(" - Success:");
+
+        printf(" - count       : %d\n", count);
+        printf(" - steerTorque : %d\n", steerTorque);
+        printf(" - steerRequest: %d\n", steerRequest);
+        printf(" - lkaState    : %d\n", (int)lkaState);
+    } else {
+        printf(" - FAILED: bad checksum or length");
+        
+    }
+    
+
+    std::cout << "Done." << std::endl;
+    
+    
+    std::cout << "\n\n------------- Building an LKA message from function -------------" << std::endl;
+    
+    count = 55;
+    steerTorque = -1234;
+    steerRequest = 1;
+    lkaState = 0x3F;
+    printf(" - count       : %d\n", count);
+    printf(" - steerTorque : %d\n", steerTorque);
+    printf(" - steerRequest: %d\n", steerRequest);
+    printf(" - lkaState    : %d\n", (int)lkaState);
+    frame = Panda::buildSteeringLKA(count, steerTorque, steerRequest, lkaState);
+    
+    printf("Parsing LKA...");
+    if(Panda::toyotaParseSteeringLKA(&frame, &count, &steerTorque, &steerRequest, &lkaState)) {
+        printf(" - Success:");
+
+        printf(" - count       : %d\n", count);
+        printf(" - steerTorque : %d\n", steerTorque);
+        printf(" - steerRequest: %d\n", steerRequest);
+        printf(" - lkaState    : %d\n", (int)lkaState);
+    } else {
+        printf(" - FAILED: bad checksum or length");
+        
+    }
+    
+    std::cout << "Done." << std::endl;
+    
+    
+    
+    std::cout << "\n\n------------- Building anpother LKA message 740, steertorque = -572 -------------" << std::endl;
+    frame.messageID = 740;
+    frame.bus = 0;
+    frame.dataLength = 5;
+    memset(frame.data, 0, 5);
+    frame.data[0] = 0x9d;
+    frame.data[1] = 0xfd;
+    frame.data[2] = 0xc4;
+    frame.data[3] = 0x00;
+    frame.data[4] = 0x49;
+    
+    length = Panda::canFrameToBuffer(frame, testPack, 2);
+    
+    for (int i = 0; i < length; i++) {
+        if ( i % 16 == 0) {
+            printf("\n");
+        }
+        printf("0x%02X ", testPack[i]);
+    }
+    printf("\n");
+    
+    printCanFrame(frame);
+    
+    printf("Parsing LKA...");
+    if(Panda::toyotaParseSteeringLKA(&frame, &count, &steerTorque, &steerRequest, &lkaState)) {
+        printf(" - Success:");
+
+        printf(" - count       : %d\n", count);
+        printf(" - steerTorque : %d\n", steerTorque);
+        printf(" - steerRequest: %d\n", steerRequest);
+        printf(" - lkaState    : %d\n", (int)lkaState);
+    } else {
+        printf(" - FAILED: bad checksum or length");
+        
+    }
+    
+    int desired_torque = (frame.data[1] << 8) | frame.data[2];
+    desired_torque = to_signed(desired_torque, 16);
+    printf("Panda sees torque as: %d\n", desired_torque);
+    
+
+    std::cout << "Done." << std::endl;
+    
+    
+    std::cout << "\n\n------------- Building LTA message 401 -------------" << std::endl;
+    
+    count = 0xFA >> 1;
+    frame = Panda::buildSteeringLTA(count, 0, 0 );
+    length = Panda::canFrameToBuffer(frame, testPack, 2);
+    
+    for (int i = 0; i < length; i++) {
+        if ( i % 16 == 0) {
+            printf("\n");
+        }
+        printf("0x%02X ", testPack[i]);
+    }
+    printf("\n");
+    
+    printf("Checksum: 0x%02X against 0x%02X\n", Panda::toyotaChecksum(frame), frame.data[7]);
+    
+    //401 0 FA 00 00 30 64 64 00 8C
+    
+    bool lta_request = (frame.data[0] & 1U) != 0U;
+    bool lta_request2 = ((frame.data[3] >> 1) & 1U) != 0U;
+    int lta_angle = (frame.data[1] << 8) | frame.data[2];
+    
+    printf("Panda inteprets this as:\n");
+    printf(" - lta_request = %d\n", lta_request);
+    printf(" - lta_request2 = %d\n", lta_request2);
+    printf(" - lta_angle = %d\n", to_signed( lta_angle, 16));
+    
+    std::cout << "Done." << std::endl;
+    
+    
+    std::cout << "\n\n------------- Building LTA message 401 Round 2 -------------" << std::endl;
+    
+    count = 0x55 >> 1;
+    frame = Panda::buildSteeringLTA(count, -1337, 1 );
+    length = Panda::canFrameToBuffer(frame, testPack, 2);
+    
+    for (int i = 0; i < length; i++) {
+        if ( i % 16 == 0) {
+            printf("\n");
+        }
+        printf("0x%02X ", testPack[i]);
+    }
+    printf("\n");
+    
+    printf("Checksum: 0x%02X against 0x%02X\n", Panda::toyotaChecksum(frame), frame.data[7]);
+    
+    
+    lta_request = (frame.data[0] & 1U) != 0U;
+    lta_request2 = ((frame.data[3] >> 1) & 1U) != 0U;
+    lta_angle = ( frame.data[1] << 8) | frame.data[2];
+    
+    printf("Panda inteprets this as:\n");
+    printf(" - lta_request = %d\n", lta_request);
+    printf(" - lta_request2 = %d\n", lta_request2);
+    printf(" - lta_angle = %d\n", to_signed( lta_angle, 16));
+    std::cout << "Done." << std::endl;
+    
+    std::cout << "\nSending it through the parser:" << std::endl;
+    testCan.notificationCanRead((char*)testPack, length);
+    usleep(100000);
+    
+    
 	return 0;
 }

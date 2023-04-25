@@ -147,12 +147,76 @@ uint8_t Panda::toyotaChecksum(CanFrame& frame)
 	//sum += frame.bus;	// I have no idea if this is needed
 	sum += frame.dataLength;
 	
-	for (int i = 0; i < frame.dataLength; i++) {
+	for (int i = 0; i < frame.dataLength-1; i++) {
 		sum += frame.data[i];
 	}
 	return sum;
 }
-
+CanFrame Panda::buildSteeringLTA( unsigned char count, int16_t steer, bool steerRequest ) {
+    CanFrame frame;
+    
+    // https://github.com/commaai/opendbc/blob/master/toyota_nodsu_pt_generated.dbc
+    //BO_ 401 STEERING_LTA: 8 XXX
+    // SG_ CHECKSUM : 63|8@0+ (1,0) [0|255] "" XXX
+    // SG_ SETME_X3 : 29|2@0+ (1,0) [0|3] "" XXX
+    // SG_ PERCENTAGE : 39|8@0+ (1,0) [0|255] "" XXX
+    // SG_ SETME_X64 : 47|8@0+ (1,0) [0|255] "" XXX
+    // SG_ ANGLE : 55|8@0- (0.5,0) [0|255] "" XXX
+    // SG_ STEER_ANGLE_CMD : 15|16@0- (0.0573,0) [-540|540] "" XXX
+    // SG_ STEER_REQUEST_2 : 25|1@0+ (1,0) [0|1] "" XXX
+    // SG_ LKA_ACTIVE : 26|1@0+ (1,0) [0|1] "" XXX
+    // SG_ BIT : 30|1@0+ (1,0) [0|1] "" XXX
+    // SG_ COUNTER : 6|6@0+ (1,0) [0|255] "" XXX
+    // SG_ STEER_REQUEST : 0|1@0+ (1,0) [0|1] "" XXX
+    // SG_ SETME_X1 : 7|1@0+ (1,0) [0|1] "" XXX
+    
+   // CM_ SG_ 401 PERCENTAGE "driver override percentage (0-100), very close to steeringPressed in OP";
+   // CM_ SG_ 401 SETME_X64 "ramps to 0 smoothly then back on falling edge of STEER_REQUEST if BIT isn't 1";
+   // CM_ SG_ 401 ANGLE "angle of car relative to lane center on LTA camera";
+   // CM_ SG_ 401 STEER_ANGLE_CMD "desired angle, OEM steers up to 95 degrees, no angle limit but torque will bottom out";
+   // CM_ SG_ 401 BIT "has correlation to STEER_REQUEST";
+   // CM_ SG_ 401 STEER_REQUEST "enable bit for steering, 1 to steer, 0 to not";
+   // CM_ SG_ 401 STEER_REQUEST_2 "enable bit for steering, 1 to steer, 0 to not";
+   // CM_ SG_ 401 LKA_ACTIVE "1 when using LTA for LKA";
+    
+   frame.bus = 0;
+   frame.busTime = 0;
+   frame.dataLength = 8;
+   frame.messageID = 401;    // STEERING_LTA
+   *((uint64_t*)frame.data) = 0;
+    
+    
+    char SETME_X3 = 0x3;
+    *((uint64_t*)frame.data) |= ((uint64_t)(SETME_X3 & 0x03) << (29+1-2));
+    char PERCENTAGE = 100;
+    *((uint64_t*)frame.data) |= ((uint64_t)(PERCENTAGE & 0xFF) << (39+1-8));
+    char SETME_X64 = 0x64;
+    *((uint64_t*)frame.data) |= ((uint64_t)(SETME_X64 & 0xFF) << (47+1-8));
+    char ANGLE = 0;
+    *((uint64_t*)frame.data) |= ((uint64_t)(ANGLE & 0xFF) << (55+1-8));
+    uint16_t STEER_ANGLE_CMD = steer;
+    *((uint64_t*)frame.data) |= ((uint64_t)((0xFF00 & STEER_ANGLE_CMD) >> 8) << (15+(16/2)+1-16));
+    *((uint64_t*)frame.data) |= ((uint64_t)(0x00FF & STEER_ANGLE_CMD)  << (23+(16/2)+1-16));
+    bool STEER_REQUEST_2 = steerRequest;
+    *((uint64_t*)frame.data) |= ((uint64_t)(STEER_REQUEST_2 & 0x01) << (25+1-1));
+    bool LKA_ACTIVE = 0;    // ???? TODO HACK WIP HALP!
+    *((uint64_t*)frame.data) |= ((uint64_t)(LKA_ACTIVE & 0x01) << (26+1-1));
+    bool BIT = 0;
+    *((uint64_t*)frame.data) |= ((uint64_t)(BIT & 0x01) << (30+1-1));
+    unsigned char COUNT = count + 128;  // TODO: this doesn't make sense if it's only 6 bits long
+    *((uint64_t*)frame.data) |= ((uint64_t)(COUNT & 0x3F) << (6+1-6));
+    
+    bool STEER_REQUEST = steerRequest;
+    *((uint64_t*)frame.data) |= ((uint64_t)(STEER_REQUEST & 0x01) << (0+1-1));
+    char SETME_X1 = 0x1;
+    *((uint64_t*)frame.data) |= ((uint64_t)(SETME_X1 & 0x01) << (7+1-1));
+    
+    
+    // Checksum at the end:
+    *((uint64_t*)frame.data) |= ((uint64_t)toyotaChecksum(frame) << (63+1-8));
+    
+    return frame;
+}
 CanFrame Panda::buildSteeringLKA( unsigned char count, int16_t steer_torque, bool steerRequest, unsigned char lkaState ) {
 	
 	// max steer_torque: const int TOYOTA_MAX_TORQUE = 1500;       // max torque cmd allowed ever
@@ -169,7 +233,7 @@ CanFrame Panda::buildSteeringLKA( unsigned char count, int16_t steer_torque, boo
 	frame.bus = 0;
 	frame.busTime = 0;
 	frame.dataLength = 5;
-	frame.messageID = 740;	// LKAS_HUD
+	frame.messageID = 740;	// STEERING_LKA
 	*((uint64_t*)frame.data) = 0;
 	
 	//bool STEER_REQUEST = 0;
@@ -192,6 +256,25 @@ CanFrame Panda::buildSteeringLKA( unsigned char count, int16_t steer_torque, boo
 	*((uint64_t*)frame.data) |= ((uint64_t)toyotaChecksum(frame) << (39+1-8));
 	
 	return frame;
+}
+
+bool Panda::toyotaParseSteeringLKA(CanFrame* frame, unsigned char* count, int16_t* steerTorque, bool* steerRequest, unsigned char* lkaState ) {
+    
+    uint8_t checksum = toyotaChecksum(*frame);
+    if(frame->dataLength != 5 || checksum != frame->data[4] || frame->messageID != 740) {
+        printf("checksum = 0x%02X, toyotaChecksum() = 0x%02X\n", checksum, toyotaChecksum(*frame));
+        return false;
+    }
+    
+    *count = (*((uint64_t*)frame->data) >> (6+1-6)) & 0x3F;
+    *steerRequest = (*((uint64_t*)frame->data) >> (0+1-1)) & 0x01;
+    *lkaState = (*((uint64_t*)frame->data) >> (31+1-8)) & 0xFF;
+    
+    *steerTorque = (*((uint64_t*)frame->data)  >> (15+(16/2)+1-16 - 8)) & 0xFF00;
+    *steerTorque |= (*((uint64_t*)frame->data)  >> (23+(16/2)+1-16)) & 0x00FF;
+    
+    
+    return true;
 }
 
 CanFrame Panda::buildACC_CONTROL(double acc, bool permitBraking, bool releaseStandstill, bool miniCar, bool cancelRequest) {

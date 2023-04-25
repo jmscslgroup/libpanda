@@ -1103,7 +1103,8 @@ void Usb::sendHeartBeat() {
 	// If the hearbeat is greater than: (check_started() ? EON_HEARTBEAT_IGNITION_CNT_ON : EON_HEARTBEAT_IGNITION_CNT_OFF)
 	// or: (check_started() ? 5U : 2U)
 	// then the panda will enter a SAFETY_SILENT mode
-	sendPandaHardwareSimple( REQUEST_HEARTBEAT, 0, 0);	// TODO test this
+//	sendPandaHardwareSimple( REQUEST_HEARTBEAT, 0, 0);	// TODO test this
+    sendPandaHardwareSimple( REQUEST_HEARTBEAT, 1, 0);    // TODO test this
 }
 
 void Usb::setKLlineFiveBaudInit( int config, int baud ) {
