@@ -140,6 +140,8 @@ void Controller::entryAction() {
 			 const uint32_t TOYOTA_PARAM_STOCK_LONGITUDINAL = 2U << TOYOTA_PARAM_OFFSET;
 			 
 			 // The value of 73 is based on car controller code in openpilot for Toyotas
+             // from openpilot/selfdrive/car/toyota/interface.py in the RAV4 section, ret.safetyParam
+             // Oops. that was old, now it/s in toyota/values.py under EPS_SCALE dictionary.  73 is default
 			 */
 			pandaHandler->getUsb().setSafetyMode(SAFETY_TOYOTA, 73);
 			break;

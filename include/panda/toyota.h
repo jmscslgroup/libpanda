@@ -35,7 +35,7 @@
 //#define TIME_HEARTBEAT_FAIL_STEERING (1.0)		// In seconds, time until a heartbeat fails from not receiving a new steering command
 //#define TIME_HEARTBEAT_FAIL_ACCELERATION (1.0)	// In seconds, time until a heartbeat fails from not receiving a new acceleration command
 
-#define TOYOTA_COMMAND_THREAD_RATE (200.0)	// Defines the rate of the thread, not for any particular command to be sent.
+#define TOYOTA_COMMAND_THREAD_RATE (2000.0)	// Defines the rate of the thread, not for any particular command to be sent.
 //#define TOYOTA_RATE_HEARTBEAT (2.0)			// This is for the panda in general, not Toyota specific
 //#define TOYOTA_RATE_CA_REPORT (1.0)	// This is for notifications of controls_allowed
 #define TOYOTA_RATE_LKA (1.0)				// Rate of the LKAS_HUD command
@@ -165,7 +165,41 @@ void printFrame( Panda::CanFrame frame );
 //
 //};
 
+//class ToyotaSteeringTorqueLimiter; // HACK
+// sample struct that keeps 6 samples in memory
+struct sample_t {
+    int values[6];
+    int min;
+    int max;
+};// sample_t_default = {.values = {0}, .min = 0, .max = 0};
 
+class ToyotaSteeringTorqueLimiter : public Panda::CanListener {
+private:
+    struct sample_t torque_meas;       // last 6 motor torques produced by the eps
+    
+    double last_steer;
+    
+    // safety param flags
+    // first byte is for eps factor, second is for flags
+    const uint32_t TOYOTA_PARAM_OFFSET = 8U;
+    const uint32_t TOYOTA_EPS_FACTOR = (1U << TOYOTA_PARAM_OFFSET) - 1U;
+    
+    int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
+    
+    void newDataNotification(  Panda::CanFrame* frame );
+    
+    void handleEpsFrame(Panda::CanFrame& frame);
+    
+public:
+    ToyotaSteeringTorqueLimiter();
+    void initWithParam(uint16_t param);
+    
+    int measuredTorque();
+    
+    // This runs at 100Hz per toyota's carcntroller.py
+    int doIt(double input);
+    
+};
 /*!
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
@@ -309,6 +343,7 @@ protected:
 	void handleSetAcceleration( double acceleration );
 public:
 	
+    ToyotaSteeringTorqueLimiter mToyotaSteeringTorqueLimiter;
 	
 //	~ToyotaHandler();
 	
