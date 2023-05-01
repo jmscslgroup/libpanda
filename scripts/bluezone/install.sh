@@ -61,6 +61,9 @@ systemctl enable bluezone.service
 
 grep -qxF "bluetoothctl discoverable on" /etc/rc.local || echo "bluetoothctl discoverable on" >> /etc/rc.local
 
+sed -i '/bluetoothctl discoverable on/d' /etc/rc.local
+sed -i '/^exit 0/i bluetoothctl discoverable on' /etc/rc.local
+
 # Start everything:
 systemctl restart dbus-org.bluez
 systemctl restart bluetooth
