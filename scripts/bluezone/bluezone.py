@@ -324,7 +324,8 @@ class CirclesOutputCharacteristic(Characteristic):
         
         # get ifaces:
         interfaces = [];
-        cmd = "ls /sys/class/net/ -l | tail -n +2 | cut -d ' ' -f 9"
+#        cmd = "ls /sys/class/net/ -l | tail -n +2 | cut -d ' ' -f 9"
+        cmd = "ls /sys/class/net/"
         try:
             interfaces = subprocess.check_output(cmd, shell=True, encoding='utf-8').split("\n")[0:-1]
         except:
