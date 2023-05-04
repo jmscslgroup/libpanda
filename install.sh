@@ -81,7 +81,6 @@ fi
 ./build.sh
 cd $SRC_DIR/scripts/xUps && sudo ./install.sh
 cd $SRC_DIR/scripts/circles-ui && sudo ./install.sh
-cd $SRC_DIR/scripts/circlesmanager && sudo ./install.sh
 cd $SRC_DIR/scripts/gps-tracker && sudo ./install.sh
 cd $SRC_DIR/scripts/experiments && ./install.sh
 cd $SRC_DIR/scripts/circlesplanner && sudo ./install.sh
@@ -97,6 +96,9 @@ cd $SRC_DIR/apps && sudo ./install.sh
 
 sudo systemctl enable ssh
 sudo systemctl start ssh
+
+# jsut ensure all the abaove installs before this due to its reboot functionality:
+cd $SRC_DIR/scripts/circlesmanager && sudo ./install.sh
 
 
 #cp scripts/addWifiAp.sh ../
@@ -180,3 +182,6 @@ then
 else
 	sudo addWifiApSimple -s vuDevices -p Acorn1873
 fi
+
+# This will invoke a reboot on first installation if hostname is not "circles"
+sudo systemctl restart circlesmanager

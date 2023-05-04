@@ -37,7 +37,7 @@ systemctl daemon-reload
 
 systemctl enable circlesmanager.service
 
-systemctl restart circlesmanager.service
+#systemctl restart circlesmanager.service
 
 
 # Setup status files:
