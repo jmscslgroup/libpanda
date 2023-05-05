@@ -88,6 +88,7 @@ class CirclesManager:
 				time.sleep(5)
 				os.system("echo \"- - - - running irsyncCyverse...\"")
 				os.system("runuser -l `cat /etc/libpanda.d/libpanda_usr` -c 'irsyncCyverse -f'")
+                os.system("echo \"- - - - running autoUpdate...\"")
                 os.system("/usr/bin/bash /usr/local/sbin/autoUpdate.sh")
                 
 				try:	# This whole try statement is a hack fix for preventing shutdowns if power was reconnected during irsync
