@@ -78,11 +78,13 @@ class CirclesManager:
 			if os.system("simplePing") == 0:	# Error code 0 means success
 				os.system("echo \"- - -  Internet was found! Stopping services...\"")
 				#os.system("irsyncCyverse -f")
-				pandarecordWasRunning = os.system("simpleCheckPandarecord")
-				canWasRunning = os.system("simpleCheckCan")
-				os.system("systemctl stop --no-block pandarecord")
-				os.system("systemctl stop --no-block rosnodeChecker")
-				os.system("systemctl stop --no-block can")
+#				pandarecordWasRunning = os.system("simpleCheckPandarecord")
+#				canWasRunning = os.system("simpleCheckCan")
+#				os.system("systemctl stop --no-block pandarecord")
+#				os.system("systemctl stop --no-block rosnodeChecker")
+#				os.system("systemctl stop --no-block can")
+                os.system("libpanda-app-manager -k")
+
 				time.sleep(5)
 				os.system("echo \"- - - - running irsyncCyverse...\"")
 				os.system("runuser -l `cat /etc/libpanda.d/libpanda_usr` -c 'irsyncCyverse -f'")
@@ -91,14 +93,15 @@ class CirclesManager:
 					if not hasExternalPower:
 						self.powerDisconnectTime = self.powerOffTimeoutInSeconds
 					else:
-						if pandarecordWasRunning:
-							#os.system("service pandarecord start")
-							os.system("systemctl start --no-block pandarecord")
-						#if canWasRunning:
-						#	os.system("service can start")
-						else:
-							os.system("systemctl start --no-block can")
-							os.system("systemctl start --no-block rosnodeChecker")
+                        os.system("libpanda-app-manager -s")
+#						if pandarecordWasRunning:
+#							#os.system("service pandarecord start")
+#							os.system("systemctl start --no-block pandarecord")
+#						#if canWasRunning:
+#						#	os.system("service can start")
+#						else:
+#							os.system("systemctl start --no-block can")
+#							os.system("systemctl start --no-block rosnodeChecker")
 				except Exception as e:
 					logging.info(e)
 			
