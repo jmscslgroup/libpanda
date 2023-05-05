@@ -80,9 +80,6 @@ class CirclesManager:
                 #os.system("irsyncCyverse -f")
 #                pandarecordWasRunning = os.system("simpleCheckPandarecord")
 #                canWasRunning = os.system("simpleCheckCan")
-#                os.system("systemctl stop --no-block pandarecord")
-#                os.system("systemctl stop --no-block rosnodeChecker")
-#                os.system("systemctl stop --no-block can")
                 os.system("libpanda-app-manager -k")
 
                 time.sleep(5)
@@ -97,14 +94,6 @@ class CirclesManager:
                         self.powerDisconnectTime = self.powerOffTimeoutInSeconds
                     else:
                         os.system("libpanda-app-manager -s")
-#                        if pandarecordWasRunning:
-#                            #os.system("service pandarecord start")
-#                            os.system("systemctl start --no-block pandarecord")
-#                        #if canWasRunning:
-#                        #    os.system("service can start")
-#                        else:
-#                            os.system("systemctl start --no-block can")
-#                            os.system("systemctl start --no-block rosnodeChecker")
                 except Exception as e:
                     logging.info(e)
             
