@@ -3,6 +3,10 @@
 #  This Noetic install version was created for the latest 64-bit raspbian image (debian-bullseye) since there are dependency issues with non-python3 modules.
 
 
+# This conflicts with icommands due to icomands' funky build.  To run this, remove icommands if installed:
+# sudo apt remove irods-icommands
+# sudo apt --fix-broken install
+
 echo "----------------------------"
 
 if [[ $EUID == 0 ]];
@@ -26,7 +30,8 @@ sudo apt-get upgrade -y
 
 #sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake
 #sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake python-empy python-setuptools catkin # python3-catkin python3-empy python3-catkin-pkg python3-yaml
-sudo apt-get install -y python3-rosdep python3-rosinstall-generator python3-vcstool build-essential cmake python3-wstool python3-rosinstall
+pip3 install vcstool
+sudo apt-get install -y python3-rosdep python3-rosinstall-generator build-essential cmake python3-wstool python3-rosinstall liblog4cxx-dev
 #extras for noetic:
 sudo apt-get install -y python3-empy python3-catkin python3-catkin-pkg python3-yaml python3-rosdep
 
