@@ -148,16 +148,16 @@ sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 
 
 
-if [ ! -d ~/irods-icommands-debs ]; then
-	tar xzf ~/libpanda/scripts/irods-icommands-debs.tgz -C ~/
-
-	cd ~/irods-icommands-debs
-	./install.sh
-	# the following needs to run AFTER installing irods commands
-	sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
-else
-	echo "irods icommands already installed."
-fi
+#if [ ! -d ~/irods-icommands-debs ]; then
+#	tar xzf ~/libpanda/scripts/irods-icommands-debs.tgz -C ~/
+#
+#	cd ~/irods-icommands-debs
+#	./install.sh
+#	# the following needs to run AFTER installing irods commands
+#	sudo sed -i 's/libssl1.0.0/libssl1.1/g' /var/lib/dpkg/status
+#else
+#	echo "irods icommands already installed."
+#fi
 
 # enable persisten journalctl logging:
 sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
