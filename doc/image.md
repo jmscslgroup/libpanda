@@ -22,6 +22,8 @@ The latest images can be downloaded from here:
 
 [CIRCLES Raspberry Pi Images](https://drive.google.com/drive/folders/1elnHg37kVFJXYLIB2_yXWHSoSZLLiZKJ?usp=sharing)
 
+[CIRCLES Raspberry Pi Images 2](https://drive.google.com/drive/folders/14CWv_xOj0ELYZ9_ewZQV0nxp8yHgw82c?usp=share_link)
+
 An SD card image is distributed for purposes of consistently and deployment convenience.  The intend of this image is to perform vehicle data collection or ROS-based acceleration control commands.  To learn more about libpanda, see the following:
 
 [https://github.com/jmscslgroup/libpanda](https://github.com/jmscslgroup/libpanda)
@@ -31,6 +33,9 @@ An SD card image is distributed for purposes of consistently and deployment conv
 <a name="changelog"></a>
 ___
 # Change Log
+
+- [circles-raspbian-2023-08-01.img.tar.gz](https://drive.google.com/file/d/1UMfDHGX5MwoU_Axsu2IcAroGZL_-ArcO/view?usp=share_link)
+	Includes autoupdate by default.  This image also includes blue zone, so things like privzone can be used to define zones for the latest pandarecord.  This also has libapnda apps that work with some easily configurable programs like pandarecord, cbf, and the joystick2car apps all configureable through privzone.
 
 - [circles-raspbian-2022-11-03.img.gz](https://drive.google.com/file/d/1YEusko0QJddRBEGpIbmps8o8WxrUFnWL/view?usp=sharing)
 	Configured for the November MVT experiment. Derived from the Raspbian 64 bit lite image from September 22, 2022. Libpanda was then cloned, and the build.sh and install.sh scripts were executed. 
