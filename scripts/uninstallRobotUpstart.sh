@@ -11,7 +11,7 @@ source /home/$LIBPANDA_USER/catkin_ws/devel/setup.bash
 # check to see if pandarecord.service is installed
 if [ "x"`systemctl list-units | grep -c pandarecord.service` = "x1" ]; then
 	echo "Uninstalling pandarecord.service"
-	#rosrun robot_upstart uninstall pandarecord 
+	#rosrun robot_upstart uninstall pandarecord
 	systemctl disable pandarecord
 fi
 
