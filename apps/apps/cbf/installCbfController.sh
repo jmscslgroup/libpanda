@@ -16,7 +16,7 @@ source ~/.bashrc
 
 pushd ~/catkin_ws
 source devel/setup.sh
-rosrun robot_upstart uninstall can
+#rosrun robot_upstart uninstall can
 rosrun robot_upstart install can_to_ros/launch/${LAUNCH_FILE} --user root
 
 echo "Enabling can_to_ros startup script"

@@ -173,8 +173,12 @@ struct sample_t {
     int max;
 };// sample_t_default = {.values = {0}, .min = 0, .max = 0};
 
+class SteeringLimiterListener;
+
 class ToyotaSteeringTorqueLimiter : public Panda::CanListener {
 private:
+    std::vector<SteeringLimiterListener*> limitObservers;
+    
     struct sample_t torque_meas;       // last 6 motor torques produced by the eps
     
     double last_steer;
@@ -199,7 +203,33 @@ public:
     // This runs at 100Hz per toyota's carcntroller.py
     int doIt(double input);
     
+    void addObserver( SteeringLimiterListener* observer );
 };
+
+
+typedef enum {
+    STEERING_STATE_OK = 0,
+    STEERING_STATE_LIMITED
+} STEERING_STATE;
+
+class SteeringLimiterListener {
+//friend class ToyotaSteeringTorqueLimiter;
+private:
+    STEERING_STATE limitError;
+    
+protected:
+    virtual void steeringLimitNotification( STEERING_STATE ) {};
+    
+public:
+    
+    SteeringLimiterListener()
+    : limitError(STEERING_STATE_OK) {};
+    
+    virtual ~SteeringLimiterListener() = 0;
+    
+    void setLimitNotification( STEERING_STATE value );
+};
+
 /*!
  @class ToyotaHandler
  \brief A threaded interface class that handles sending contorl commands to a Panda via a Panda::Handler
@@ -345,6 +375,7 @@ public:
 	
     ToyotaSteeringTorqueLimiter mToyotaSteeringTorqueLimiter;
 	
+    void addSteeringTorqueLimiterListener(SteeringLimiterListener* listener);
 //	~ToyotaHandler();
 	
 	/*!

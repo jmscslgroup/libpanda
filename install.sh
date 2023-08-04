@@ -82,7 +82,7 @@ fi
 cd $SRC_DIR/scripts/xUps && sudo ./install.sh
 cd $SRC_DIR/scripts/circles-ui && sudo ./install.sh
 cd $SRC_DIR/scripts/gps-tracker && sudo ./install.sh
-cd $SRC_DIR/scripts/experiments && ./install.sh
+#cd $SRC_DIR/scripts/experiments && ./install.sh
 cd $SRC_DIR/scripts/circlesplanner && sudo ./install.sh
 cd $SRC_DIR/scripts/piStatus && sudo ./install.sh
 cd $SRC_DIR/scripts/autoUpdate && sudo ./install.sh

@@ -48,7 +48,12 @@ private:
     };
 };
 
-
+class ExampleSteeringLimitListener: public Panda::SteeringLimiterListener {
+private:
+    void steeringLimitNotification( Panda::STEERING_STATE value) {
+        std::cout << "New steering limit notification: " << (int)value << std::endl;
+    }
+};
 
 static volatile bool keepRunning = true;
 void killPanda(int killSignal) {
@@ -423,6 +428,8 @@ int main(int argc, char **argv) {
     ExampleControllerListener myExampleControllerListener;
     pandaController->getController()->addObserver(&myExampleControllerListener);
     
+    ExampleSteeringLimitListener myExampleSteeringLimitListener;    // This is only added if toyota is confrimed (below, next if statemenr)
+    
     
     ToyotaSteeringTorqueLimiter mToyotaSteeringTorqueLimiter2;
     ToyotaSteeringViolationSimulator mToyotaSteeringViolationSimulator;
@@ -435,6 +442,8 @@ int main(int argc, char **argv) {
         // This is nasty:
         Panda::ToyotaHandler* toyotaHandler = static_cast<Panda::ToyotaHandler*>(pandaController->getController());
         pandaHandler.addCanObserver(toyotaHandler->mToyotaSteeringTorqueLimiter);
+        
+        toyotaHandler->addSteeringTorqueLimiterListener(&myExampleSteeringLimitListener);
         
     }
     
