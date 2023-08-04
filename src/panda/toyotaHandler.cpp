@@ -175,10 +175,26 @@ ToyotaSteeringTorqueLimiter::ToyotaSteeringTorqueLimiter()
     int ToyotaSteeringTorqueLimiter::doIt(double input) {
         int result =  apply_meas_steer_torque_limits(input, last_steer, torque_meas.values[0], TOYOTA_MAX_RATE_UP, TOYOTA_MAX_RATE_DOWN, TOYOTA_MAX_TORQUE_ERROR, TOYOTA_MAX_TORQUE);
         last_steer = result;
+        if(result != input) {
+            for(std::vector<SteeringLimiterListener*>::iterator it = limitObservers.begin(); it != limitObservers.end(); it++) {
+                (*it)->setLimitNotification( STEERING_STATE_OK );
+            }
+        } else {
+            for(std::vector<SteeringLimiterListener*>::iterator it = limitObservers.begin(); it != limitObservers.end(); it++) {
+            (*it)->setLimitNotification( STEERING_STATE_LIMITED );
+        }
+            
+        }
         return result;
     }
     
+void ToyotaSteeringTorqueLimiter::addObserver( SteeringLimiterListener* observer ) {
+    limitObservers.push_back(observer);
+}
 
+void ToyotaHandler::addSteeringTorqueLimiterListener(SteeringLimiterListener* listener) {
+    mToyotaSteeringTorqueLimiter.addObserver( listener );
+}
 
 
 
