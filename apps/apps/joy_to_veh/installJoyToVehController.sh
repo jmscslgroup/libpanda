@@ -15,12 +15,11 @@ source ~/.bashrc
 
 pushd ~/catkin_ws
 source devel/setup.sh
-rosrun robot_upstart uninstall can #this has to be changed to uninstall dynamically
 rosrun robot_upstart install ${REPO}/launch/${LAUNCH_FILE} --user root
 
 echo "Enabling joy_to_veh startup script"
 sudo systemctl daemon-reload
-sudo systemctl enable joy_to_veh
+sudo systemctl enable joy
 popd
 
 echo "----------------------------"

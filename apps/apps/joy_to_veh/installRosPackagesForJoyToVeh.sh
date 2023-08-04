@@ -61,11 +61,11 @@ source devel/setup.sh
 catkin_make
 
 # ROS upstart install:
-rosrun robot_upstart install can_to_ros/launch/vehicle_interface.launch --user root
+#rosrun robot_upstart install can_to_ros/launch/vehicle_interface.launch --user root
 
-echo "Enabling can_to_ros startup script"
-sudo systemctl daemon-reload
-sudo systemctl enable can
+#echo "Enabling can_to_ros startup script"
+#sudo systemctl daemon-reload
+#sudo systemctl enable can
 
 
 # Hash saving:

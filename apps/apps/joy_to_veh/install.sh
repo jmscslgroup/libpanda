@@ -13,9 +13,9 @@ source /home/$LIBPANDA_USER/.bashrc
 
 runuser -l $LIBPANDA_USER -c /etc/libpanda.d/apps/joy_to_veh/installRosPackagesForJoyToVeh.sh
 
-echo "Uninstalling original can service if it exists..."
-cd $LIBPANDA_SRC/scripts
-./uninstallRobotUpstart.sh
+#echo "Uninstalling original can service if it exists..."
+#cd $LIBPANDA_SRC/scripts
+#./uninstallRobotUpstart.sh
 
 echo "Installing joy_to_veh demo..."
 runuser -l $LIBPANDA_USER -c /etc/libpanda.d/apps/joy_to_veh/installJoyToVehController.sh
