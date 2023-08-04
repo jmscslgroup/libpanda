@@ -19,6 +19,7 @@ cat $ROS_PACKAGE_REPOSITORY_CSV | tr -d " \t\r" | awk -F',' '{print $2 ": " subs
 cd ~
 if [ ! -d catkin_ws/src ]; then
     mkdir -p catkin_ws/src
+    source /opt/ros/noetic/setup.bash   # will it always be noetic, in this location?
 fi
 cd catkin_ws/src
 
