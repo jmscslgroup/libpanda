@@ -11,7 +11,7 @@ LIBPANDA_USER=$(cat /etc/libpanda.d/libpanda_usr)
 
 source /home/$LIBPANDA_USER/.bashrc
 
-apt-get install libdiagnostic-updater-dev
+apt-get install -y libdiagnostic-updater-dev
 
 runuser -l $LIBPANDA_USER -c /etc/libpanda.d/apps/joy_to_veh/installRosPackagesForJoyToVeh.sh
 
