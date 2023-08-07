@@ -196,7 +196,10 @@ void ToyotaHandler::addSteeringTorqueLimiterListener(SteeringLimiterListener* li
     mToyotaSteeringTorqueLimiter.addObserver( listener );
 }
 
-
+void ToyotaHandler::setPandaHandler(Panda::Handler* handler) {
+    Controller::setPandaHandler(handler);
+    handler->addCanObserver(mToyotaSteeringTorqueLimiter);
+}
 
 //ToyotaHandler::ToyotaHandler(Panda::Handler* handler) {
 ToyotaHandler::ToyotaHandler() {

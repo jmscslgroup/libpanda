@@ -85,6 +85,8 @@ protected:
 	virtual void handleSetAcceleration( double acceleration ) = 0;
 	
 	virtual void newCanNotification(CanFrame* canFrame) {};
+    
+    virtual void setPandaHandler(Panda::Handler* handler);
 	
 public:
 	virtual ~Controller() = 0;

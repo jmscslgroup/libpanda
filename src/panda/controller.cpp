@@ -46,12 +46,17 @@ Controller*  Controller::create( Panda::Handler& handler ) {
 			break;
 	}
 	if (result != NULL) {
-		result->pandaHandler = &handler;
+//		result->pandaHandler = &handler;
+        result->setPandaHandler(&handler);
 		result->pandaHandler->getCan().addObserver(result);
 		result->pandaHandler->addHeartbeatObserver(*result);
 	}
 	
 	return result;
+}
+
+void Controller::setPandaHandler(Panda::Handler* handler) {
+    this->pandaHandler = handler;
 }
 
 //void Controller::sendHeartBeat() {

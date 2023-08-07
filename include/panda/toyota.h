@@ -341,6 +341,9 @@ protected:
 	 \brief Construction must be done with a Panda::Handler
 	 */
 	ToyotaHandler();
+    
+    // calls base class then adds its own connections
+    void setPandaHandler(Panda::Handler* handler);
 	
 	/*!
 	 \brief Sends a steering torque to the steering wheel (non-working).
@@ -494,6 +497,9 @@ public:
 //	 \param observer The observer for notification subscription
 //	 */
 //	void addObserver( ToyotaListener* observer );
+    
+    
+    
 };
 
 }

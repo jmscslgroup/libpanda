@@ -441,7 +441,7 @@ int main(int argc, char **argv) {
         
         // This is nasty:
         Panda::ToyotaHandler* toyotaHandler = static_cast<Panda::ToyotaHandler*>(pandaController->getController());
-        pandaHandler.addCanObserver(toyotaHandler->mToyotaSteeringTorqueLimiter);
+//        pandaHandler.addCanObserver(toyotaHandler->mToyotaSteeringTorqueLimiter);
         
         toyotaHandler->addSteeringTorqueLimiterListener(&myExampleSteeringLimitListener);
         
