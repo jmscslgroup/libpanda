@@ -2,13 +2,26 @@
 
 INTERACTIVE=True
 APP_DIR=/etc/libpanda.d/apps
+#APP_THIRD_PARTY_DIR=/etc/libpanda.d/apps-third-party
+APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
 CURRENT_APP_FILE=/etc/libpanda.d/app
+APP_MANIFEST=/etc/libpanda.d/app-manifest.csv
 
 #echo " - Getting app list..."
 APPS=$(ls $APP_DIR)
-#APPS="${APPS}"
-
-#echo " Apps: ${APPS}"
+#while IFS= read -r LINE
+#do
+#    #echo $LINE
+#    LINE=$(echo $LINE | tr -d [:space:])
+#    IFS=","
+#    set -- $LINE
+#    IFS=
+#    REPOSITORY=$1
+##    echo "Appending: ${REPOSITORY}"
+#    APPS+=("${REPOSITORY}")
+#    APPS="${APPS}"$'\n'"${REPOSITORY}"
+#done < $APP_MANIFEST
+#echo "${APPS}"
 
 CURRENT_APP=$(cat $CURRENT_APP_FILE)
 #echo " Current App: ${CURRENT_APP}"
@@ -43,9 +56,155 @@ do_status () {
     systemctl status $SERVICE | grep Active | sed "s/.*Active: //g"
 }
 
+do_repo_update () {
+    APP_TO_UPDATE=$1
+    APP_BRANCH=$2
+    THIS_APP_DIRECTORY=${APP_TO_UPDATE%%/*}
+    
+    
+    echo "Updating App ${APP_TO_UPDATE} with branch ${APP_BRANCH}..."
+
+    mkdir -p $APP_REPOSITORIES/$THIS_APP_DIRECTORY
+    if [ ! -d $APP_REPOSITORIES/$APP_TO_UPDATE ]; then
+        cd $APP_REPOSITORIES/$THIS_APP_DIRECTORY
+        git clone https://github.com/$APP_TO_UPDATE
+        cd ../$APP_TO_UPDATE
+    else
+        echo "Entering ${APP_REPOSITORIES}/${APP_TO_UPDATE}"
+        cd $APP_REPOSITORIES/$APP_TO_UPDATE
+        git pull
+    fi
+                
+    git checkout $APP_BRANCH
+    
+    pwd
+    # now parse the yaml file, if it exists
+    if [ -f libpanda-apps.yaml ]; then
+        indices=$(yq e '.apps | to_entries | .[] | .key' libpanda-apps.yaml)
+
+        for index in ${indices}
+        do
+            echo ""
+            echo "Element $index"
+#           yq e ".apps[${index}]" libpanda-apps.yaml
+            APP_NAME=$(yq e ".apps[${index}].name" libpanda-apps.yaml)
+            APP_PATH=$(yq e ".apps[${index}] | select(has(\"path\")) | .path" libpanda-apps.yaml)
+            if [ -z "$APP_PATH" ]; then
+                APP_PATH=$APP_NAME
+            fi
+            echo "Copying App \"${APP_NAME}\" from repository path ${APP_PATH} into ${APP_DIR}/"
+            
+            cp -r ${APP_PATH} ${APP_DIR}/
+        done
+
+    else
+        echo "Error!  Repository $APP_TO_UPDATE is missing libpanda-app.yaml...."
+    fi
+}
+
+do_repo_update_all () {
+    echo "Updating all apps..."
+    rm -rf $APP_DIR # Danger!
+    mkdir -p $APP_DIR
+    
+    OLDIFS=$IFS
+    while IFS= read -r LINE
+    do
+        #echo $LINE
+        LINE=$(echo $LINE | tr -d [:space:])
+        IFS=","
+        set -- $LINE
+        IFS=
+        REPOSITORY=$1
+        BRANCH=$2
+    
+        IFS=$OLDIFS
+        if [ ! -z "${REPOSITORY}" ]; then
+            do_repo_update ${REPOSITORY} ${BRANCH}
+        fi
+##    cd $APP_THIRD_PARTY_DIR
+#    cd $APP_REPOSITORIES
+#
+#    echo "Checking ${REPOSITORY} with brach ${BRANCH}"
+#
+#    if [ -d ${REPOSITORY} ]; then
+#        cd ${REPOSITORY}
+#        GIT_WORKING_BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d "\n\r")
+#        if [ "$GIT_WORKING_BRANCH" != "$BRANCH" ]; then
+#            echo " - Mismatch in hash, checking out specified commit..."
+#            git pull
+#            git checkout $BRANCH
+#        else
+#            echo " - Already on the corrent branch!"
+#        fi
+#    fi
+    done < $APP_MANIFEST
+
+}
+
+do_repo_add () {
+    APP_TO_ADD=$1
+    
+    if [ "$#" -eq 2 ]; then
+#        echo "A branch was provided: $2"
+        APP_BRANCH=$2
+        echo "Attempting to add repository: ${APP_TO_ADD} with branch: ${APP_BRANCH}"
+    else
+        APP_BRANCH="main"
+        echo "Attempting to add repository: ${APP_TO_ADD}"
+    fi
+    
+    # check format:
+    re='([^[:space:]\/]+\/[^[:space:]\/]+)'
+    if  [[ "$APP_TO_ADD" =~ $re ]]; then
+        echo "You provided: ${BASH_REMATCH[1]}"
+    else
+        echo "Repository unrecognized: ${APP_TO_ADD}"
+        echo "Please provide in the format of <owner>/<repository>"
+        echo "For example: https://github.com/jmscslgroup/libpanda --> jmscslgroup/libpanda"
+        return 0
+    fi
+    
+    GIT_REPO="https://github.com/${APP_TO_ADD}"
+    if wget -q --method=HEAD ${GIT_REPO}; then
+        echo "Repository found and available!"
+    else
+        echo "Error getting repository, either it does not exist or internet is not available"
+        echo "Unable to resolve ${GIT_REPO}"
+        return 0
+    fi
+    
+#    sed -i -n -e '/^${APP_TO_ADD}\,/!p' -e '$a${APP_TO_ADD}\,\ ${APP_BRANCH}' /etc/libpanda.d/app-manifest.csv
+    #sed '/^${APP_TO_ADD},/{h;s/,.*/,${APP_BRANCH}/};${x;/^$/{s//${APP_TO_ADD}, ${APP_BRANCH}/;H};x}' /etc/libpanda.d/app-manifest.csv
+    
+    if [ -f /etc/libpanda.d/app-manifest.csv ]; then
+        sed -i '\!^'"$APP_TO_ADD"',!{h;s!,.*!, '"$APP_BRANCH"'!};${x;\!^$!{s!!'"$APP_TO_ADD"','"$APP_BRANCH"'!;H};x}' /etc/libpanda.d/app-manifest.csv
+    else
+        echo -e "${APP_TO_ADD}, ${APP_BRANCH}\n" > /etc/libpanda.d/app-manifest.csv
+    fi
+
+    do_repo_update $APP_TO_ADD $APP_BRANCH
+}
+
+do_repo_remove () {
+    APP_TO_REMOVE=$1
+    
+    #do_app_uninstall $APP_TO_REMOVE
+    echo "Removing app repository: $APP_TO_REMOVE"
+    
+#    echo ":$APP_TO_REMOVE,:d"
+    sed -i "\:$APP_TO_REMOVE,:d" /etc/libpanda.d/app-manifest.csv
+    
+    if [ -d $APP_REPOSITORIES//$APP_TO_REMOVE ]; then
+        rm -rf $APP_REPOSITORIES/$APP_TO_REMOVE
+    fi
+    
+    do_repo_update_all  # not elegant but whatever
+}
+
 do_app_uninstall () {
     APP_TO_REMOVE=$CURRENT_APP
-    echo "Removing App: $APP_TO_REMOVE"
+    echo "Uninstalling App: $APP_TO_REMOVE"
     
     if [ "$APP_TO_REMOVE" = "None" ]; then
         echo " - Nothing to do!"
@@ -158,8 +317,9 @@ fi
 
 
 
-
-while getopts ":htkdsculi:" o; do
+THIRD_PARTY_REPO=
+THIRD_PARTY_BRANCH=
+while getopts ":htkdscupli:g:b:r:" o; do
     case "${o}" in
         i) # Specify App to be installed
 #            echo "Installing: ${OPTARG}"
@@ -174,6 +334,18 @@ while getopts ":htkdsculi:" o; do
                 do_app_install $OPTARG
             fi
             
+            ;;
+        g) # Add 3rd Party App Repository (in form <owner>/<repo>). Example: -g jmscslgroup/libpanda
+            THIRD_PARTY_REPO=$OPTARG
+            ;;
+        b) # Specify Branch for 3rd Party App Repository (in addition to repository). Example: -g jmscslgroup/libpanda -b test_branch
+            THIRD_PARTY_BRANCH=$OPTARG
+            ;;
+        r) # Remove 3rd Party App Repository (in form <owner>/<repo>). Example: -r jmscslgroup/libpanda
+            do_repo_remove $OPTARG
+            ;;
+        p) # Updates all apps from their repositories
+            do_repo_update_all
             ;;
         u) # Uninstall current App
             echo "Removing: ${CURRENT_APP}"
@@ -204,6 +376,15 @@ while getopts ":htkdsculi:" o; do
     esac
 done
 
+if [ ! -z "$THIRD_PARTY_REPO" ];
+then
+    do_repo_add $THIRD_PARTY_REPO $THIRD_PARTY_BRANCH
+else
+    if [ ! -z "$THIRD_PARTY_BRANCH" ];
+    then
+        usage
+    fi
+fi
 
 exit 0
 
