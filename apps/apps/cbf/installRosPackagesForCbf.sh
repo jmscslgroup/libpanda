@@ -1,5 +1,5 @@
 #!/bin/bash
-# Author: Matt Bunting
+# Author: Matt Bunting, Matt Nice
 
 echo "----------------------------"
 if [[ $EUID == 0 ]];
@@ -55,10 +55,16 @@ do
 done < $ROS_PACKAGE_REPOSITORY_CSV
 
 
+
 # Build:
 cd ~/catkin_ws
 source devel/setup.sh
-catkin_make
+
+echo "Regenerating CanToRos"
+cd src/can_to_ros/scripts
+echo y | ./regenerateCanToRos.sh
+
+#catkin_make #this is redundant, called in regenerate script
 
 # ROS upstart install:
 #rosrun robot_upstart install can_to_ros/launch/vehicle_interface.launch --user root
@@ -70,7 +76,7 @@ sudo systemctl enable can
 
 # Hash saving:
 echo "Saving hashes to /etc/libpanda.d/git_hashes/"
-cd src
+cd ~/catkin_make/src
 sudo mkdir -p /etc/libpanda.d/git_hashes
 while IFS= read -r LINE
 do
