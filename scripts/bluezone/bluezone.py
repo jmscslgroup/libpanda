@@ -250,11 +250,13 @@ class CirclesOutputCharacteristic(Characteristic):
                 columns = line.split("\t");
                 print("Split tab: " + str(columns))
                 result.append({
-                    "app": columns[0],
-                    "service": columns[1],
-                    "enabled": columns[2],
-                    "running": columns[3],
-                    "description": columns[4].replace('\"', '')
+                    "repository": columns[0],
+                    "branch": columns[1],
+                    "app": columns[2],
+                    "service": columns[3],
+                    "enabled": columns[4],
+                    "running": columns[5],
+                    "description": columns[6].replace('\"', '')
                 })
         except subprocess.CalledProcessError as grepexc:
             print("error code", grepexc.returncode, grepexc.output)
@@ -579,6 +581,12 @@ class CirclesInputCharacteristic(Characteristic):
             self.handleZoneFile(json.loads(inputJson["contents"]))
         elif inputJson["type"] == "app_enable":
             self.handleAppEnable(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "app_update":
+            self.handleAppUpdate(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "app_add_repository":
+            self.handleAppAddRepository(json.loads(inputJson["contents"]))
+        elif inputJson["type"] == "app_remove_repository":
+            self.handleAppRemoveRepository(json.loads(inputJson["contents"]))
         else:
             self.service.set_status("Unregognized type: " + inputJson["type"])
     
@@ -619,6 +627,40 @@ class CirclesInputCharacteristic(Characteristic):
         except subprocess.CalledProcessError as grepexc:
             print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
             self.service.set_status("Error enabling app " + contents["app"])
+                
+    def handleAppUpdate(self, contents):
+        print(" - Updating All Apps" )
+        cmd = "libpanda-app-manager -p"
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+#            self.service.set_status("App " + contents["app"] + " enabled!")
+            self.service.set_status("App updated!")
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            self.service.set_status("Error updating app ")
+        
+    def handleAppAddRepository(self, contents):
+        print(" - Adding App Repository: " + contents["repository"] )
+        cmd = "libpanda-app-manager -g " + contents["repository"] + " -b " + contents["branch"]
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+#            self.service.set_status("App " + contents["app"] + " enabled!")
+            self.service.set_status("Repository updated!")
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            self.service.set_status("Error adding repository")
+            
+    def handleAppRemoveRepository(self, contents):
+        print(" - Removing App Repository: " + contents["repository"] )
+        cmd = "libpanda-app-manager -r " + contents["repository"]
+        try:
+            result = subprocess.check_output(cmd, shell=True)
+#            self.service.set_status("App " + contents["app"] + " enabled!")
+            self.service.set_status("Repository removed!")
+        except subprocess.CalledProcessError as grepexc:
+            print("error code: " + str(grepexc.returncode) + ", output:" + str(grepexc.output))
+            self.service.set_status("Error removing repository")
+        
         
     def __add_wifi(self):
         try:
