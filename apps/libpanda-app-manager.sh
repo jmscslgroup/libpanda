@@ -28,19 +28,77 @@ CURRENT_APP=$(cat $CURRENT_APP_FILE)
 
 
 do_descriptions () {
-    echo -e "App\tService\tEnabled\tRunning\tDescription"
-    for APP in $APPS;
+#    echo -e "App\tService\tEnabled\tRunning\tDescription"
+#    for APP in $APPS;
+#    do
+#        DESCRIPTION=$(cat $APP_DIR/$APP/description.txt)
+#        ENABLED=$([[ "$APP" == "$CURRENT_APP" ]] && echo "yes" || echo "no")
+#        SERVICE=$(cat $APP_DIR/$APP/service)
+#        if [ "$ENABLED" = "yes" ]; then
+#            RUNNING=$(systemctl status $SERVICE | grep "running" > /dev/null 2>&1 && echo "yes" || echo "no")
+#        else
+#            RUNNING="no"
+#        fi
+#        echo -e "${APP}\t$SERVICE\t$ENABLED\t$RUNNING\t\"${DESCRIPTION}\""
+#    done
+    
+    
+    echo -e "Repository\tBranch\tApp\tService\tEnabled\tRunning\tDescription"
+    OLDIFS=$IFS
+    while IFS= read -r LINE
     do
-        DESCRIPTION=$(cat $APP_DIR/$APP/description.txt)
-        ENABLED=$([[ "$APP" == "$CURRENT_APP" ]] && echo "yes" || echo "no")
-        SERVICE=$(cat $APP_DIR/$APP/service)
-        if [ "$ENABLED" = "yes" ]; then
-            RUNNING=$(systemctl status $SERVICE | grep "running" > /dev/null 2>&1 && echo "yes" || echo "no")
-        else
-            RUNNING="no"
+        #echo $LINE
+        LINE=$(echo $LINE | tr -d [:space:])
+        IFS=","
+        set -- $LINE
+        IFS=
+        REPOSITORY=$1
+        BRANCH=$2
+    
+        IFS=$OLDIFS
+        if [ ! -z "${REPOSITORY}" ]; then # Sanity check to not reading empy lines
+            #do_repo_update ${REPOSITORY} ${BRANCH}
+                
+            cd $APP_REPOSITORIES/$REPOSITORY
+            
+                # now parse the yaml file, if it exists
+            if [ -f libpanda-apps.yaml ]; then
+                indices=$(yq e '.apps | to_entries | .[] | .key' libpanda-apps.yaml)
+
+                for index in ${indices}
+                do
+#                    echo ""
+#                    echo "Element $index"
+#                   yq e ".apps[${index}]" libpanda-apps.yaml
+                    APP_NAME=$(yq e ".apps[${index}].name" libpanda-apps.yaml)
+                    APP_PATH=$(yq e ".apps[${index}] | select(has(\"path\")) | .path" libpanda-apps.yaml)
+                    if [ -z "$APP_PATH" ]; then
+                        APP_PATH=$APP_NAME
+                    fi
+                    #echo "Copying App \"${APP_NAME}\" from repository path ${APP_PATH} into ${APP_DIR}/"
+            
+#                    cp -r ${APP_PATH} ${APP_DIR}/
+                    APP=${APP_PATH%%/*}
+                    
+                        
+                    DESCRIPTION=$(cat $APP_DIR/$APP/description.txt)
+                    ENABLED=$([[ "$APP" == "$CURRENT_APP" ]] && echo "yes" || echo "no")
+                    SERVICE=$(cat $APP_DIR/$APP/service)
+                    if [ "$ENABLED" = "yes" ]; then
+                        RUNNING=$(systemctl status $SERVICE | grep "running" > /dev/null 2>&1 && echo "yes" || echo "no")
+                    else
+                        RUNNING="no"
+                    fi
+                    
+                    echo -e "${REPOSITORY}\t${BRANCH}\t${APP}\t$SERVICE\t$ENABLED\t$RUNNING\t\"${DESCRIPTION}\""
+                done
+
+#            else
+                #echo "Error!  Repository $APP_TO_UPDATE is missing libpanda-app.yaml...."
+            fi
+            
         fi
-        echo -e "${APP}\t$SERVICE\t$ENABLED\t$RUNNING\t\"${DESCRIPTION}\""
-    done
+    done < $APP_MANIFEST
 }
 
 do_start_app () {
@@ -84,8 +142,8 @@ do_repo_update () {
 
         for index in ${indices}
         do
-            echo ""
-            echo "Element $index"
+#            echo ""
+#            echo "Element $index"
 #           yq e ".apps[${index}]" libpanda-apps.yaml
             APP_NAME=$(yq e ".apps[${index}].name" libpanda-apps.yaml)
             APP_PATH=$(yq e ".apps[${index}] | select(has(\"path\")) | .path" libpanda-apps.yaml)
@@ -122,22 +180,6 @@ do_repo_update_all () {
         if [ ! -z "${REPOSITORY}" ]; then
             do_repo_update ${REPOSITORY} ${BRANCH}
         fi
-##    cd $APP_THIRD_PARTY_DIR
-#    cd $APP_REPOSITORIES
-#
-#    echo "Checking ${REPOSITORY} with brach ${BRANCH}"
-#
-#    if [ -d ${REPOSITORY} ]; then
-#        cd ${REPOSITORY}
-#        GIT_WORKING_BRANCH=$(git rev-parse --abbrev-ref HEAD | tr -d "\n\r")
-#        if [ "$GIT_WORKING_BRANCH" != "$BRANCH" ]; then
-#            echo " - Mismatch in hash, checking out specified commit..."
-#            git pull
-#            git checkout $BRANCH
-#        else
-#            echo " - Already on the corrent branch!"
-#        fi
-#    fi
     done < $APP_MANIFEST
 
 }
