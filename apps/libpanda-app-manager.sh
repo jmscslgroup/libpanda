@@ -2,61 +2,23 @@
 
 INTERACTIVE=True
 APP_DIR=/etc/libpanda.d/apps
-#APP_THIRD_PARTY_DIR=/etc/libpanda.d/apps-third-party
 APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
 CURRENT_APP_FILE=/etc/libpanda.d/app
-#APP_MANIFEST=/etc/libpanda.d/app-manifest.csv
 APP_MANIFEST=/etc/libpanda.d/app-manifest.yaml
 
 #echo " - Getting app list..."
 APPS=$(ls $APP_DIR)
-#while IFS= read -r LINE
-#do
-#    #echo $LINE
-#    LINE=$(echo $LINE | tr -d [:space:])
-#    IFS=","
-#    set -- $LINE
-#    IFS=
-#    REPOSITORY=$1
-##    echo "Appending: ${REPOSITORY}"
-#    APPS+=("${REPOSITORY}")
-#    APPS="${APPS}"$'\n'"${REPOSITORY}"
-#done < $APP_MANIFEST
-#echo "${APPS}"
+
 
 CURRENT_APP=$(cat $CURRENT_APP_FILE)
 #echo " Current App: ${CURRENT_APP}"
 
-
 do_descriptions () {
-#    echo -e "App\tService\tEnabled\tRunning\tDescription"
-#    for APP in $APPS;
-#    do
-#        DESCRIPTION=$(cat $APP_DIR/$APP/description.txt)
-#        ENABLED=$([[ "$APP" == "$CURRENT_APP" ]] && echo "yes" || echo "no")
-#        SERVICE=$(cat $APP_DIR/$APP/service)
-#        if [ "$ENABLED" = "yes" ]; then
-#            RUNNING=$(systemctl status $SERVICE | grep "running" > /dev/null 2>&1 && echo "yes" || echo "no")
-#        else
-#            RUNNING="no"
-#        fi
-#        echo -e "${APP}\t$SERVICE\t$ENABLED\t$RUNNING\t\"${DESCRIPTION}\""
-#    done
-    
     
     echo -e "Repository\tBranch\tApp\tService\tEnabled\tRunning\tDescription"
-#    OLDIFS=$IFS
-#    while IFS= read -r LINE
-#    do
-#        #echo $LINE
-#        LINE=$(echo $LINE | tr -d [:space:])
-#        IFS=","
-#        set -- $LINE
-#        IFS=
-#        REPOSITORY=$1
-#        BRANCH=$2
-#
-#        IFS=$OLDIFS
+
+    REPOSITORES=$(yq e 'to_entries | .[] | .key' $APP_MANIFEST)
+    
     for REPOSITORY in $REPOSITORES;
     do
         BRANCH=$(yq e '.'"${REPOSITORY}"'' $APP_MANIFEST)
@@ -139,6 +101,16 @@ do_repo_update () {
         git pull
     fi
                 
+    TEST_BRANCH=$(git rev-parse --verify $APP_BRANCH)
+    
+    if [ -z "${TEST_BRANCH}" ]; then
+        echo "Error: branch ${APP_BRANCH} does not exist in repository ${APP_TO_ADD}" >&2
+        do_repo_remove $APP_TO_UPDATE
+        return 0
+    fi
+    
+#    echo "TEST_BRANCH = ${TEST_BRANCH}"
+    
     git checkout $APP_BRANCH
     
     pwd
@@ -162,7 +134,7 @@ do_repo_update () {
         done
 
     else
-        echo "Error!  Repository $APP_TO_UPDATE is missing libpanda-app.yaml...."
+        echo "Error!  Repository $APP_TO_UPDATE is missing libpanda-app.yaml...." >&2
     fi
 }
 
@@ -170,23 +142,6 @@ do_repo_update_all () {
     echo "Updating all apps..."
     rm -rf $APP_DIR # Danger!
     mkdir -p $APP_DIR
-    
-#    OLDIFS=$IFS
-#    while IFS= read -r LINE
-#    do
-#        #echo $LINE
-#        LINE=$(echo $LINE | tr -d [:space:])
-#        IFS=","
-#        set -- $LINE
-#        IFS=
-#        REPOSITORY=$1
-#        BRANCH=$2
-#
-#        IFS=$OLDIFS
-#        if [ ! -z "${REPOSITORY}" ]; then
-#            do_repo_update ${REPOSITORY} ${BRANCH}
-#        fi
-#    done < $APP_MANIFEST
 
     REPOSITORES=$(yq e 'to_entries | .[] | .key' $APP_MANIFEST)
         
@@ -218,8 +173,8 @@ do_repo_add () {
     if  [[ "$APP_TO_ADD" =~ $re ]]; then
         echo "You provided: ${BASH_REMATCH[1]}"
     else
-        echo "Repository unrecognized: ${APP_TO_ADD}"
-        echo "Please provide in the format of <owner>/<repository>"
+        echo "Repository unrecognized: ${APP_TO_ADD}" >&2
+        echo "Please provide in the format of <owner>/<repository>" >&2
         echo "For example: https://github.com/jmscslgroup/libpanda --> jmscslgroup/libpanda"
         return 0
     fi
@@ -228,10 +183,13 @@ do_repo_add () {
     if wget -q --method=HEAD ${GIT_REPO}; then
         echo "Repository found and available!"
     else
-        echo "Error getting repository, either it does not exist or internet is not available"
-        echo "Unable to resolve ${GIT_REPO}"
+        echo "Error getting repository, either it does not exist or internet is not available" >&2
+        echo "Unable to resolve ${GIT_REPO}" >&2
         return 0
     fi
+    
+    
+    
     
 #    sed -i -n -e '/^${APP_TO_ADD}\,/!p' -e '$a${APP_TO_ADD}\,\ ${APP_BRANCH}' /etc/libpanda.d/app-manifest.csv
     #sed '/^${APP_TO_ADD},/{h;s/,.*/,${APP_BRANCH}/};${x;/^$/{s//${APP_TO_ADD}, ${APP_BRANCH}/;H};x}' /etc/libpanda.d/app-manifest.csv
@@ -260,7 +218,7 @@ do_repo_remove () {
     yq -i 'del(.'"${APP_TO_REMOVE}"')' $APP_MANIFEST
     
     if [ -d $APP_REPOSITORIES//$APP_TO_REMOVE ]; then
-        rm -rf $APP_REPOSITORIES/$APP_TO_REMOVE
+        rm -rf $APP_REPOSITORIES/$APP_TO_REMOVE # Dangerzone
     fi
     
     do_repo_update_all  # not elegant but whatever
@@ -391,7 +349,7 @@ while getopts ":htkdscupli:g:b:r:" o; do
             check_app_exists $OPTARG
             if [ "$?" -eq 1 ];
             then
-                echo "Error: Invalid app.  Please run the following to list available apps"
+                echo "Error: Invalid app.  Please run the following to list available apps" >&2
                 echo "$0 -l"
             else
                 do_app_uninstall
