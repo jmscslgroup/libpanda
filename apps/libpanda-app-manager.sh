@@ -5,7 +5,8 @@ APP_DIR=/etc/libpanda.d/apps
 #APP_THIRD_PARTY_DIR=/etc/libpanda.d/apps-third-party
 APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
 CURRENT_APP_FILE=/etc/libpanda.d/app
-APP_MANIFEST=/etc/libpanda.d/app-manifest.csv
+#APP_MANIFEST=/etc/libpanda.d/app-manifest.csv
+APP_MANIFEST=/etc/libpanda.d/app-manifest.yaml
 
 #echo " - Getting app list..."
 APPS=$(ls $APP_DIR)
@@ -44,18 +45,22 @@ do_descriptions () {
     
     
     echo -e "Repository\tBranch\tApp\tService\tEnabled\tRunning\tDescription"
-    OLDIFS=$IFS
-    while IFS= read -r LINE
+#    OLDIFS=$IFS
+#    while IFS= read -r LINE
+#    do
+#        #echo $LINE
+#        LINE=$(echo $LINE | tr -d [:space:])
+#        IFS=","
+#        set -- $LINE
+#        IFS=
+#        REPOSITORY=$1
+#        BRANCH=$2
+#
+#        IFS=$OLDIFS
+    for REPOSITORY in $REPOSITORES;
     do
-        #echo $LINE
-        LINE=$(echo $LINE | tr -d [:space:])
-        IFS=","
-        set -- $LINE
-        IFS=
-        REPOSITORY=$1
-        BRANCH=$2
-    
-        IFS=$OLDIFS
+        BRANCH=$(yq e '.'"${REPOSITORY}"'' $APP_MANIFEST)
+        
         if [ ! -z "${REPOSITORY}" ]; then # Sanity check to not reading empy lines
             #do_repo_update ${REPOSITORY} ${BRANCH}
                 
@@ -98,7 +103,8 @@ do_descriptions () {
             fi
             
         fi
-    done < $APP_MANIFEST
+    done
+#    done < $APP_MANIFEST
 }
 
 do_start_app () {
@@ -165,23 +171,34 @@ do_repo_update_all () {
     rm -rf $APP_DIR # Danger!
     mkdir -p $APP_DIR
     
-    OLDIFS=$IFS
-    while IFS= read -r LINE
-    do
-        #echo $LINE
-        LINE=$(echo $LINE | tr -d [:space:])
-        IFS=","
-        set -- $LINE
-        IFS=
-        REPOSITORY=$1
-        BRANCH=$2
-    
-        IFS=$OLDIFS
-        if [ ! -z "${REPOSITORY}" ]; then
-            do_repo_update ${REPOSITORY} ${BRANCH}
-        fi
-    done < $APP_MANIFEST
+#    OLDIFS=$IFS
+#    while IFS= read -r LINE
+#    do
+#        #echo $LINE
+#        LINE=$(echo $LINE | tr -d [:space:])
+#        IFS=","
+#        set -- $LINE
+#        IFS=
+#        REPOSITORY=$1
+#        BRANCH=$2
+#
+#        IFS=$OLDIFS
+#        if [ ! -z "${REPOSITORY}" ]; then
+#            do_repo_update ${REPOSITORY} ${BRANCH}
+#        fi
+#    done < $APP_MANIFEST
 
+    REPOSITORES=$(yq e 'to_entries | .[] | .key' $APP_MANIFEST)
+        
+    for REPOSITORY in $REPOSITORES;
+    do
+        BRANCH=$(yq e '.'"${REPOSITORY}"'' $APP_MANIFEST)
+        
+#        if [ ! -z "${REPOSITORY}" ]; then
+        do_repo_update ${REPOSITORY} ${BRANCH}
+#        fi
+    done
+    
 }
 
 do_repo_add () {
@@ -219,11 +236,15 @@ do_repo_add () {
 #    sed -i -n -e '/^${APP_TO_ADD}\,/!p' -e '$a${APP_TO_ADD}\,\ ${APP_BRANCH}' /etc/libpanda.d/app-manifest.csv
     #sed '/^${APP_TO_ADD},/{h;s/,.*/,${APP_BRANCH}/};${x;/^$/{s//${APP_TO_ADD}, ${APP_BRANCH}/;H};x}' /etc/libpanda.d/app-manifest.csv
     
-    if [ -f /etc/libpanda.d/app-manifest.csv ]; then
-        sed -i '\!^'"$APP_TO_ADD"',!{h;s!,.*!, '"$APP_BRANCH"'!};${x;\!^$!{s!!'"$APP_TO_ADD"','"$APP_BRANCH"'!;H};x}' /etc/libpanda.d/app-manifest.csv
-    else
-        echo -e "${APP_TO_ADD}, ${APP_BRANCH}\n" > /etc/libpanda.d/app-manifest.csv
-    fi
+#    if [ -f /etc/libpanda.d/app-manifest.csv ]; then
+#        sed -i '\!^'"$APP_TO_ADD"',!{h;s!,.*!, '"$APP_BRANCH"'!};${x;\!^$!{s!!'"$APP_TO_ADD"','"$APP_BRANCH"'!;H};x}' $APP_MANIFEST
+#    else
+#        echo -e "${APP_TO_ADD}, ${APP_BRANCH}\n" > $APP_MANIFEST
+#    fi
+    
+    
+    touch $APP_MANIFEST
+    yq -i '.'"${APP_TO_ADD}"'.branch = "'"${APP_BRANCH}"'"' $APP_MANIFEST
 
     do_repo_update $APP_TO_ADD $APP_BRANCH
 }
@@ -235,7 +256,8 @@ do_repo_remove () {
     echo "Removing app repository: $APP_TO_REMOVE"
     
 #    echo ":$APP_TO_REMOVE,:d"
-    sed -i "\:$APP_TO_REMOVE,:d" /etc/libpanda.d/app-manifest.csv
+#    sed -i "\:$APP_TO_REMOVE,:d" $APP_MANIFEST
+    yq -i 'del(.'"${APP_TO_REMOVE}"')' $APP_MANIFEST
     
     if [ -d $APP_REPOSITORIES//$APP_TO_REMOVE ]; then
         rm -rf $APP_REPOSITORIES/$APP_TO_REMOVE
