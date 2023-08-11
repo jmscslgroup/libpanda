@@ -12,11 +12,11 @@ if [ ! -f /usr/local/bin/yq ]; then
 fi
 
 echo " - Installing default apps..."
-mkdir -p /etc/libpanda.d/apps
+mkdir -p /etc/libpanda.d/apps # clear any currently installed apps
 rm -rf /etc/libpanda.d/apps # Danger zone
-cp -r apps /etc/libpanda.d/
+mkdir -p /etc/libpanda.d/apps
+#cp -r apps /etc/libpanda.d/
 
-#mkdir -p /etc/libpanda.d/apps-third-party
 mkdir -p /etc/libpanda.d/apps-repositories
 
 echo " - Installing app manager..."
@@ -26,7 +26,12 @@ fi
 cp libpanda-app-manager.sh /usr/local/sbin/libpanda-app-manager
 chmod +x /usr/local/sbin/libpanda-app-manager
 
-/usr/local/sbin/libpanda-app-manager -g jmscslgroup/libpanda-default-apps -b main
+# If this is a first install, then install default apps:
+if [ ! -f "/etc/libpanda.d/app-manifest.yaml" ]; then
+    /usr/local/sbin/libpanda-app-manager -g jmscslgroup/libpanda-default-apps -b main
+else
+    /usr/local/sbin/libpanda-app-manager -p # Update apps
+fi
 
 echo " - Done."
 echo "========================="
