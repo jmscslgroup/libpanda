@@ -21,7 +21,7 @@ do_descriptions () {
     
     for REPOSITORY in $REPOSITORES;
     do
-        BRANCH=$(yq e '.'"${REPOSITORY}"'' $APP_MANIFEST)
+        BRANCH=$(yq e '.'"${REPOSITORY}"'.branch' $APP_MANIFEST)
         
         if [ ! -z "${REPOSITORY}" ]; then # Sanity check to not reading empy lines
             #do_repo_update ${REPOSITORY} ${BRANCH}
