@@ -242,7 +242,7 @@ do_app_install () {
     APP_TO_INSTALL=$1
     echo "Installing: $APP_TO_INSTALL"
     
-    if [ "$APP_TO_Install" = "None" ]; then
+    if [ "$APP_TO_INSTALL" = "None" ]; then
         echo " - Nothing to do!"
         return 0
     fi
