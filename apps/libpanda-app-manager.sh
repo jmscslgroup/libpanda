@@ -78,8 +78,12 @@ do_stop_app () {
 }
 
 do_status () {
-    SERVICE=$(cat $APP_DIR/$CURRENT_APP/service)
-    systemctl status $SERVICE | grep Active | sed "s/.*Active: //g"
+    if [ "${CURRENT_APP}" == "None" ]; then
+        echo "inactive (none installed)"
+    elses
+        SERVICE=$(cat $APP_DIR/$CURRENT_APP/service)
+        systemctl status $SERVICE | grep Active | sed "s/.*Active: //g"
+    fi
 }
 
 do_repo_update () {
