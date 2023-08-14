@@ -358,20 +358,24 @@ while getopts ":htkdscupli:g:b:r:" o; do
             
             ;;
         g) # Add 3rd Party App Repository (in form <owner>/<repo>). Example: -g jmscslgroup/libpanda
+            check_root
             THIRD_PARTY_REPO=$OPTARG
             ;;
         b) # Specify Branch for 3rd Party App Repository (in addition to repository). Example: -g jmscslgroup/libpanda -b test_branch
+            check_root
             THIRD_PARTY_BRANCH=$OPTARG
             ;;
         r) # Remove 3rd Party App Repository (in form <owner>/<repo>). Example: -r jmscslgroup/libpanda
+            check_root
             do_repo_remove $OPTARG
             ;;
         p) # Updates all apps from their repositories
+            check_root
             do_repo_update_all
             ;;
         u) # Uninstall current App
-            echo "Removing: ${CURRENT_APP}"
             check_root
+            echo "Removing: ${CURRENT_APP}"
             do_app_uninstall
             ;;
         l) # List available Apps
@@ -384,9 +388,11 @@ while getopts ":htkdscupli:g:b:r:" o; do
             do_descriptions
             ;;
         s) # Start the current App
+            check_root
             do_start_app
             ;;
         k) # Kill the current App
+            check_root
             do_stop_app
             ;;
         t) # sTatus of current app
