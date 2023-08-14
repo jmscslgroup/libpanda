@@ -101,7 +101,7 @@ do_repo_update () {
         git pull
     fi
                 
-    TEST_BRANCH=$(git rev-parse --verify $APP_BRANCH)
+    TEST_BRANCH=$(sudo git rev-parse --verify $APP_BRANCH)
     
     if [ -z "${TEST_BRANCH}" ]; then
         echo "Error: branch ${APP_BRANCH} does not exist in repository ${APP_TO_ADD}" >&2
