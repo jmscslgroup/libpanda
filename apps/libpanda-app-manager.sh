@@ -70,7 +70,7 @@ do_descriptions () {
 }
 
 do_start_app () {
-    if [ "${CURRENT_APP}" != "None" ]; then 
+    if [ "${CURRENT_APP}" != "None" ]; then
         $APP_DIR/$CURRENT_APP/start.sh
     fi
 }
@@ -155,7 +155,7 @@ do_repo_update_all () {
         
     for REPOSITORY in $REPOSITORES;
     do
-        BRANCH=$(yq e '.'"${REPOSITORY}"'' $APP_MANIFEST)
+        BRANCH=$(yq e '.'"${REPOSITORY}".branch'' $APP_MANIFEST)
         
 #        if [ ! -z "${REPOSITORY}" ]; then
         do_repo_update ${REPOSITORY} ${BRANCH}
