@@ -70,13 +70,13 @@ do_descriptions () {
 }
 
 do_start_app () {
-    if [ "${CURRENT_APP}" != "None" ];
+    if [ "${CURRENT_APP}" != "None" ]; then 
         $APP_DIR/$CURRENT_APP/start.sh
     fi
 }
 
 do_stop_app () {
-    if [ "${CURRENT_APP}" != "None" ];
+    if [ "${CURRENT_APP}" != "None" ]; then
         $APP_DIR/$CURRENT_APP/stop.sh
     fi
 }
