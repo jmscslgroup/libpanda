@@ -70,17 +70,21 @@ do_descriptions () {
 }
 
 do_start_app () {
-    $APP_DIR/$CURRENT_APP/start.sh
+    if [ "${CURRENT_APP}" != "None" ];
+        $APP_DIR/$CURRENT_APP/start.sh
+    fi
 }
 
 do_stop_app () {
-    $APP_DIR/$CURRENT_APP/stop.sh
+    if [ "${CURRENT_APP}" != "None" ];
+        $APP_DIR/$CURRENT_APP/stop.sh
+    fi
 }
 
 do_status () {
     if [ "${CURRENT_APP}" == "None" ]; then
         echo "inactive (none installed)"
-    elses
+    else
         SERVICE=$(cat $APP_DIR/$CURRENT_APP/service)
         systemctl status $SERVICE | grep Active | sed "s/.*Active: //g"
     fi
