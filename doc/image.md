@@ -34,7 +34,13 @@ An SD card image is distributed for purposes of consistently and deployment conv
 ___
 # Change Log
 
-- [circles-raspbian-2023-08-01.img.tar.gz](https://drive.google.com/file/d/1UMfDHGX5MwoU_Axsu2IcAroGZL_-ArcO/view?usp=share_link)
+- [circles-raspbian-2023-08-15.img.tar.gz](https://drive.google.com/file/d/17X7KTfV_NeM25uGnh53nMPMPt-Q7jcz5/view?usp=share_link)
+    Features ROS, icommands, and pandarecord enabled by deault.  Implements repository-based apps.  Fixes issues with WLAN country below.  Using this image will require consideration of the following tasks by the installer:
+    - - Configure Cyverse credentials with iinit
+    - - Configure privacy zones and WiFi at [https://ransom.isis.vanderbilt.edu:8085](https://ransom.isis.vanderbilt.edu:8085)
+    
+    
+- [circles-raspbian-2023-08-01.img.tar.gz (broken, use above)](https://drive.google.com/file/d/1UMfDHGX5MwoU_Axsu2IcAroGZL_-ArcO/view?usp=share_link)
 	Includes autoupdate by default.  This image also includes blue zone, so things like privzone can be used to define zones for the latest pandarecord.  This also has libapnda apps that work with some easily configurable programs like pandarecord, cbf, and the joystick2car apps all configureable through privzone.
 
 - [circles-raspbian-2022-11-03.img.gz](https://drive.google.com/file/d/1YEusko0QJddRBEGpIbmps8o8WxrUFnWL/view?usp=sharing)
