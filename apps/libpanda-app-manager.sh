@@ -1,27 +1,31 @@
 #!/bin/bash
 
-INTERACTIVE=True
-APP_DIR=/etc/libpanda.d/apps
-APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
-CURRENT_APP_FILE=/etc/libpanda.d/app
-APP_MANIFEST=/etc/libpanda.d/app-manifest.yaml
+init () {
+    INTERACTIVE=True
+    APP_DIR=/etc/libpanda.d/apps
+    APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
+    APP_MANIFEST=/etc/libpanda.d/app-manifest.yaml
 
-#echo " - Getting app list..."
-APPS=$(ls $APP_DIR)
+    #echo " - Getting app list..."
+    APPS=$(ls $APP_DIR)
+#    MANIFEST_VERSION=$(yq e '.version' /etc/libpanda.d/app-manifest.yaml)
+    MANIFEST_VERSION=$(yq e '.version' $APP_MANIFEST)
 
+    CURRENT_APP=$(yq e '.current' $APP_MANIFEST)
+    #echo " Current App: ${CURRENT_APP}"
+}
 
-CURRENT_APP=$(cat $CURRENT_APP_FILE)
-#echo " Current App: ${CURRENT_APP}"
+init
 
 do_descriptions () {
     
     echo -e "Repository\tBranch\tApp\tService\tEnabled\tRunning\tDescription"
 
-    REPOSITORES=$(yq e 'to_entries | .[] | .key' $APP_MANIFEST)
+    REPOSITORES=$(yq e '.repositories | to_entries | .[] | .key' $APP_MANIFEST)
     
     for REPOSITORY in $REPOSITORES;
     do
-        BRANCH=$(yq e '.'"${REPOSITORY}"'.branch' $APP_MANIFEST)
+        BRANCH=$(yq e '.repositories.'"${REPOSITORY}"'.branch' $APP_MANIFEST)
         
         if [ ! -z "${REPOSITORY}" ]; then # Sanity check to not reading empy lines
             #do_repo_update ${REPOSITORY} ${BRANCH}
@@ -151,11 +155,11 @@ do_repo_update_all () {
     rm -rf $APP_DIR # Danger!
     mkdir -p $APP_DIR
 
-    REPOSITORES=$(yq e 'to_entries | .[] | .key' $APP_MANIFEST)
+    REPOSITORES=$(yq e '.repositories | to_entries | .[] | .key' $APP_MANIFEST)
         
     for REPOSITORY in $REPOSITORES;
     do
-        BRANCH=$(yq e '.'"${REPOSITORY}"'.branch' $APP_MANIFEST)
+        BRANCH=$(yq e '.repositories.'"${REPOSITORY}"'.branch' $APP_MANIFEST)
         
 #        if [ ! -z "${REPOSITORY}" ]; then
         do_repo_update ${REPOSITORY} ${BRANCH}
@@ -210,7 +214,7 @@ do_repo_add () {
     
     
     touch $APP_MANIFEST
-    yq -i '.'"${APP_TO_ADD}"'.branch = "'"${APP_BRANCH}"'"' $APP_MANIFEST
+    yq -i '.repositories.'"${APP_TO_ADD}"'.branch = "'"${APP_BRANCH}"'"' $APP_MANIFEST
 
     do_repo_update $APP_TO_ADD $APP_BRANCH
 }
@@ -223,7 +227,7 @@ do_repo_remove () {
     
 #    echo ":$APP_TO_REMOVE,:d"
 #    sed -i "\:$APP_TO_REMOVE,:d" $APP_MANIFEST
-    yq -i 'del(.'"${APP_TO_REMOVE}"')' $APP_MANIFEST
+    yq -i 'del(.repositories.'"${APP_TO_REMOVE}"')' $APP_MANIFEST
     
     if [ -d $APP_REPOSITORIES//$APP_TO_REMOVE ]; then
         rm -rf $APP_REPOSITORIES/$APP_TO_REMOVE # Dangerzone
@@ -243,7 +247,8 @@ do_app_uninstall () {
 
     $APP_DIR/$APP_TO_REMOVE/stop.sh
     $APP_DIR/$APP_TO_REMOVE/uninstall.sh
-    echo "None" > $CURRENT_APP_FILE
+#    echo "None" > $CURRENT_APP_FILE
+    yq -i '.current = "None"' $APP_MANIFEST
 }
 
 do_app_install () {
@@ -256,7 +261,43 @@ do_app_install () {
     fi
     
     $APP_DIR/$APP_TO_INSTALL/install.sh
-    echo "$APP_TO_INSTALL" > $CURRENT_APP_FILE
+#    echo "$APP_TO_INSTALL" > $CURRENT_APP_FILE
+    yq -i '.current = "'"$APP_TO_INSTALL"'"' $APP_MANIFEST
+}
+
+do_migrate_0_0 () {
+    # old methods of init:
+    CURRENT_APP_FILE=/etc/libpanda.d/app
+    CURRENT_APP=$(cat $CURRENT_APP_FILE)
+
+    APP_MANIFEST_OLD="${APP_MANIFEST}.bak"
+    mv $APP_MANIFEST $APP_MANIFEST_OLD
+    touch $APP_MANIFEST
+    
+    yq -i '.version = 0.0' $APP_MANIFEST
+    
+    # move repositories located at .[] into .repositories[]:
+    REPOSITORES=$(yq e ' to_entries | .[] | .key' $APP_MANIFEST_OLD)
+    for REPOSITORY in $REPOSITORES;
+    do
+        BRANCH=$(yq e '.'"${REPOSITORY}"'.branch' $APP_MANIFEST_OLD)
+#        echo "Copying ${REPOSITORY}"
+        yq -i '.repositories.'"${REPOSITORY}"'.branch = "'"${BRANCH}"'"' $APP_MANIFEST
+    done
+    yq -i '.current = "'"$CURRENT_APP"'"' $APP_MANIFEST
+}
+
+do_migrate () {
+    if [ -z "$MANIFEST_VERSION" ]; then
+#        echo "Manifest does not exist!  nothing to migrate"
+        touch $APP_MANIFEST
+    elif [ "$MANIFEST_VERSION" == "null" ]; then
+#        echo "App version out of date!"
+        do_migrate_0_0
+        init
+        do_migrate
+    fi
+
 }
 
 
@@ -279,7 +320,8 @@ case $APP in
     
     None)
     do_app_uninstall $CURRENT_APP
-    echo "$APP" > $CURRENT_APP_FILE
+#    echo "$APP" > $CURRENT_APP_FILE
+    yq -i '.current = '"$APP"'' $APP_MANIFEST
     ;;
 
     Quit)
@@ -345,7 +387,7 @@ if [ "$#" -eq 0 ]; then
     echo "========================="
 fi
 
-
+do_migrate
 
 THIRD_PARTY_REPO=
 THIRD_PARTY_BRANCH=
