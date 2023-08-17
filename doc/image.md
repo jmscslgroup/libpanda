@@ -35,7 +35,7 @@ ___
 # Change Log
 
 - [circles-raspbian-2023-08-15.img.tar.gz](https://drive.google.com/file/d/17X7KTfV_NeM25uGnh53nMPMPt-Q7jcz5/view?usp=share_link)
-    Features ROS, icommands, and pandarecord enabled by deault.  Implements repository-based apps.  Fixes issues with WLAN country below.  Using this image will require consideration of the following tasks by the installer:
+    Features ROS, icommands, and pandarecord enabled by deault.  Implements repository-based apps.  Fixes issues with WLAN country.  Using this image will require consideration of the following tasks by the installer:
     - - Configure Cyverse credentials with iinit
     - - Configure privacy zones and WiFi at [https://ransom.isis.vanderbilt.edu:8085](https://ransom.isis.vanderbilt.edu:8085)
     
