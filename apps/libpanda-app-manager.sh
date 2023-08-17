@@ -8,14 +8,13 @@ init () {
 
     #echo " - Getting app list..."
     APPS=$(ls $APP_DIR)
-#    MANIFEST_VERSION=$(yq e '.version' /etc/libpanda.d/app-manifest.yaml)
-    MANIFEST_VERSION=$(yq e '.version' $APP_MANIFEST)
-
-    CURRENT_APP=$(yq e '.current' $APP_MANIFEST)
-    #echo " Current App: ${CURRENT_APP}"
+    
+    if [ -f $APP_MANIFEST ]; then
+        MANIFEST_VERSION=$(yq e '.version' $APP_MANIFEST)
+        CURRENT_APP=$(yq e '.current' $APP_MANIFEST)
+    fi
 }
 
-init
 
 do_descriptions () {
     
@@ -265,6 +264,10 @@ do_app_install () {
     yq -i '.current = "'"$APP_TO_INSTALL"'"' $APP_MANIFEST
 }
 
+do_migrate_empty () {
+    touch $APP_MANIFEST
+}
+
 do_migrate_0_0 () {
     # old methods of init:
     CURRENT_APP_FILE=/etc/libpanda.d/app
@@ -290,62 +293,65 @@ do_migrate_0_0 () {
 do_migrate () {
     if [ -z "$MANIFEST_VERSION" ]; then
 #        echo "Manifest does not exist!  nothing to migrate"
-        touch $APP_MANIFEST
+        do_migrate_empty
     elif [ "$MANIFEST_VERSION" == "null" ]; then
 #        echo "App version out of date!"
         do_migrate_0_0
-        init
-        do_migrate
+    else    # Current version is 0.0
+        return
     fi
 
+        
+    init
+    do_migrate
 }
 
 
 do_interactive () {
-PS3="Enter an app number to install: "
-OPTIONS="$APPS None Quit"
-OPTION_COUNT=$(echo "${OPTIONS}" | wc -w)
-select APP in $OPTIONS
-do
-    if [ 1 -le "$REPLY" ] && [ "$REPLY" -le $OPTION_COUNT ];
-    then
-        echo "Selected: $APP"
-        break;
-    else
-        echo "Wrong selection: Select any number from 1-$OPTION_COUNT"
-    fi
-done
+    PS3="Enter an app number to install: "
+    OPTIONS="$APPS None Quit"
+    OPTION_COUNT=$(echo "${OPTIONS}" | wc -w)
+    select APP in $OPTIONS
+    do
+        if [ 1 -le "$REPLY" ] && [ "$REPLY" -le $OPTION_COUNT ];
+        then
+            echo "Selected: $APP"
+            break;
+        else
+            echo "Wrong selection: Select any number from 1-$OPTION_COUNT"
+        fi
+    done
 
-case $APP in
+    case $APP in
     
-    None)
-    do_app_uninstall $CURRENT_APP
-#    echo "$APP" > $CURRENT_APP_FILE
-    yq -i '.current = '"$APP"'' $APP_MANIFEST
-    ;;
+        None)
+            do_app_uninstall $CURRENT_APP
+#           echo "$APP" > $CURRENT_APP_FILE
+            yq -i '.current = '"$APP"'' $APP_MANIFEST
+            ;;
 
-    Quit)
-    ;;
+        Quit)
+            ;;
 
-  *)
-    if [ "${APP}" = "${CURRENT_APP}" ]; then
-        echo " - $APP is already installed!"
-    else
-        do_app_uninstall $CURRENT_APP
-        do_app_install $APP
-    fi
-    ;;
-esac
+        *)
+            if [ "${APP}" = "${CURRENT_APP}" ]; then
+                echo " - $APP is already installed!"
+            else
+                do_app_uninstall $CURRENT_APP
+                do_app_install $APP
+            fi
+            ;;
+    esac
 
 
     return 0
 }
 
 check_root() {
-if [ "$EUID" -ne 0 ];
-  then echo "Please run as root"
-  exit 1
-fi
+    if [ "$EUID" -ne 0 ];
+        then echo "Please run as root"
+        exit 1
+    fi
 }
 
 usage() {
@@ -382,12 +388,15 @@ if [ "$#" -eq 0 ]; then
     echo "=========================="
     echo "Libpanda App Manager"
     echo "Doing interactive mode..."
+    init
+    do_migrate
     do_interactive
     echo " - Done."
     echo "========================="
+else    # lame
+    init
+    do_migrate
 fi
-
-do_migrate
 
 THIRD_PARTY_REPO=
 THIRD_PARTY_BRANCH=
