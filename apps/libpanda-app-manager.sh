@@ -1,18 +1,52 @@
 #!/bin/bash
 
+
+
 init () {
     INTERACTIVE=True
-    APP_DIR=/etc/libpanda.d/apps
-    APP_REPOSITORIES=/etc/libpanda.d/apps-repositories
+    APP_DIR=/etc/libpanda.d/apps    # where apps are copied (not a great structure TBH)
+    APP_REPOSITORIES=/etc/libpanda.d/apps-repositories  # where apps are checked out
     APP_MANIFEST=/etc/libpanda.d/app-manifest.yaml
 
     #echo " - Getting app list..."
-    APPS=$(ls $APP_DIR)
+#    APPS=$(ls $APP_DIR)
     
     if [ -f $APP_MANIFEST ]; then
         MANIFEST_VERSION=$(yq e '.version' $APP_MANIFEST)
         CURRENT_APP=$(yq e '.current' $APP_MANIFEST)
+        
+        get_apps_from_manifest
+#        echo "APPS: ${APPS[*]}"
     fi
+}
+
+get_apps_from_manifest() {
+    APPS2=()
+    APPS=()
+    REPOSITORES=$(yq e '.repositories | to_entries | .[] | .key' $APP_MANIFEST)
+    
+    for REPOSITORY in $REPOSITORES;
+    do
+        cd $APP_REPOSITORIES/$REPOSITORY
+        if [ -f libpanda-apps.yaml ]; then
+            indices=$(yq e '.apps | to_entries | .[] | .key' libpanda-apps.yaml)
+            for index in ${indices}
+            do
+                APP_NAME=$(yq e ".apps[${index}].name" libpanda-apps.yaml)
+                
+                APPS2+=("$REPOSITORY/$APP_NAME")
+                APPS+=("$APP_NAME")
+#                APP_PATH=$(yq e ".apps[${index}] | select(has(\"path\")) | .path" libpanda-apps.yaml)
+#                if [ -z "$APP_PATH" ]; then
+#                    APP_PATH=$APP_NAME
+#                fi
+            done
+
+        else
+            echo "Error!  Repository $APP_TO_UPDATE is missing libpanda-app.yaml...." >&2
+        fi
+        
+    done
 }
 
 
@@ -309,7 +343,7 @@ do_migrate () {
 
 do_interactive () {
     PS3="Enter an app number to install: "
-    OPTIONS="$APPS None Quit"
+    OPTIONS="${APPS[*]} None Quit"
     OPTION_COUNT=$(echo "${OPTIONS}" | wc -w)
     select APP in $OPTIONS
     do
@@ -438,7 +472,7 @@ while getopts ":htkdscupli:g:b:r:" o; do
             do_app_uninstall
             ;;
         l) # List available Apps
-            echo "$APPS"
+            echo "${APPS[*]}"
             ;;
         c) # Currently installed App
             echo "$CURRENT_APP"
