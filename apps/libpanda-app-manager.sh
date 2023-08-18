@@ -388,7 +388,7 @@ usage() {
 check_app_exists() {
     TO_CHECK=$1
     RET=1
-    for APP in $APPS;
+    for APP in ${APPS[*]};
     do
 #        echo "Checking |${APP}| against |${TO_CHECK}|"
         if [ "$APP" = "$TO_CHECK" ];
