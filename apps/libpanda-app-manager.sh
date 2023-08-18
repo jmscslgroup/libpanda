@@ -146,7 +146,8 @@ do_repo_update () {
         git pull
     fi
                 
-    TEST_BRANCH=$(sudo git rev-parse --verify $APP_BRANCH)
+#    TEST_BRANCH=$(sudo git rev-parse --verify $APP_BRANCH)
+    TEST_BRANCH=$(sudo git ls-remote origin $APP_BRANCH)
     
     if [ -z "${TEST_BRANCH}" ]; then
         echo "Error: branch ${APP_BRANCH} does not exist in repository ${APP_TO_ADD}" >&2
@@ -234,18 +235,6 @@ do_repo_add () {
     fi
     
     
-    
-    
-#    sed -i -n -e '/^${APP_TO_ADD}\,/!p' -e '$a${APP_TO_ADD}\,\ ${APP_BRANCH}' /etc/libpanda.d/app-manifest.csv
-    #sed '/^${APP_TO_ADD},/{h;s/,.*/,${APP_BRANCH}/};${x;/^$/{s//${APP_TO_ADD}, ${APP_BRANCH}/;H};x}' /etc/libpanda.d/app-manifest.csv
-    
-#    if [ -f /etc/libpanda.d/app-manifest.csv ]; then
-#        sed -i '\!^'"$APP_TO_ADD"',!{h;s!,.*!, '"$APP_BRANCH"'!};${x;\!^$!{s!!'"$APP_TO_ADD"','"$APP_BRANCH"'!;H};x}' $APP_MANIFEST
-#    else
-#        echo -e "${APP_TO_ADD}, ${APP_BRANCH}\n" > $APP_MANIFEST
-#    fi
-    
-    
     touch $APP_MANIFEST
     yq -i '.repositories.'"${APP_TO_ADD}"'.branch = "'"${APP_BRANCH}"'"' $APP_MANIFEST
 
@@ -299,10 +288,12 @@ do_app_install () {
 }
 
 do_migrate_empty () {
+    check_root
     touch $APP_MANIFEST
 }
 
 do_migrate_0_0 () {
+    check_root
     # old methods of init:
     CURRENT_APP_FILE=/etc/libpanda.d/app
     CURRENT_APP=$(cat $CURRENT_APP_FILE)
