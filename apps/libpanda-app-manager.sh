@@ -334,7 +334,7 @@ do_migrate () {
 
 do_interactive () {
     PS3="Enter an app number to install: "
-    OPTIONS="${APPS[*]} None Quit"
+    OPTIONS="${APPS[@]} None Quit"
     OPTION_COUNT=$(echo "${OPTIONS}" | wc -w)
     select APP in $OPTIONS
     do
@@ -388,7 +388,7 @@ usage() {
 check_app_exists() {
     TO_CHECK=$1
     RET=1
-    for APP in ${APPS[*]};
+    for APP in ${APPS[@]};
     do
 #        echo "Checking |${APP}| against |${TO_CHECK}|"
         if [ "$APP" = "$TO_CHECK" ];
