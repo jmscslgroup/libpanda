@@ -127,6 +127,85 @@ do_status () {
     fi
 }
 
+get_git_branch_or_hash () {
+    TARGET_DIRECTORY=$1
+    OWNER_AND_REPOSITORY=$2
+    BRANCH_OR_HASH=$3
+    
+    RETURN_VALUE=1
+    
+    # check format:
+    re='([^[:space:]\/]+\/[^[:space:]\/]+)'
+    if  [[ "$OWNER_AND_REPOSITORY" =~ $re ]]; then
+        echo "You provided: ${BASH_REMATCH[1]}"
+    else
+        echo "Repository unrecognized: ${OWNER_AND_REPOSITORY}" >&2
+        echo "Please provide in the format of <owner>/<repository>" >&2
+        echo "For example: https://github.com/jmscslgroup/libpanda --> jmscslgroup/libpanda"
+        return 0
+    fi
+    
+    _OWNER=${OWNER_AND_REPOSITORY%%/*}
+    _REPOSITORY=$(sed 's/.*\///g' <<<$OWNER_AND_REPOSITORY)
+    
+    GIT_REPO="https://github.com/${OWNER_AND_REPOSITORY}"
+    if wget -q --method=HEAD ${GIT_REPO}; then
+        echo "Repository found and available!"
+    else
+        echo "Error getting repository, either it does not exist or internet is not available" >&2
+        echo "Unable to resolve ${GIT_REPO}" >&2
+        return 0
+    fi
+    
+    mkdir -p $TARGET_DIRECTORY
+    pushd $TARGET_DIRECTORY
+    if [ ! -d $TARGET_DIRECTORY/$_REPOSITORY ]; then
+        git clone https://github.com/$OWNER_AND_REPOSITORY
+        pushd $_REPOSITORY
+    else
+        echo "Entering ${TARGET_DIRECTORY}/${_REPOSITORY}"
+        pushd $_REPOSITORY
+        git pull
+    fi
+    
+    echo "checking branch/hash ${BRANCH_OR_HASH}"
+    if [ -z "${BRANCH_OR_HASH}" ]; then
+        echo "No branch or hash provided"
+        # Make sure we switch to main/master
+        TEST_BRANCH=$(git ls-remote origin main)
+        if [ -z "${TEST_BRANCH}" ]; then
+            git checkout master
+        else
+            git checkout main
+        fi
+    else
+        if git cat-file -e $BRANCH_OR_HASH^{commit}; then
+            echo " - Branch/Hash exists!"
+            git checkout ${BRANCH_OR_HASH}
+        else
+            TEST_BRANCH=$(git ls-remote origin $BRANCH_OR_HASH)
+    
+            if [ -z "${TEST_BRANCH}" ]; then
+                echo "Error: branch ${BRANCH_OR_HASH} does not exist in repository ${OWNER_AND_REPOSITORY}" >&2
+#                do_repo_remove $APP_TO_UPDATE
+                RETURN_VALUE=0
+            else
+                git checkout ${BRANCH_OR_HASH}
+            fi
+        fi
+    fi
+    
+    popd
+    popd
+    
+    return $RETURN_VALUE
+}
+
+## Testing git checkout:
+#get_git_branch_or_hash ~/Downloads/jmscslgroup blegas78/gps2vsl app
+#echo $?
+#exit
+
 do_repo_update () {
     APP_TO_UPDATE=$1
     APP_BRANCH=$2
@@ -401,6 +480,7 @@ check_app_exists() {
 #    echo "RET= $RET"
     return $RET
 }
+
 
 
 #echo "=========================="
