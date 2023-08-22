@@ -201,10 +201,29 @@ get_git_branch_or_hash () {
     return $RETURN_VALUE
 }
 
+
 ## Testing git checkout:
 #get_git_branch_or_hash ~/Downloads/jmscslgroup blegas78/gps2vsl app
 #echo $?
 #exit
+
+
+install_ros_repository () {
+    owner=$1
+    repository=$2
+    versionHash=$3
+    echo "Checking ${owner}/${repository} with hash ${versionHash}"
+    LIPBANDA_USER=$(cat /etc/libpanda.d/libpanda_usr)
+    
+    export -f get_git_branch_or_hash
+    su $LIPBANDA_USER -c "bash -c \"get_git_branch_or_hash /home/${LIPBANDA_USER}/catkin_ws/src/ ${owner}/${repository} ${versionHash}\""
+#    get_git_branch_or_hash /home/$LIPBANDA_USER/catkin_ws/src/ $owner/$repository $versionHash
+    
+#    mkdir -p /home/$LIPBANDA_USER/catkin_ws/src
+#    pushd /home/$LIPBANDA_USER/catkin_ws/src
+#
+#    popd #/home/$LIPBANDA_USER/catkin_ws/src
+}
 
 do_repo_update () {
     APP_TO_UPDATE=$1
@@ -256,6 +275,15 @@ do_repo_update () {
             echo "Copying App \"${APP_NAME}\" from repository path ${APP_PATH} into ${APP_DIR}/"
             
             cp -r ${APP_PATH} ${APP_DIR}/
+            
+#            ROS_REPO_INDICES=$(yq e ".apps[${index}] | select(has(\"ros_repositories\")) | .ros_repositories | to_entries | .[] | .key" libpanda-apps.yaml)
+#            for ROS_REPO_INDEX in ${ROS_REPO_INDICES}
+#            do
+#                ROS_OWNER=$(yq e ".apps[${index}].ros_repositories[${ROS_REPO_INDEX}].owner" libpanda-apps.yaml)
+#                ROS_REPO=$(yq e ".apps[${index}].ros_repositories[${ROS_REPO_INDEX}].repo" libpanda-apps.yaml)
+#                ROS_HASH=$(yq e ".apps[${index}].ros_repositories[${ROS_REPO_INDEX}].branch_or_hash" libpanda-apps.yaml)
+#                install_ros_repository $ROS_OWNER $ROS_REPO $ROS_HASH
+#            done
         done
 
     else
@@ -352,6 +380,14 @@ do_app_uninstall () {
     yq -i '.current = "None"' $APP_MANIFEST
 }
 
+install_dependencies () {
+    # Ros repositores, apt, pip3...
+    APP_DEFINITION_FILE=$1
+    APP_TO_INSTALL=$2
+    
+    
+}
+
 do_app_install () {
     APP_TO_INSTALL=$1
     echo "Installing: $APP_TO_INSTALL"
@@ -360,6 +396,41 @@ do_app_install () {
         echo " - Nothing to do!"
         return 0
     fi
+    
+    # check out the corresponding ROS repositories here:
+    #install_ros_repository $ROS_OWNER $ROS_REPO $ROS_HASH
+    REPOSITORES=$(yq e '.repositories | to_entries | .[] | .key' $APP_MANIFEST)
+    for REPOSITORY in $REPOSITORES;
+    do
+        APP_DEFINITION_FILE=$APP_REPOSITORIES/$REPOSITORY/libpanda-apps.yaml
+        if [ ! -f $APP_DEFINITION_FILE ]; then
+            echo "Error! Does not exist: ${APP_DEFINITION_FILE}"
+            continue
+        fi
+        
+        APP_INDICES=$(yq e '.apps | to_entries | .[] | .key' $APP_DEFINITION_FILE)
+        for APP_INDEX in $APP_INDICES;
+        do
+            APP_NAME_IN_FILE=$(yq e ".apps[${APP_INDEX}] | .name" $APP_DEFINITION_FILE)
+            if [ "$APP_TO_INSTALL" == "$APP_NAME_IN_FILE" ]; then
+                
+            ROS_REPO_INDICES=$(yq e ".apps[${APP_INDEX}] | select(has(\"ros_repositories\")) | .ros_repositories | to_entries | .[] | .key" $APP_DEFINITION_FILE)
+            for ROS_REPO_INDEX in ${ROS_REPO_INDICES}
+            do
+                ROS_OWNER=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].owner" $APP_DEFINITION_FILE)
+                ROS_REPO=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].repo" $APP_DEFINITION_FILE)
+                ROS_HASH=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].branch_or_hash" $APP_DEFINITION_FILE)
+                if [ "$ROS_HASH" == "null" ]; then
+                    install_ros_repository $ROS_OWNER $ROS_REPO
+                else
+                    install_ros_repository $ROS_OWNER $ROS_REPO $ROS_HASH
+                fi
+            done
+                break
+            fi
+        done
+        
+    done
     
     $APP_DIR/$APP_TO_INSTALL/install.sh
 #    echo "$APP_TO_INSTALL" > $CURRENT_APP_FILE
@@ -438,7 +509,7 @@ do_interactive () {
             ;;
 
         *)
-            if [ "${APP}" = "${CURRENT_APP}" ]; then
+            if [ "${APP}" == "${CURRENT_APP}" ]; then
                 echo " - $APP is already installed!"
             else
                 do_app_uninstall $CURRENT_APP
