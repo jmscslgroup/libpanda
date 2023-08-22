@@ -17,8 +17,10 @@ init () {
         
         if [ "$MANIFEST_VERSION" == "null" ]; then
             APPS=$(ls $APP_DIR)
-        else
+        elif [ "$MANIFEST_VERSION" ]; then
             get_apps_from_manifest
+        else
+            APPS=$(ls $APP_DIR)
         fi
 #        echo "APPS: ${APPS[*]}"
     fi
