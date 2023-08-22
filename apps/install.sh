@@ -3,13 +3,13 @@
 echo "=========================="
 echo "Installing libpanda Apps"
 
-if [ ! -f /usr/local/bin/yq ]; then
+#if [ ! -f /usr/local/bin/yq ]; then
     echo " - Installing yq YAML parser..."
     # https://lindevs.com/install-yq-on-raspberry-pi
     sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm
     sudo chmod a+x /usr/local/bin/yq
     yq --version
-fi
+#fi
 
 mkdir -p /etc/libpanda.d/apps # clear any currently installed apps
 #rm -rf /etc/libpanda.d/apps # Danger zone
