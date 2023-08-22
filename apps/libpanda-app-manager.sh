@@ -560,6 +560,11 @@ check_app_exists() {
 
 
 
+if ! yq --version; then
+    echo "Fatal Error! Dependency yq is not installed or broken.  Resintall with libpanda/apps/install.sh"
+    exit 1
+fi
+
 #echo "=========================="
 #echo "Libpanda App Manager"
 
