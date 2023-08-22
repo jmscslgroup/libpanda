@@ -15,7 +15,11 @@ init () {
         MANIFEST_VERSION=$(yq e '.version' $APP_MANIFEST)
         CURRENT_APP=$(yq e '.current' $APP_MANIFEST)
         
-        get_apps_from_manifest
+        if [ "$MANIFEST_VERSION" == "null" ]; then
+            APPS=$(ls $APP_DIR)
+        else
+            get_apps_from_manifest
+        fi
 #        echo "APPS: ${APPS[*]}"
     fi
 }

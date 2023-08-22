@@ -97,7 +97,7 @@ cd $SRC_DIR/apps && sudo ./install.sh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 
-# jsut ensure all the abaove installs before this due to its reboot functionality:
+# just ensure all the above installs before this due to its reboot functionality:
 cd $SRC_DIR/scripts/circlesmanager && sudo ./install.sh
 
 
@@ -184,4 +184,4 @@ else
 fi
 
 # This will invoke a reboot on first installation if hostname is not "circles"
-sudo systemctl restart circlesmanager
+systemctl is-active circlesmanager || sudo systemctl start circlesmanager
