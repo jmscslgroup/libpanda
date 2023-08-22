@@ -12,6 +12,7 @@ fi
 SRC_DIR=$(cat /etc/libpanda.d/libpanda_src_dir)
 USER=$(cat /etc/libpanda.d/libpanda_usr)
 
+#if [ ! -d ~/irods-icommands-debs ]; then
 if [ ! -d ~/irods-icommands-debs ]; then
     echo "Installing irods icommands..."
     tar xzf $SRC_DIR/scripts/irods-icommands-debs.tgz -C /home/$USER/

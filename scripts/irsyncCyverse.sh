@@ -37,16 +37,16 @@ fi
 case "$response" in
       [yY][eE][sS]|[yY])
       #csv files:
-	  #irsync -r -v ${LOCAL} i:${REMOTE}
+	  irsync -r -v ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
-	  #imkdir -pv ${DIR_PATH_CYVERSE}
-	  #irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+	  imkdir -pv ${DIR_PATH_CYVERSE}
+	  irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
-	##Starting the rsync upload process
-	sudo sh -c "echo 'rsync transfer starting' > /etc/libpanda.d/logMessage"
-	#sleep 10
-	rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
+#	##Starting the rsync upload process
+#	sudo sh -c "echo 'rsync transfer starting' > /etc/libpanda.d/logMessage"
+#	#sleep 10
+#	rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
 	;;
       *)
           echo "Exiting" 
