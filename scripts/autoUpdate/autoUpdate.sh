@@ -37,9 +37,9 @@ LIBPANDA_SRC=$(cat /etc/libpanda.d/libpanda_src_dir)
 PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
 su -c "cd $LIBPANDA_SRC && ./update.sh" $PI_USER
 
-echo "Updating libapnda apps..."
-echo "Updating libapnda apps..." > /etc/libpanda.d/logMessage
-libpanda-app-manager -p
+#echo "Updating libpanda apps..."
+#echo "Updating libpanda apps..." > /etc/libpanda.d/logMessage
+#libpanda-app-manager -p
 
 echo "Updating done!"
 echo "Updating done!" > /etc/libpanda.d/logMessage

@@ -13,6 +13,9 @@ then
     libpanda-app-manager -k # stop app
 fi
 libpanda-app-manager -u # uninstall
+echo "Updating libpanda apps..."
+echo "Updating libpanda apps..." > /etc/libpanda.d/logMessage
+libpanda-app-manager -p
 ./install.sh
 libpanda-app-manager -i $CURRENT_APP # reintall
 
