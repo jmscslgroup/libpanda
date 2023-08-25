@@ -394,6 +394,49 @@ install_dependencies () {
     
 }
 
+do_apt_install () {
+#    PACKAGES_TO_CHECK=("$@")
+    local -n PACKAGES_TO_CHECK=$1
+    PACKAGES_TO_INSTALL=()
+#    echo "Dependencies:" ${PACKAGES_TO_CHECK[@]}
+    for PACKAGE_TO_CHECK in "${PACKAGES_TO_CHECK[@]}"
+    do
+#        echo "Checking" $PACKAGE_TO_CHECK
+        if [ $(dpkg-query -W -f='${Status}' $PACKAGE_TO_CHECK 2>/dev/null | grep -c "ok installed") -eq 0 ];
+        then
+            echo "apt package that needs to be installed:" $PACKAGE_TO_CHECK
+            PACKAGES_TO_INSTALL+=($PACKAGE_TO_CHECK)
+        fi
+    done
+    echo ${PACKAGES_TO_INSTALL[@]}
+
+    if [ ${#PACKAGES_TO_INSTALL[@]} -ne 0 ];
+    then
+        apt-get update
+        apt-get install -y ${PACKAGES_TO_INSTALL[@]}
+    fi
+}
+do_pip3_install () {
+#    PACKAGES_TO_CHECK=("$@")
+    local -n PACKAGES_TO_CHECK=$1
+    PACKAGES_TO_INSTALL=()
+#    echo "Dependencies:" ${PACKAGES_TO_CHECK[@]}
+    for PACKAGE_TO_CHECK in "${PACKAGES_TO_CHECK[@]}"
+    do
+#        echo "Checking" $PACKAGE_TO_CHECK
+        if ! python3 -c "import ${PACKAGE_TO_CHECK}" 2> /dev/null; then
+            echo "pip3 package that needs to be installed:" $PACKAGE_TO_CHECK
+            PACKAGES_TO_INSTALL+=($PACKAGE_TO_CHECK)
+        fi
+    done
+    echo ${PACKAGES_TO_INSTALL[@]}
+
+    if [ ${#PACKAGES_TO_INSTALL[@]} -ne 0 ];
+    then
+        pip3 install ${PACKAGES_TO_INSTALL[@]}
+    fi
+}
+
 do_app_install () {
     APP_TO_INSTALL=$1
     echo "Installing: $APP_TO_INSTALL"
@@ -419,19 +462,39 @@ do_app_install () {
         do
             APP_NAME_IN_FILE=$(yq e ".apps[${APP_INDEX}] | .name" $APP_DEFINITION_FILE)
             if [ "$APP_TO_INSTALL" == "$APP_NAME_IN_FILE" ]; then
-                
-            ROS_REPO_INDICES=$(yq e ".apps[${APP_INDEX}] | select(has(\"ros_repositories\")) | .ros_repositories | to_entries | .[] | .key" $APP_DEFINITION_FILE)
-            for ROS_REPO_INDEX in ${ROS_REPO_INDICES}
-            do
-                ROS_OWNER=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].owner" $APP_DEFINITION_FILE)
-                ROS_REPO=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].repo" $APP_DEFINITION_FILE)
-                ROS_HASH=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].branch_or_hash" $APP_DEFINITION_FILE)
-                if [ "$ROS_HASH" == "null" ]; then
-                    install_ros_repository $ROS_OWNER $ROS_REPO
-                else
-                    install_ros_repository $ROS_OWNER $ROS_REPO $ROS_HASH
-                fi
-            done
+            
+                # pakcage maanager dependencies (apt/pip3):
+                APT_PACKAGES=()
+                PIP3_PACKAGES=()
+                DEPENDECY_INDICES=$(yq e ".apps[${APP_INDEX}].dependencies | to_entries | .[] | .key" $APP_DEFINITION_FILE)
+                for DEPENDECY_INDEX in ${DEPENDECY_INDICES}
+                do
+                    PACKAGE_MANAGER_TYPE=$(yq e ".apps[${APP_INDEX}].dependencies.[${DEPENDECY_INDEX}] | to_entries | .[] | .key" $APP_DEFINITION_FILE)
+                    PACKAGE_NAME=$(yq e ".apps[${APP_INDEX}].dependencies.[${DEPENDECY_INDEX}] | to_entries | .[] | .value" $APP_DEFINITION_FILE)
+                    if [ "$PACKAGE_MANAGER_TYPE" == "apt" ]; then
+                        APT_PACKAGES+=($PACKAGE_NAME)
+                    elif [ "$PACKAGE_MANAGER_TYPE" == "pip3" ]; then
+                        PIP3_PACKAGES+=($PACKAGE_NAME)
+                    else
+                        echo "Error! Dependency $PACKAGE_NAME has unknown/unsupported package managery type: $PACKAGE_MANAGER_TYPE"
+                    fi
+                done
+                do_apt_install APT_PACKAGES
+                do_pip3_install PIP3_PACKAGES
+            
+                # ROS dependency install:
+                ROS_REPO_INDICES=$(yq e ".apps[${APP_INDEX}] | select(has(\"ros_repositories\")) | .ros_repositories | to_entries | .[] | .key" $APP_DEFINITION_FILE)
+                for ROS_REPO_INDEX in ${ROS_REPO_INDICES}
+                do
+                    ROS_OWNER=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].owner" $APP_DEFINITION_FILE)
+                    ROS_REPO=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].repo" $APP_DEFINITION_FILE)
+                    ROS_HASH=$(yq e ".apps[${APP_INDEX}].ros_repositories[${ROS_REPO_INDEX}].branch_or_hash" $APP_DEFINITION_FILE)
+                    if [ "$ROS_HASH" == "null" ]; then
+                        install_ros_repository $ROS_OWNER $ROS_REPO
+                    else
+                        install_ros_repository $ROS_OWNER $ROS_REPO $ROS_HASH
+                    fi
+                done
                 break
             fi
         done
