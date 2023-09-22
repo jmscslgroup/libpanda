@@ -321,4 +321,21 @@ namespace CNMEAParserData {
 		POS_MODE_IND_E                       m_posModeInd;                       ///< Positioning system mode indicator
 	} GLL_DATA_T;
 
+
+///
+/// \brief GST Data (by Bunting)
+///
+typedef struct _GST_DATA_T {
+    int                m_nSecond;                                                ///< Second
+    int                m_nMilliSecond;                                            ///< Millisecond
+    double              m_nRMS;                                                ///< RMS value of the pseudorange residuals; includes carrier phase residuals during periods of RTK (float) and RTK (fixed) processing
+    ///<
+    double              m_nErrorEllipseMajor;
+    double              m_nErrorEllipseMinor;
+    double              m_nErrorEllipseOrientation;
+    double              m_nLatitudeSigmaError;
+    double              m_nLongitudeSigmaError;
+    double              m_nAltitudeSigmaError;
+} GST_DATA_T;
+
 };

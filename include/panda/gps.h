@@ -67,6 +67,7 @@ enum UBX_ID_ACK {
 
 enum UBX_ID_CFG {
 	UBX_ID_CFG_PRT  = 0x00,
+    UBX_ID_CFG_MSG  = 0x01,
 	UBX_ID_CFG_RST  = 0x04,
 	UBX_ID_CFG_RATE = 0x08,
 	UBX_ID_CFG_ODO  = 0x1e,

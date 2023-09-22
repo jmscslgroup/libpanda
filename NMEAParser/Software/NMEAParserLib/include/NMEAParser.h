@@ -38,6 +38,7 @@
 #include "NMEASentenceVTG.h" // Bunting addition
 #include "NMEASentenceTXT.h" // Bunting addition
 #include "NMEASentenceGLL.h" // Bunting addition
+#include "NMEASentenceGST.h" // Bunting addition
 
 ///
 /// \class CNMEAParser
@@ -70,6 +71,7 @@ private:
 	CNMEASentenceVTG	m_GNVTG;												///< // Added by Bunting
 	CNMEASentenceTXT	m_GNTXT;												///< // Added by Bunting
 	CNMEASentenceGLL	m_GNGLL;												///< // Added by Bunting
+    CNMEASentenceGST    m_GNGST;                                                ///< // Added by Bunting
 
 	// GLONASS
 	CNMEASentenceGSV	m_GLGSV;												///< GLGSV Satellite message (GLONASS)
@@ -182,7 +184,14 @@ public:
 	/// \return Returns ERROR_OK if successful.
 	///
 	CNMEAParserData::ERROR_E GetGPGLL(CNMEAParserData::GLL_DATA_T & sentenseData);
-	
+    
+    ///
+    /// \brief Places a copy of the GNGST data into sentenseData (added by Matt Bunting)
+    /// \param sentenseData reference to a CNMEASentenceGST object to place the data into.
+    /// \return Returns ERROR_OK if successful.
+    ///
+    CNMEAParserData::ERROR_E GetGNGST(CNMEAParserData::GST_DATA_T & sentenseData);
+    
 	///
     /// \brief Places a copy of the GNGSA data into sentenseData
     /// \param sentenseData reference to a CNMEASentenceGSA object to place the data into.

@@ -47,6 +47,7 @@ private:
 			std::cerr << "*";
 			notificationCount = 0;
 		}
+//        printf("Lat StdDev: %f\n", gpsData->quality.LatitudeSigmaError);
 	}
 };
 

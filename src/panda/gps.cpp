@@ -680,30 +680,61 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 			// TODO: fill in the appropriate fields
 		}
 		
-	} else if (strcmp(pCmd, "GNGLL") == 0 || strcmp(pCmd, "GPGLL") == 0 ) {
-		CNMEAParserData::GLL_DATA_T	gllData;
-		
-		CNMEAParserData::ERROR_E error;
-		if (strcmp(pCmd, "GNGLL") == 0) {
-			error = GetGNGLL(gllData);
-		} else {
-			error = GetGPGLL(gllData);
-		}
-		
-		if(error == CNMEAParserData::ERROR_OK) {
+    } else if (strcmp(pCmd, "GNGLL") == 0 || strcmp(pCmd, "GPGLL") == 0 ) {
+        CNMEAParserData::GLL_DATA_T	gllData;
+        
+        CNMEAParserData::ERROR_E error;
+        if (strcmp(pCmd, "GNGLL") == 0) {
+            error = GetGNGLL(gllData);
+        } else {
+            error = GetGPGLL(gllData);
+        }
+        
+        if(error == CNMEAParserData::ERROR_OK) {
 #ifdef GPS_VERBOSE
-			printf("\nCmd: %s Data: %s\n", pCmd, pData);
-			std::cout << "GNGLL Parsed! Text transmission" << std::endl;
-			printf("   Latitude:            %f\n", gllData.m_dLatitude);
-			printf("   Longitude:           %f\n", gllData.m_dLongitude);
-			printf("   Time:                %02d:%02d:%02d.%03d\n", gllData.m_nHour, gllData.m_nMinute, gllData.m_nSecond, gllData.m_nMilliSecond);
-			printf("   Status:              %c\n", (char)gllData.m_nStatus);
-			printf("   Mode:                %c\n", (char)gllData.m_posModeInd);
-			
+            printf("\nCmd: %s Data: %s\n", pCmd, pData);
+            std::cout << "GNGLL Parsed! Text transmission" << std::endl;
+            printf("   Latitude:            %f\n", gllData.m_dLatitude);
+            printf("   Longitude:           %f\n", gllData.m_dLongitude);
+            printf("   Time:                %02d:%02d:%02d.%03d\n", gllData.m_nHour, gllData.m_nMinute, gllData.m_nSecond, gllData.m_nMilliSecond);
+            printf("   Status:              %c\n", (char)gllData.m_nStatus);
+            printf("   Mode:                %c\n", (char)gllData.m_posModeInd);
+            
 #endif
-			
-			// TODO: fill in the appropriate fields
-		}
+            
+            // TODO: fill in the appropriate fields
+        }
+    } else if (strcmp(pCmd, "GNGST") == 0 ) {
+            CNMEAParserData::GST_DATA_T    gstData;
+            
+            CNMEAParserData::ERROR_E error;
+            if (strcmp(pCmd, "GNGST") == 0) {
+                error = GetGNGST(gstData);
+            }
+            
+            if(error == CNMEAParserData::ERROR_OK) {
+#ifdef GPS_VERBOSE
+                printf("\nCmd: %s Data: %s\n", pCmd, pData);
+                std::cout << "GNGST Parsed! Text transmission" << std::endl;
+                printf("   Latitude:            %f\n", gstData.m_nRMS);
+                printf("   Longitude:           %f\n", gstData.m_dLongitude);
+                //                printf("   Time:                %02d:%02d:%02d.%03d\n", gllData.m_nHour, gllData.m_nMinute, gllData.m_nSecond, gllData.m_nMilliSecond);   // TODO
+                printf("   Status:              %c\n", (char)gllData.m_nStatus);
+                printf("   Mode:                %c\n", (char)gllData.m_posModeInd);
+                
+#endif
+                
+                // TODO: fill in the appropriate fields
+                state.quality.RMS = gstData.m_nRMS;
+                
+                state.quality.ErrorEllipseMajor = gstData.m_nErrorEllipseMajor;
+                state.quality.ErrorEllipseMinor = gstData.m_nErrorEllipseMinor;
+                state.quality.ErrorEllipseOrientation = gstData.m_nErrorEllipseOrientation;
+                state.quality.LatitudeSigmaError = gstData.m_nLatitudeSigmaError;
+                state.quality.LongitudeSigmaError = gstData.m_nLongitudeSigmaError;
+                state.quality.AltitudeSigmaError = gstData.m_nAltitudeSigmaError;
+            }
+        
 		
 	} else {
 //#ifdef GPS_VERBOSE
@@ -1089,6 +1120,13 @@ void Gps::initialize() {
 	
 	char cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
+    
+    char cfgMsgGstReadPayload[] = "\xf0\x07";
+    sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 2, cfgMsgGstReadPayload);
+    
+    char cfgMsgGstPayload[] = "\xf0\x07\x0a"; //0xF0 0x07
+    sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 3, cfgMsgGstPayload);
+    
 	
 	std::cerr << " - GPS Done." << std::endl;
 }
@@ -1110,6 +1148,7 @@ std::string Panda::ubxClassIdToString( char mClass, char mId ) {
 			switch (mId) {
 				case UBX_ID_CFG_PRT:  return "CFG-PRT";
 				case UBX_ID_CFG_ODO:  return "CFG-ODO";
+                case UBX_ID_CFG_MSG:  return "CFG-MSG";
 				case UBX_ID_CFG_RST:  return "CFG-RST";
 				case UBX_ID_CFG_RATE: return "CFG-RATE";
 				case UBX_ID_CFG_NAV5: return "CFG-NAV5";

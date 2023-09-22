@@ -28,6 +28,7 @@
 
 #include <map>
 #include <time.h>
+#include <math.h> // For NAN
 
 namespace Panda {
 
@@ -85,6 +86,28 @@ namespace Panda {
 		/*! \brief Vertical Dilution of Precision
 		 */
 		double VDOP = 0;
+        /*! \brief RMS value of the pseudorange residuals; includes carrier phase residuals during periods of RTK (float) and RTK (fixed) processing
+         */
+        double RMS = 0;
+        /*! \brief Error ellipse semi-major axis 1-sigma error, in meters
+         */
+        double ErrorEllipseMajor = NAN;
+        /*! \brief Error ellipse semi-minor axis 1-sigma error, in meters
+         */
+        double ErrorEllipseMinor = NAN;
+        /*! \brief Error ellipse orientation, degrees from true north
+         */
+        double ErrorEllipseOrientation = NAN;
+        /*! \brief Latitude 1-sigma error, in meters
+         */
+        double LatitudeSigmaError = NAN;
+        /*! \brief Longitude 1-sigma error, in meters
+         */
+        double LongitudeSigmaError = NAN;
+        /*! \brief Altidute 1-sigma error, in meters
+         */
+        double AltitudeSigmaError = NAN;
+
 	} GpsQuality;
 
 	/*!
@@ -157,7 +180,7 @@ namespace Panda {
 		/*! \brief The current quality of the fix
 		 */
 		GpsQuality quality;
-		/*! \brief The magnetic variation, if supported.  Unsure if this is porivded by the Ublox M8
+		/*! \brief The magnetic variation, if supported.  Unsure if this is provided by the Ublox M8
 		 */
 		double magneticVariation = 0;
 		/*! \brief Total satellites in use

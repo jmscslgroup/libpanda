@@ -52,6 +52,8 @@ add_library(NMEAParserLib SHARED	# Bunting: all below headers have been moved to
 	include/NMEASentenceRMC.h
 	NMEASentenceZDA.cpp	# added by Bunting
 	include/NMEASentenceZDA.h	# added by Bunting
+	NMEASentenceGST.cpp	# added by Bunting
+	include/NMEASentenceGST.h	# added by Bunting
 )
 
 add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for install
@@ -79,6 +81,8 @@ add_library(NMEAParserLib-static STATIC	#this whole thing added by Bunting for i
 	include/NMEASentenceRMC.h
 	NMEASentenceZDA.cpp	# added by Bunting
 	include/NMEASentenceZDA.h	# added by Bunting
+	NMEASentenceGST.cpp	# added by Bunting
+	include/NMEASentenceGST.h	# added by Bunting
 )
 include_directories( "include" ) # Added by Bunting	
 new_install( NMEAParserLib ) # the as well by bunting

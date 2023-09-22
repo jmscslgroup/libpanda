@@ -55,6 +55,7 @@ void CNMEAParser::ResetData(void)
 	m_GPTXT.ResetData(); // added by Bunting
 	m_GNGLL.ResetData(); // added by Bunting
 	m_GPGLL.ResetData(); // added by Bunting
+    m_GNGST.ResetData(); // added by Bunting
 	m_GLGSV.ResetData();
 	m_GLGSA.ResetData();
 	m_QZGSV.ResetData();
@@ -175,6 +176,14 @@ CNMEAParserData::ERROR_E CNMEAParser::GetGPGLL(CNMEAParserData::GLL_DATA_T & sen
 	sentenseData = m_GPGLL.GetSentenceData();
 	DataAccessSemaphoreUnlock();
 	return CNMEAParserData::ERROR_OK;
+}
+
+CNMEAParserData::ERROR_E CNMEAParser::GetGNGST(CNMEAParserData::GST_DATA_T & sentenseData)    // Added by Bunting
+{
+    DataAccessSemaphoreLock();
+    sentenseData = m_GNGST.GetSentenceData();
+    DataAccessSemaphoreUnlock();
+    return CNMEAParserData::ERROR_OK;
 }
 
 CNMEAParserData::ERROR_E CNMEAParser::GetGNGSA(CNMEAParserData::GSA_DATA_T & sentenseData)
@@ -351,6 +360,11 @@ CNMEAParserData::ERROR_E CNMEAParser::ProcessRxCommand(char * pCmd, char * pData
 		m_GPGLL.ProcessSentence(pCmd, pData);
 		DataAccessSemaphoreUnlock();
 	}
+    else if (strcmp(pCmd, "GNGST") == 0) {    // this elsif() Added by Bunting
+        DataAccessSemaphoreLock();
+        m_GNGST.ProcessSentence(pCmd, pData);
+        DataAccessSemaphoreUnlock();
+    }
 	else if (strcmp(pCmd, "GAGGA") == 0) {
 		DataAccessSemaphoreLock();
 		m_GAGGA.ProcessSentence(pCmd, pData);
