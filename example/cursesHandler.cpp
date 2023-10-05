@@ -317,26 +317,29 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	int statHeight = satHeight;
 	
 	double alpha = 0.95;
-	double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
-//	static double gpsHeading;
-//	gpsHeading += 0.1;
-	if (gpsHeading != 0) {	// HACK
-		if (gpsHeading > M_PI*2.0) {
-			gpsHeading -= M_PI*2.0;
-		}
-		if (heading - gpsHeading > M_PI) {
-			heading -= M_PI*2.0;
-		} else if (heading - gpsHeading < -M_PI) {
-			heading += M_PI*2.0;
-		}
-		heading = alpha * heading + (1-alpha)*gpsHeading;
-		if (heading > M_PI*2.0) {
-			heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
-		} else if (heading < 0) {
-			heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
-		}
-	}
-	
+    if(!isnan(handler.getGps().getData().motion.course)) {
+        double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
+        //	static double gpsHeading;
+        //	gpsHeading += 0.1;
+        if (gpsHeading != 0) {	// HACK
+            if (gpsHeading > M_PI*2.0) {
+                gpsHeading -= M_PI*2.0;
+            }
+            if (heading - gpsHeading > M_PI) {
+                heading -= M_PI*2.0;
+            } else if (heading - gpsHeading < -M_PI) {
+                heading += M_PI*2.0;
+            }
+            heading = alpha * heading + (1-alpha)*gpsHeading;
+            if (heading > M_PI*2.0) {
+                heading = heading - floor(heading/(M_PI*2.0))*M_PI*2.0; // float modulus
+            } else if (heading < 0) {
+                heading = heading + ceil(-heading/(M_PI*2.0))*M_PI*2.0;
+            }
+        }
+        
+        heading = gpsHeading;
+    }
 
 //	miniWindow(menuY, menuY+menuHeight, menuX, menuX+menuWidth);	// Panda menu
 	miniWindow(gpsY, gpsY+gpsHeight, gpsX, gpsX+gpsWidth);	// GPS

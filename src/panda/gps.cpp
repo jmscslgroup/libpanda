@@ -122,8 +122,9 @@ void Gps::handleConfiguration() {
 			
 			ubxLastSentClass = ubxCurrentCommand[2];
 			ubxLastSentId = ubxCurrentCommand[3];
-			
+#ifdef GPS_DEBUG
 			printf(" - Sending UBX-%s...\n", ubxClassIdToString(ubxLastSentClass, ubxLastSentId).c_str());
+#endif
 			gpsSend(ubxCurrentCommand.c_str(), getUbxLength(ubxCurrentCommand.c_str()));
 
 			gpsConfigState = GPS_CONFIG_WAIT;
@@ -132,28 +133,38 @@ void Gps::handleConfiguration() {
 		case GPS_CONFIG_WAIT:	// waiting...
 			configurationWaitCounter++;
 			if (configurationWaitCounter % 40 == 0) {
+#ifdef GPS_DEBUG
 				std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Timed out... attempting again " << ubxSendAttempt++ << std::endl;
+#endif
 				gpsConfigState = GPS_CONFIG_SEND; // send again
 			}
-			if (configurationWaitCounter >= 400) {
+			if (ubxSendAttempt >= 3) {
+#ifdef GPS_DEBUG
 				std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Too many attempts" << std::endl;
+#endif
 				configurationWaitCounter = 0;
 				gpsConfigState = GPS_CONFIG_FAIL;
 			}
 			break;
 			
 		case GPS_CONFIG_ACK: // next task
+#ifdef GPS_DEBUG
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Acknowledged!" << std::endl;
+#endif
 			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
 		case GPS_CONFIG_NACK:
+#ifdef GPS_DEBUG
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": GPS module rejected command" << std::endl;
+#endif
 			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
 		case GPS_CONFIG_SUCCESS:
+#ifdef GPS_DEBUG
 			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << " Success!" << std::endl;
+#endif
 //			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << " response: ";
 //			for (int i = 0; i < responseLength; i++) {
 //				printf("0x%02X ", responsePayload[i]);
@@ -163,7 +174,10 @@ void Gps::handleConfiguration() {
 			break;
 			
 		case GPS_CONFIG_FAIL:
-			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": Failed to configure" << std::endl;
+#ifdef GPS_DEBUG
+			std::cout << " --- Gps UBX-" << ubxClassIdToString(ubxLastSentClass, ubxLastSentId) << ": UBX communication failure" << std::endl;
+#endif
+            responseLength = -1;    // failed
 			gpsConfigState = GPS_CONFIG_COMPLETE;
 			break;
 			
@@ -184,6 +198,9 @@ bool Gps::busyUbx() {
 
 // Returns the result of the latest successul UBX read
 int Gps::getUbxResponse(char* result) {
+    if(responseLength <= 0) {
+        return responseLength;
+    }
 	memcpy(result, responsePayload, responseLength);
 	return responseLength;
 }
@@ -224,34 +241,46 @@ void Gps::notificationUbxMessage(char mClass, char mId, short length, unsigned c
 	
 }
 
+float Panda::parseFloat(char* payloadLocation) {
+    float velCovNN;
+    *(long*)&velCovNN =
+    ((((long)payloadLocation[3]) << 24) & 0xFF000000) |
+    ((((long)payloadLocation[2]) << 16) & 0x00FF0000) |
+    ((((long)payloadLocation[1]) << 8) & 0x0000FF00) |
+    ((((long)payloadLocation[0]) << 0) & 0x000000FF);
+    return velCovNN;
+}
+
 int Gps::parseUbx(unsigned char* buffer, int length) {
 	
-	if (length < 8) {
+	if (length < 8) {   // Every UBX packet has 2 SYNCs, 1 Class, 1 ID, 2 Length, and 2 checksum bytes
 		std::cerr << "GPS: Incomplete incoming UBX transmission" << std::endl;
 		return 0;
 	}
-	int ubxLength = (int)buffer[4] | ((int)buffer[5] << 8);
-	if (ubxLength + 4 > length) {
+	int ubxLength = (int)buffer[4] | ((int)buffer[5] << 8); // Length is 2 bytes accoring to UBX protocol
+	if (ubxLength + 8 > length) {
 		std::cerr << "GPS: Incomplete incoming UBX transmission (type 2)" << std::endl;
 		return 0;
 	}
 //	printf("Length %d\n", ubxLength);
 	unsigned char copyOfUbx[ubxLength + 8];
-	memcpy(copyOfUbx, buffer, ubxLength + 6);
+	memcpy(copyOfUbx, buffer, ubxLength + 6);   // Only 6 since we generate cheksum for last 2 bytes in next step
 	Panda::setUbxChecksum((char*)copyOfUbx);
 	
 	if (copyOfUbx[ubxLength+6] != buffer[ubxLength+6] ||
 		copyOfUbx[ubxLength+7] != buffer[ubxLength+7]) {
-		std::cerr << "GPS: UBX protocol recieved invalid checksum:";
+        gpsConfigState = GPS_CONFIG_FAIL;
+//		std::cerr << "GPS: UBX protocol recieved invalid checksum:";
 //		for ( int i = 0; i < ubxLength + 8; i++) {
 //			printf("0x%02X ", copyOfUbx[i]);
 //		}
 //		printf("\nublox:");
-		for ( int i = 0; i < ubxLength + 8; i++) {
-			printf("0x%02X ", buffer[i]);
-		}
-		printf("\n");
-		return 0;
+//		for ( int i = 0; i < ubxLength + 8; i++) {
+//			printf("0x%02X ", buffer[i]);
+//		}
+//		printf("\n");
+//		return 0;
+        return ubxLength + 8;
 	}
 //	std::cout << "Check this out! --> ";
 //	for ( int i = 0; i < ubxLength + 8; i++) {
@@ -268,40 +297,38 @@ int Gps::parseUbx(unsigned char* buffer, int length) {
 
 
 void Gps::processUart(char* buffer, int bufferLength) {
+//    for(int i = 0; i < bufferLength; i++) {
+//        printf("0x%02X ", buffer[i]);
+//    }
+//    printf("\n");
 	for (int i = 0;  i < bufferLength-1; i++) {
 		if (((unsigned char*)buffer)[i] == 0xB5 &&
 			((unsigned char*)buffer)[i+1] == 0x62) {
-//			printf("Found an SOB: ");
-//			for (int j = i; j < bufferLength; j++) {
-//				printf("0x%02X ", buffer[j]);
-//			}
-//			printf("\n");
 			int parseLength = parseUbx((unsigned char*)&buffer[i], bufferLength-i);
 			if (parseLength > 0) {
-//				buffer += i+parseLength;
-//				bufferLength -= i+parseLength;
-//				i = 0;
-//				printf("new buffer: ");
-//				for (int j = 0; j < bufferLength; j++) {
-//					printf("0x%02X ", buffer[j]);
-//				}
-				
 				processUart(&buffer[i+parseLength], bufferLength-i-parseLength);
 				return;
 			}
-		}
+        }
+        else {
+            CNMEAParserData::ERROR_E nErr;
+            if ((nErr = this->ProcessNMEABuffer(&buffer[i], 1)) != CNMEAParserData::ERROR_OK) {
+                std::cerr << "NMEA Parser Gps::ProcessNMEABuffer Failed and returned error: " << nErr << std::endl;
+            }
+            if (nmeaDump.is_open()) {
+                nmeaDump << std::string(&buffer[i],1);
+            }
+        }
 	}
 
 	CNMEAParserData::ERROR_E nErr;
-	if ((nErr = this->ProcessNMEABuffer((char*)buffer, bufferLength)) != CNMEAParserData::ERROR_OK) {
+	if ((nErr = this->ProcessNMEABuffer((char*)&buffer[bufferLength-1],1)) != CNMEAParserData::ERROR_OK) {
 		std::cerr << "NMEA Parser Gps::ProcessNMEABuffer Failed and returned error: " << nErr << std::endl;
 	}
 	if (nmeaDump.is_open()) {
 //		uartBuffer[lengthRead] = 0;	// just for printing to the terminal
-		nmeaDump << std::string(buffer,bufferLength);
+		nmeaDump << std::string(&buffer[bufferLength-1],1);
 	}
-
-	//usbHandler->requestUartData();	// buffer may still have more, make an immediate new request
 
 	//std::cout << "done with notificationUartRead()" << std::endl;
 }
@@ -405,6 +432,7 @@ void Gps::OnError(CNMEAParserData::ERROR_E nError, char *pCmd) {
 
 CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 	bool newData = false;
+    bool newHeadingData = false;
 	state.successfulParseCount++;
 
 	// Call base class to process the command
@@ -638,6 +666,8 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 			
 
 #endif
+            state.motion.course = vtgData.m_trackTrue;
+            newHeadingData = true;
 //			state.motion.course
 			// TODO: fill in the appropriate fields
 		}
@@ -750,6 +780,13 @@ CNMEAParserData::ERROR_E Gps::ProcessRxCommand(char *pCmd, char *pData) {
 			listener->newDataNotification(&this->state);
 		}
 	}
+    if(newHeadingData) {
+        
+            for (std::vector<GpsListener*>:: iterator it = listeners.begin(); it != listeners.end(); it++) {
+                GpsListener* listener = *it;
+                listener->newHeadingNotification(&this->state);
+            }
+    }
 
 	return CNMEAParserData::ERROR_OK;
 }
@@ -1108,27 +1145,98 @@ void Gps::initialize() {
 	
 	*/
 	
-	
 	char cfgratePayload[] = "\x64\x00\x01\x00\x01\x00";
 	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_RATE, 6, cfgratePayload);
 	
 	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_RATE, 0, NULL); // Poll the same message
+    
 	
 	char cfgNavPayload[] = "\x05\x00\x04\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_NAV5, 0x24, cfgNavPayload);
 	
 	
-	char cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-	sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
+    // UBX-CFG-ODO
+    char result[512];
+    int attemptCount = 0;
+    while(attemptCount++ < 5 ) {
+        sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0, NULL);
+        while(busyUbx()) {
+            doAction(); // mega HACK
+            usleep(100);
+        }
+        
+        int length = getUbxResponse(result);
+        if(length < 0)
+            continue;
+        printf("UBX-CFG-ODO read result, length %d\n", length);
+        printf(" - version     : 0x%02X\n", result[0]);
+        printf(" - flags       : 0x%02X\n", result[4]);
+        printf(" - odoCfg      : 0x%02X\n", result[5]);
+        printf(" - cogMaxSpeed : 0x%02X\n", result[12]);
+        printf(" - cogMaxPosAcc: 0x%02X\n", result[13]);
+        printf(" - velLpGain   : 0x%02X\n", result[16]);
+        printf(" - cogLpGain   : 0x%02X\n", result[17]);
+        //	char cfgOdoPayload[] = "\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+        char *cfgOdoPayload = result;//[] = "\x00\x00\x00\x00\x03\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+        cfgOdoPayload[4] = 0x0f;    // flags
+        cfgOdoPayload[5] = 0x03;    // odoCfg, this sets the device to "car" versus running(0), cycling(1), swimming(2), custom(4)
+        //    cfgOdoPayload[12] = 0x0a;    // cogMaxSpeed (scaling 1e-1 m/s)
+        //    cfgOdoPayload[13] = 0x01;    // cogMaxPosAcc (m)
+        //    cfgOdoPayload[17] = 0x10;    // cogLpGain
+        sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_ODO, 0x14, cfgOdoPayload);
+        break;
+    }
     
-    char cfgMsgGstReadPayload[] = "\xf0\x07";
-    sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 2, cfgMsgGstReadPayload);
     
-    char cfgMsgGstPayload[] = "\xf0\x07\x0a"; //0xF0 0x07
+    
+    // Enable NMEA GxGST message:
+//    char cfgMsgGstReadPayload[] = "\xf0\x07";
+//    attemptCount = 0;
+//    while(attemptCount++ < 5 ) {
+//        sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 2, cfgMsgGstReadPayload);
+//        while(busyUbx()) {
+//            doAction(); // mega HACK
+//            usleep(100);
+//        }
+//        //    char result[512];
+//        int length = getUbxResponse(result);
+//        if(length < 0)
+//            continue;
+//        printf("UBX-CFG-MSG read result, length %d\n", length);
+//        printf(" - Message Class: 0x%02X\n", result[0]);
+//        printf(" - Message ID   : 0x%02X\n", result[1]);
+//        for(int i = 2; i < length; i++) {
+//            printf(" - Port Rate[%d] : 0x%02X\n", i-2, result[i]);
+//        }
+//        break;
+//    }
+    
+    char cfgMsgGstPayload[] = "\xf0\x07\x0a"; // 0x0a corresponds to NMEA GST message
     sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 3, cfgMsgGstPayload);
     
+    
+//    attemptCount = 0;
+//    while(attemptCount++ < 5 ) {
+//        sendUbxCommand(UBX_CLASS_CFG, UBX_ID_CFG_MSG, 2, cfgMsgGstReadPayload);
+//        while(busyUbx()) {
+//            doAction(); // mega HACK
+//            usleep(100);
+//        }
+//        //    char result[512];
+//        int length = getUbxResponse(result);
+//        if(length < 0)
+//            continue;
+//        printf("UBX-CFG-MSG read result, length %d\n", length);
+//        printf(" - Message Class: 0x%02X\n", result[0]);
+//        printf(" - Message ID   : 0x%02X\n", result[1]);
+//        for(int i = 2; i < length; i++) {
+//            printf(" - Port Rate[%d] : 0x%02X\n", i-2, result[i]);
+//        }
+//        break;
+//    }
 	
 	std::cerr << " - GPS Done." << std::endl;
+    
 }
 
 
@@ -1171,6 +1279,7 @@ std::string Panda::ubxClassIdToString( char mClass, char mId ) {
 			
 		case UBX_CLASS_NAV:
 			switch (mId) {
+                case UBX_ID_NAV_COV:  return "NAV-COV";
 				default:
 					break;
 			}

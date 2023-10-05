@@ -47,7 +47,6 @@ private:
 			std::cerr << "*";
 			notificationCount = 0;
 		}
-//        printf("Lat StdDev: %f\n", gpsData->quality.LatitudeSigmaError);
 	}
 };
 
@@ -65,9 +64,8 @@ int main(int argc, char **argv) {
 	Panda::Usb mUsb;
 	Panda::Gps mGps;
 	mGps.setUsb(&mUsb);
-	mUsb.addObserver(&mGps);
-
-	mGps.addObserver(&mSimpleGpsObserver);
+    mUsb.addObserver(&mGps);
+    mGps.addObserver(&mSimpleGpsObserver);
 
 	if (argc == 2) {
 		std::cout << "Setting mode to MODE_SYNCHRONOUS" << std::endl;
@@ -85,6 +83,7 @@ int main(int argc, char **argv) {
 	mGps.initialize();
 	mUsb.startRecording();
 	mGps.startParsing();
+    
 
 	
 	// Test sending some GPS UBX commands
@@ -112,6 +111,7 @@ int main(int argc, char **argv) {
 	for (int i = 40; i < length; i += 30) {
 		printf(" - Extended Info   : %s\n", &result[i]);
 	}
+    
 	
 	sleep(1);
 	
@@ -124,7 +124,34 @@ int main(int argc, char **argv) {
 			std::cerr << ".";
 			lastNmeaMessageCount = mGps.getData().successfulParseCount;
 		}
-		usleep(100000);
+		usleep(1000);
+        
+//        printf("UBX-NAV-COV request...\n");
+        char navMsgCov[100];
+        mGps.sendUbxCommand(Panda::UBX_CLASS_NAV, Panda::UBX_ID_NAV_COV, 0, NULL);
+            while(mGps.busyUbx()) {
+                usleep(100);
+            }
+        length = mGps.getUbxResponse(navMsgCov);
+//        printf("UBX-NAV-COV read result, length %d\n", length);
+        if(length > 0) {
+            printf(" - posCovNN: %f\n", Panda::parseFloat(&navMsgCov[16]));
+            printf(" - posCovEE: %f\n", Panda::parseFloat(&navMsgCov[28]));
+            printf(" - posCovDD: %f\n", Panda::parseFloat(&navMsgCov[36]));
+        }
+//        printf("UBX-MON-VER request...\n");
+        mGps.sendUbxCommand(Panda::UBX_CLASS_MON, Panda::UBX_ID_MON_VER, 0, NULL);
+        while(mGps.busyUbx()) {
+            usleep(100);
+        }
+        length = mGps.getUbxResponse(result);
+//        printf("UBX-MON-VER read result, length %d\n", length);
+//        printf(" - Software Version: %s\n", result);
+//        printf(" - Hardware Version: %s\n", &result[30]);
+//        for (int i = 40; i < length; i += 30) {
+//            printf(" - Extended Info   : %s\n", &result[i]);
+//        }
+        
 	}
 	std::cout << std::endl;
 	

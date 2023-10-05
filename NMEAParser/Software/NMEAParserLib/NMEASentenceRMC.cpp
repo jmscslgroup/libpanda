@@ -32,6 +32,7 @@
 
 #include "NMEASentenceRMC.h"
 #include <stdlib.h>
+#include <math.h>
 
 CNMEASentenceRMC::CNMEASentenceRMC() {
 	// TODO Auto-generated constructor stub
@@ -114,7 +115,7 @@ CNMEAParserData::ERROR_E CNMEASentenceRMC::ProcessSentence(char *pCmd, char *pDa
 		m_SentenceData.m_dTrackAngle = atof(szField);
 	}
 	else {
-		m_SentenceData.m_dTrackAngle = 0.0;
+		m_SentenceData.m_dTrackAngle = nan("");
 	}
 
 

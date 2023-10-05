@@ -479,10 +479,12 @@ do_app_install () {
                         echo "Error! Dependency $PACKAGE_NAME has unknown/unsupported package managery type: $PACKAGE_MANAGER_TYPE"
                     fi
                 done
+                echo "Installing apt/pip3 dependencies..."
                 do_apt_install APT_PACKAGES
                 do_pip3_install PIP3_PACKAGES
             
                 # ROS dependency install:
+                echo "Getting ROS dependencies (if any)..."
                 ROS_REPO_INDICES=$(yq e ".apps[${APP_INDEX}] | select(has(\"ros_repositories\")) | .ros_repositories | to_entries | .[] | .key" $APP_DEFINITION_FILE)
                 for ROS_REPO_INDEX in ${ROS_REPO_INDICES}
                 do

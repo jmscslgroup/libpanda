@@ -41,11 +41,19 @@
 
 namespace Panda {
 
+#define UBX_NAV_COV_POS_NN (16)
+#define UBX_NAV_COV_POS_NE (20)
+#define UBX_NAV_COV_POS_ND (24)
+#define UBX_NAV_COV_POS_EE (28)
+#define UBX_NAV_COV_POS_ED (32)
+#define UBX_NAV_COV_POS_DD (36)
+
 enum GPS_CONFIG_STATE {
 	GPS_CONFIG_IDLE,
 	GPS_CONFIG_START,
 	GPS_CONFIG_SEND,
 	GPS_CONFIG_WAIT,
+//    GPS_CONFIG_BAD_CHECKSUM,
 	GPS_CONFIG_ACK,
 	GPS_CONFIG_NACK,
 	GPS_CONFIG_SUCCESS,
@@ -78,10 +86,15 @@ enum UBX_ID_MON {
 	UBX_ID_MON_VER  = 0x04
 };
 
+enum UBX_ID_NAV {
+    UBX_ID_NAV_COV  = 0x36
+};
+
 std::string ubxClassIdToString( char mClass, char mId);
 	
 	void setUbxChecksum(char* packet);
 	int makeUbx(char* dst, char mClass, char mId, unsigned short payloadLength, char* payload);
+    float parseFloat(char* payloadLocation);
 	unsigned short getUbxLength(const char* ubx);
 
 	class Gps;
@@ -103,6 +116,15 @@ std::string ubxClassIdToString( char mClass, char mId);
 		 @param gpsData The up-to-date GPS data.
 		 */
 		virtual void newDataNotification(GpsData* gpsData) = 0;
+        
+        
+        /*!
+         \brief Called on a successful VTG message parse
+         Overload this to get instant updates form freshly parsed NMEA strings. Be efficient in this
+         method!  This will block further GPS reads and parsings.
+         @param gpsData The up-to-date GPS data.
+         */
+        virtual void newHeadingNotification(GpsData* gpsData) {};
 
 	public:
 		virtual ~GpsListener() { };
@@ -212,7 +234,7 @@ std::string ubxClassIdToString( char mClass, char mId);
 		
 		char ubxLastSentClass;
 		char ubxLastSentId;
-		unsigned short responseLength;
+		int responseLength;
 		char responsePayload[256];	// this could all be a struct...
 		
 		GPS_CONFIG_STATE gpsConfigState;
