@@ -100,4 +100,6 @@ source /opt/ros/noetic/setup.bash
 #echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
+echo "export ROSCONSOLE_FORMAT='"'[${severity}] - ${node}: [${time}] ${message}'"'" >> ~/.bashrc
+
 echo "----------------------------"
