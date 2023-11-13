@@ -1,6 +1,6 @@
 [Unit]
 Description=Auto-updates libpanda and the corresponding catkin packages at boot if connected to vuDevices.
-After=can.service
+After=baseline.service
 Wants=network.target
 
 [Service]
