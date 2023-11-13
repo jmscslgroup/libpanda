@@ -23,7 +23,7 @@ CURRENT_LIBPANDA_GIT_VERSION=$(git rev-parse HEAD | tr -d "\n\r")
 if [ "$INSTALLED_LIBPANDA_GIT_VERSION" = "$CURRENT_LIBPANDA_GIT_VERSION" ];
 then
 	echo "Software stack is already up to date!"
-	exit 1
+	#exit 1
 fi
 
 echo "Update needed, Git hash mismatch: $INSTALLED_LIBPANDA_GIT_VERSION != $CURRENT_LIBPANDA_GIT_VERSION"
