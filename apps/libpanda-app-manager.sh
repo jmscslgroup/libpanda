@@ -114,13 +114,13 @@ do_descriptions () {
 
 do_start_app () {
     if [ "${CURRENT_APP}" != "None" ]; then
-        $APP_DIR/$CURRENT_APP/start.sh
+        bash $APP_DIR/$CURRENT_APP/start.sh
     fi
 }
 
 do_stop_app () {
     if [ "${CURRENT_APP}" != "None" ]; then
-        $APP_DIR/$CURRENT_APP/stop.sh
+        bash $APP_DIR/$CURRENT_APP/stop.sh
     fi
 }
 
@@ -380,8 +380,8 @@ do_app_uninstall () {
         return 0
     fi
 
-    $APP_DIR/$APP_TO_REMOVE/stop.sh
-    $APP_DIR/$APP_TO_REMOVE/uninstall.sh
+    bash $APP_DIR/$APP_TO_REMOVE/stop.sh
+    bash $APP_DIR/$APP_TO_REMOVE/uninstall.sh
 #    echo "None" > $CURRENT_APP_FILE
     yq -i '.current = "None"' $APP_MANIFEST
 }
@@ -503,7 +503,7 @@ do_app_install () {
         
     done
     
-    $APP_DIR/$APP_TO_INSTALL/install.sh
+    bash $APP_DIR/$APP_TO_INSTALL/install.sh
 #    echo "$APP_TO_INSTALL" > $CURRENT_APP_FILE
     yq -i '.current = "'"$APP_TO_INSTALL"'"' $APP_MANIFEST
 }
