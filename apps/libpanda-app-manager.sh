@@ -154,8 +154,10 @@ get_git_branch_or_hash () {
     _OWNER=${OWNER_AND_REPOSITORY%%/*}
     _REPOSITORY=$(sed 's/.*\///g' <<<$OWNER_AND_REPOSITORY)
     
+    PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
     GIT_REPO="https://github.com/${OWNER_AND_REPOSITORY}"
-    if wget -q --method=HEAD ${GIT_REPO}; then
+    #if wget -q --method=HEAD ${GIT_REPO}; then
+    if sudo -H -u ${PI_USER} bash -c "git ls-remote ${GIT_REPO}"; then
         echo "Repository found and available!"
     else
         echo "Error getting repository, either it does not exist or internet is not available" >&2
@@ -163,40 +165,42 @@ get_git_branch_or_hash () {
         return 0
     fi
     
+    
     mkdir -p $TARGET_DIRECTORY
+    chown -R ${PI_USER}:${PI_USER} $TARGET_DIRECTORY
     pushd $TARGET_DIRECTORY
     if [ ! -d $TARGET_DIRECTORY/$_REPOSITORY ]; then
-        git clone https://github.com/$OWNER_AND_REPOSITORY
+        sudo -H -u ${PI_USER} bash -c "git clone https://github.com/${OWNER_AND_REPOSITORY}"
         pushd $_REPOSITORY
     else
         echo "Entering ${TARGET_DIRECTORY}/${_REPOSITORY}"
         pushd $_REPOSITORY
-        git pull
+        sudo -H -u ${PI_USER} bash -c 'git pull'
     fi
     
     echo "checking branch/hash ${BRANCH_OR_HASH}"
     if [ -z "${BRANCH_OR_HASH}" ]; then
         echo "No branch or hash provided"
         # Make sure we switch to main/master
-        TEST_BRANCH=$(git ls-remote origin main)
+        TEST_BRANCH=$(sudo -H -u ${PI_USER} bash -c "git ls-remote origin main")
         if [ -z "${TEST_BRANCH}" ]; then
-            git checkout master
+            sudo -H -u ${PI_USER} bash -c 'git checkout master'
         else
-            git checkout main
+            sudo -H -u ${PI_USER} bash -c 'git checkout main'
         fi
     else
         if git cat-file -e $BRANCH_OR_HASH^{commit}; then
             echo " - Branch/Hash exists!"
-            git checkout ${BRANCH_OR_HASH}
+            sudo -H -u ${PI_USER} bash -c "git checkout ${BRANCH_OR_HASH}"
         else
-            TEST_BRANCH=$(git ls-remote origin $BRANCH_OR_HASH)
+            TEST_BRANCH=$(sudo -H -u ${PI_USER} bash -c "git ls-remote origin ${BRANCH_OR_HASH}")
     
             if [ -z "${TEST_BRANCH}" ]; then
                 echo "Error: branch ${BRANCH_OR_HASH} does not exist in repository ${OWNER_AND_REPOSITORY}" >&2
 #                do_repo_remove $APP_TO_UPDATE
                 RETURN_VALUE=0
             else
-                git checkout ${BRANCH_OR_HASH}
+                sudo -H -u ${PI_USER} bash -c "git checkout ${BRANCH_OR_HASH}"
             fi
         fi
     fi
@@ -236,22 +240,25 @@ do_repo_update () {
     APP_BRANCH=$2
     THIS_APP_DIRECTORY=${APP_TO_UPDATE%%/*}
     
+    PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
     
     echo "Updating App ${APP_TO_UPDATE} with branch ${APP_BRANCH}..."
 
     mkdir -p $APP_REPOSITORIES/$THIS_APP_DIRECTORY
+    chown -R ${PI_USER}:${PI_USER} $APP_REPOSITORIES/$THIS_APP_DIRECTORY
     if [ ! -d $APP_REPOSITORIES/$APP_TO_UPDATE ]; then
         cd $APP_REPOSITORIES/$THIS_APP_DIRECTORY
-        git clone https://github.com/$APP_TO_UPDATE
+        
+        sudo -H -u ${PI_USER} bash -c "git clone https://github.com/${APP_TO_UPDATE}"
         cd ../$APP_TO_UPDATE
     else
         echo "Entering ${APP_REPOSITORIES}/${APP_TO_UPDATE}"
         cd $APP_REPOSITORIES/$APP_TO_UPDATE
-        git pull
+        sudo -H -u ${PI_USER} bash -c 'git pull'
     fi
                 
 #    TEST_BRANCH=$(sudo git rev-parse --verify $APP_BRANCH)
-    TEST_BRANCH=$(sudo git ls-remote origin $APP_BRANCH)
+    TEST_BRANCH=$(sudo -H -u ${PI_USER} bash -c "git ls-remote origin ${APP_BRANCH}")
     
     if [ -z "${TEST_BRANCH}" ]; then
         echo "Error: branch ${APP_BRANCH} does not exist in repository ${APP_TO_ADD}" >&2
@@ -261,7 +268,7 @@ do_repo_update () {
     
 #    echo "TEST_BRANCH = ${TEST_BRANCH}"
     
-    git checkout $APP_BRANCH
+    sudo -H -u ${PI_USER} bash -c "git checkout ${APP_BRANCH}"
     
     pwd
     # now parse the yaml file, if it exists
@@ -339,7 +346,9 @@ do_repo_add () {
     fi
     
     GIT_REPO="https://github.com/${APP_TO_ADD}"
-    if wget -q --method=HEAD ${GIT_REPO}; then
+    #if wget -q --method=HEAD ${GIT_REPO}; then
+    PI_USER=$(cat /etc/libpanda.d/libpanda_usr)
+    if sudo -H -u ${PI_USER} bash -c "git ls-remote ${GIT_REPO}"; then
         echo "Repository found and available!"
     else
         echo "Error getting repository, either it does not exist or internet is not available" >&2
