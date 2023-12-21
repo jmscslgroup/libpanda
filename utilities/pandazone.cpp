@@ -33,7 +33,7 @@
 #include <json/json.h>
 #include <cmath>
 
-
+#include <sstream>
 
 #include "panda.h"
 
