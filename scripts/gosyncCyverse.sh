@@ -1,6 +1,7 @@
 #/bin/bash
 
 /usr/local/sbin/check_VIN_before_upload
+# /usr/local/sbin/local_data_size_maintenance
 
 VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
@@ -43,6 +44,7 @@ case "$response" in
 	  gocmd mkdir -p ${DIR_PATH_CYVERSE}
 	  gocmd sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
+	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
 	;;
       *)
           echo "Exiting" 
