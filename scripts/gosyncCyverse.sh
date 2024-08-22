@@ -7,7 +7,7 @@ VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
 
 # csv files:
-LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData
+LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData/${VIN}
 REMOTE=/iplant/home/sprinkjm/private-ndd/${VIN}/libpanda
 
 # For rosbagfiles:
@@ -38,11 +38,12 @@ fi
 case "$response" in
       [yY][eE][sS]|[yY])
       #csv files:
-	  gocmd sync --progress --no_hash ${LOCAL} i:${REMOTE}
+	  gocmd -c ~/go-cmd-binary/config.yaml mkdir -p ${REMOTE}
+	  gocmd -c ~/go-cmd-binary/config.yaml sync --progress --no_hash ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
-	  gocmd mkdir -p ${DIR_PATH_CYVERSE}
-	  gocmd sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+	  gocmd -c ~/go-cmd-binary/config.yaml mkdir -p ${DIR_PATH_CYVERSE}
+	  gocmd -c ~/go-cmd-binary/config.yaml sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
 	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
 	;;
