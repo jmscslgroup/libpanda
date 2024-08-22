@@ -1,4 +1,4 @@
-
+##AUTHORS: Gracie Gumm, Matthew Nice
 #!/bin/bash
 VIN=$(cat /etc/libpanda.d/vin)
 local_path=/var/panda/CyverseData/JmscslgroupData/PandaData
@@ -34,6 +34,7 @@ for file in $local_files; do
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
         if [[ "$name" == "$remote_basename" ]]; then
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
           remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
           len_str=$(( ${#remote_size_str} / 2))
           remote_size=${remote_size_str:0:$len_str}
@@ -63,6 +64,7 @@ for file in $local_files; do
       time_file=${name:11:8}
       date_directory=$year_file"_"$month_file"_"$day_file
       type=${name:38:3}
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
       remote_loc=`ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory`
       local_size=$(du --bytes /var/panda/CyverseData/JmscslgroupData/PandaData/$date_directory/$name | awk '{print $1}')
       if [ -z "$remote_loc" ]; then
@@ -75,6 +77,7 @@ for file in $local_files; do
         for remote_file in $remote_files; do
           remote_basename=$(basename "$remote_file")
           if [[ "$name" == "$remote_basename" ]]; then
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
             remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
             len_str=$(( ${#remote_size_str} / 2))
             remote_size=${remote_size_str:0:$len_str}
@@ -121,11 +124,13 @@ if [[ $used_storage -gt $critical_storage ]]; then
     # Delete files if status is uploaded. Double check status
     if [ "$previous_status" = "Uploaded" ]; then
       echo "$name has been uploaded and will be deleted"
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
       remote_files=$(ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
         if [[ "$name" == "$remote_basename" ]]; then
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
           remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
           len_str=$(( ${#remote_size_str} / 2))
           remote_size=${remote_size_str:0:$len_str}

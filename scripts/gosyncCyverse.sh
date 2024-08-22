@@ -44,7 +44,7 @@ case "$response" in
 	  gocmd mkdir -p ${DIR_PATH_CYVERSE}
 	  gocmd sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
-	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
+#	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
 	;;
       *)
           echo "Exiting" 
