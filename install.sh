@@ -148,6 +148,8 @@ cd ~/${MISMATCHFILES}
 sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
 sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 
+sudo cp ./scripts/local_data_size_maintenance.sh usr/local/sbin/local_data_size_maintenance.sh
+sudo chmod +x /usr/local/sbin/local_data_size_maintenance.sh
 
 
 #if [ ! -d ~/irods-icommands-debs ]; then
