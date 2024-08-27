@@ -1,13 +1,12 @@
 #/bin/bash
 
-/usr/local/sbin/check_VIN_before_upload
-# /usr/local/sbin/local_data_size_maintenance
+#/usr/local/sbin/check_VIN_before_upload
 
 VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
 
 # csv files:
-LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData
+LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData/
 REMOTE=/iplant/home/sprinkjm/private-ndd/${VIN}/libpanda
 
 # For rosbagfiles:
@@ -53,3 +52,5 @@ case "$response" in
 else
 	echo "You have not set your VIN...exiting."
 fi
+
+/usr/local/sbin/local_data_size_maintenance
