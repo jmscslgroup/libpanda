@@ -1,8 +1,11 @@
 ##AUTHORS: Gracie Gumm, Matthew Nice
 #!/bin/bash
 VIN=$(cat /etc/libpanda.d/vin)
-local_path=/var/panda/CyverseData/JmscslgroupData/PandaData
-FILE=/home/circles/libpanda/scripts/upload_status.csv
+local_path=/var/panda/CyverseData/JmscslgroupData/PandaData/
+FILE=/home/circles/upload_status.csv
+remote_path=/iplant/home/sprinkjm/private-ndd/$VIN/libpanda/PandaData
+#remote_path=/iplant/home/sprinkjm/private-circles/$VIN/libpanda
+
 
 # creating index file if it does not already exist
 if [ -f "$FILE" ]; then
@@ -20,24 +23,32 @@ for file in $local_files; do
   if [[ "$name" == "upload_status.csv" ]]; then
     continue
   fi
+
+ #remote_files=$(ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$VIN/$date_directory/) 
   
   # Check if the file has already been added to log.csv and update status if uploaded now
   if grep -q "^$(basename $file)," $FILE; then
     previous_status=$(grep "$name" "$FILE" | awk -F', ' '{print $6}')
+	echo "$file status is $previous_status"
     if [ "$previous_status" = "Not Uploaded" ]; then
+	echo "$name and $FILE"
       local_size=$(grep "$name" "$FILE" | awk -F', ' '{print $5}')
       date_directory=$(grep "$name" "$FILE" | awk -F', ' '{print $2}')
       time_file=$(grep "$name" "$FILE" | awk -F', ' '{print $3}')
       type=$(grep "$name" "$FILE" | awk -F', ' '{print $4}')
-      remote_files=$(ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/) 
+      echo "looking for $remote_path and $date_directory files to confirm upload"
+#      remote_files=$(ils -r $remote_path/$date_directory/) 
+      remote_files=$(gocmd ls $remote_path/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
         if [[ "$name" == "$remote_basename" ]]; then
-	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
-          remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
-          len_str=$(( ${#remote_size_str} / 2))
-          remote_size=${remote_size_str:0:$len_str}
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE --DONE
+            remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
+            #len_str=$(( ${#remote_size_str} / 2))
+            #remote_size=${remote_size_str:0:$len_str}
+            remote_size=$remote_size_str
+	echo "remote size is $remote_size, local size is $local_size"
           if [[ "$local_size" == "$remote_size" ]]; then
             status="Uploaded"
             time_check=$(date '+%Y-%m-%d %H:%M:%S')
@@ -64,24 +75,27 @@ for file in $local_files; do
       time_file=${name:11:8}
       date_directory=$year_file"_"$month_file"_"$day_file
       type=${name:38:3}
-	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
-      remote_loc=`ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory`
-      local_size=$(du --bytes /var/panda/CyverseData/JmscslgroupData/PandaData/$date_directory/$name | awk '{print $1}')
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
+#      remote_loc=`ils -r $remote_path/$date_directory`
+      remote_loc=`gocmd ls $remote_path/$date_directory`
+      local_size=$(du --bytes $local_path/$date_directory/$name | awk '{print $1}')
       if [ -z "$remote_loc" ]; then
         status="Not Uploaded"
         time_check=$(date '+%Y-%m-%d %H:%M:%S')
       else
         status="Not Uploaded"
         time_check=$(date '+%Y-%m-%d %H:%M:%S')
-        remote_files=$(ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/)
-        for remote_file in $remote_files; do
+#        remote_files=$(ils -r $remote_path/$date_directory/)
+        remote_files=$(gocmd ls $remote_path/$date_directory/)
+      for remote_file in $remote_files; do
           remote_basename=$(basename "$remote_file")
           if [[ "$name" == "$remote_basename" ]]; then
-	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
-            remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
-            len_str=$(( ${#remote_size_str} / 2))
-            remote_size=${remote_size_str:0:$len_str}
-            if awk -v local="$local_size" -v remote="$remote_size" 'BEGIN { if (local >= remote) exit 0; exit 1 }'; then
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
+            remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
+            #len_str=$(( ${#remote_size_str} / 2))
+            #remote_size=${remote_size_str:0:$len_str}
+            remote_size=$remote_size_str
+	if awk -v local="$local_size" -v remote="$remote_size" 'BEGIN { if (local >= remote) exit 0; exit 1 }'; then
               status="Uploaded"
               time_check=$(date '+%Y-%m-%d %H:%M:%S')
               echo "$name is properly uploaded"
@@ -99,14 +113,14 @@ for file in $local_files; do
   fi
 done
 
-# DELETE SECTION
-critical_storage=50
-used_storage_float=$(lsblk -fmo NAME,FSUSE%,FSAVAIL,FSSIZE | grep 'mmcblk0p2' | awk '{printf "%.1f", $2 }')
+# DELETE SECTION going from 9 to 5 (GB of data)
+critical_storage=4
+used_storage_float=$(du -sh $local_path | awk -F' ' '{print$1}' | head -c-2)
 used_storage=${used_storage_float%.*}
-delete_to=20
+delete_to=3
 echo $used_storage_float
 if [[ $used_storage -gt $critical_storage ]]; then
-  echo "Memory usage critical... deleting files."
+  echo "Memory usage above $critical_storage GB... deleting oldest uploaded files."
   while [[ $used_storage -gt $delete_to ]]; do
     file_name=$(awk -F ',' 'NR==2{print $1}' $FILE)
     name=$(basename "$file_name")
@@ -124,14 +138,15 @@ if [[ $used_storage -gt $critical_storage ]]; then
     # Delete files if status is uploaded. Double check status
     if [ "$previous_status" = "Uploaded" ]; then
       echo "$name has been uploaded and will be deleted"
-	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
-      remote_files=$(ils -r /iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/) 
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
+#      remote_files=$(ils -r $remote_path/$date_directory/) 
+      remote_files=$(gocmd ls $remote_path/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
         if [[ "$name" == "$remote_basename" ]]; then
-	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE
-          remote_size_str=$(ils -l "/iplant/home/sprinkjm/private-circles/$VIN/libpanda/$date_directory/$remote_basename" | awk '{printf$4}')
+	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
+          remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
           len_str=$(( ${#remote_size_str} / 2))
           remote_size=${remote_size_str:0:$len_str}
           # FILE IS UPLOADED, GOOD TO DELETE
@@ -140,6 +155,10 @@ if [[ $used_storage -gt $critical_storage ]]; then
             time_check=$(date '+%Y-%m-%d %H:%M:%S')
             echo "Deleting $name..."
             sudo rm "${local_path}/${date_directory}/${file_name}"
+	    if [ -z "$(ls -A ${local_path}/${date_directory})" ]; then
+  		 echo "Empty directory, ${local_path}/${date_directory}, to delete."
+		sudo rmdir "${local_path}/${date_directory}"
+		fi
             sed -i '2d' $FILE
 	    echo "Storage is currently: $used_storage"
             remote_found=1
@@ -159,7 +178,7 @@ if [[ $used_storage -gt $critical_storage ]]; then
       sed -i "/^$name,/d" $FILE
       echo "$name, $date_directory, $time_file, $type, $local_size, $status, $time_check" >> "$FILE"
     fi
-    used_storage_float=$(lsblk -fmo NAME,FSUSE%,FSAVAIL,FSSIZE | grep 'mmcblk0p2' | awk '{printf "%.1f", $2 }')
+    used_storage_float=$(du -sh $local_path | awk -F' ' '{print$1}' | head -c-2)
     used_storage=${used_storage_float%.*}
   done
   echo "Deletion process is completed. Currrent used storage $used_storage_float%"
