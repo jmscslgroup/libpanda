@@ -37,7 +37,8 @@ for file in $local_files; do
       time_file=$(grep "$name" "$FILE" | awk -F', ' '{print $3}')
       type=$(grep "$name" "$FILE" | awk -F', ' '{print $4}')
       echo "looking for $remote_path and $date_directory files to confirm upload"
-      remote_files=$(ils -r $remote_path/$date_directory/) 
+#      remote_files=$(ils -r $remote_path/$date_directory/) 
+      remote_files=$(gocmd ls $remote_path/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
@@ -75,7 +76,8 @@ for file in $local_files; do
       date_directory=$year_file"_"$month_file"_"$day_file
       type=${name:38:3}
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
-      remote_loc=`ils -r $remote_path/$date_directory`
+#      remote_loc=`ils -r $remote_path/$date_directory`
+      remote_loc=`gocmd ls $remote_path/$date_directory`
       local_size=$(du --bytes $local_path/$date_directory/$name | awk '{print $1}')
       if [ -z "$remote_loc" ]; then
         status="Not Uploaded"
@@ -83,7 +85,8 @@ for file in $local_files; do
       else
         status="Not Uploaded"
         time_check=$(date '+%Y-%m-%d %H:%M:%S')
-        remote_files=$(ils -r $remote_path/$date_directory/)
+#        remote_files=$(ils -r $remote_path/$date_directory/)
+        remote_files=$(gocmd ls $remote_path/$date_directory/)
       for remote_file in $remote_files; do
           remote_basename=$(basename "$remote_file")
           if [[ "$name" == "$remote_basename" ]]; then
@@ -136,7 +139,8 @@ if [[ $used_storage -gt $critical_storage ]]; then
     if [ "$previous_status" = "Uploaded" ]; then
       echo "$name has been uploaded and will be deleted"
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
-      remote_files=$(ils -r $remote_path/$date_directory/) 
+#      remote_files=$(ils -r $remote_path/$date_directory/) 
+      remote_files=$(gocmd ls $remote_path/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
