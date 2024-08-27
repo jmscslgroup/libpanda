@@ -3,7 +3,7 @@
 VIN=$(cat /etc/libpanda.d/vin)
 local_path=/var/panda/CyverseData/JmscslgroupData/PandaData/
 FILE=/home/circles/upload_status.csv
-remote_path=/iplant/home/sprinkjm/private-ndd/$VIN/libpanda
+remote_path=/iplant/home/sprinkjm/private-ndd/$VIN/libpanda/PandaData
 #remote_path=/iplant/home/sprinkjm/private-circles/$VIN/libpanda
 
 
@@ -29,20 +29,25 @@ for file in $local_files; do
   # Check if the file has already been added to log.csv and update status if uploaded now
   if grep -q "^$(basename $file)," $FILE; then
     previous_status=$(grep "$name" "$FILE" | awk -F', ' '{print $6}')
+	echo "$file status is $previous_status"
     if [ "$previous_status" = "Not Uploaded" ]; then
+	echo "$name and $FILE"
       local_size=$(grep "$name" "$FILE" | awk -F', ' '{print $5}')
       date_directory=$(grep "$name" "$FILE" | awk -F', ' '{print $2}')
       time_file=$(grep "$name" "$FILE" | awk -F', ' '{print $3}')
       type=$(grep "$name" "$FILE" | awk -F', ' '{print $4}')
+      echo "looking for $remote_path and $date_directory files to confirm upload"
       remote_files=$(ils -r $remote_path/$date_directory/) 
       remote_found=0
       for remote_file in $remote_files; do
         remote_basename=$(basename "$remote_file")
         if [[ "$name" == "$remote_basename" ]]; then
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE --DONE
-          remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
-          len_str=$(( ${#remote_size_str} / 2))
-          remote_size=${remote_size_str:0:$len_str}
+            remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
+            #len_str=$(( ${#remote_size_str} / 2))
+            #remote_size=${remote_size_str:0:$len_str}
+            remote_size=$remote_size_str
+	echo "remote size is $remote_size, local size is $local_size"
           if [[ "$local_size" == "$remote_size" ]]; then
             status="Uploaded"
             time_check=$(date '+%Y-%m-%d %H:%M:%S')
@@ -84,9 +89,10 @@ for file in $local_files; do
           if [[ "$name" == "$remote_basename" ]]; then
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
             remote_size_str=$(ils -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
-            len_str=$(( ${#remote_size_str} / 2))
-            remote_size=${remote_size_str:0:$len_str}
-            if awk -v local="$local_size" -v remote="$remote_size" 'BEGIN { if (local >= remote) exit 0; exit 1 }'; then
+            #len_str=$(( ${#remote_size_str} / 2))
+            #remote_size=${remote_size_str:0:$len_str}
+            remote_size=$remote_size_str
+	if awk -v local="$local_size" -v remote="$remote_size" 'BEGIN { if (local >= remote) exit 0; exit 1 }'; then
               status="Uploaded"
               time_check=$(date '+%Y-%m-%d %H:%M:%S')
               echo "$name is properly uploaded"

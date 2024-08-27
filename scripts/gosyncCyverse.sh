@@ -37,7 +37,7 @@ fi
 case "$response" in
       [yY][eE][sS]|[yY])
       #csv files:
-	  gocmd sync --progress --no_hash ${LOCAL} i:${REMOTE}
+	  gocmd sync --progress --no_hash --show_path ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
 	  gocmd mkdir -p ${DIR_PATH_CYVERSE}
