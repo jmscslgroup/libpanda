@@ -115,7 +115,7 @@ done
 
 # DELETE SECTION going from 9 to 5 (GB of data)
 critical_storage=4
-used_storage_float=$(du -sh $local_path | awk -F' ' '{print$1}' | head -c-2)
+used_storage_float=$(du -sh -B G $local_path | awk -F' ' '{print$1}' | head -c-2)
 used_storage=${used_storage_float%.*}
 delete_to=3
 echo $used_storage_float
@@ -178,7 +178,7 @@ if [[ $used_storage -gt $critical_storage ]]; then
       sed -i "/^$name,/d" $FILE
       echo "$name, $date_directory, $time_file, $type, $local_size, $status, $time_check" >> "$FILE"
     fi
-    used_storage_float=$(du -sh $local_path | awk -F' ' '{print$1}' | head -c-2)
+    used_storage_float=$(du -sh -B G $local_path | awk -F' ' '{print$1}' | head -c-2)
     used_storage=${used_storage_float%.*}
   done
   echo "Deletion process is completed. Currrent used storage $used_storage_float%"
