@@ -6,11 +6,11 @@ VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
 
 # csv files:
-LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData
-REMOTE=/iplant/home/sprinkjm/private-circles/${VIN}/libpanda
+LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData/
+REMOTE=/iplant/home/sprinkjm/private-ndd/${VIN}/libpanda
 
 # For rosbagfiles:
-DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-circles/${VIN}/bagfiles/"
+DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-ndd/${VIN}/bagfiles/"
 DIR_PATH_LOCAL="/var/panda/CyverseData/JmscslgroupData/bagfiles/"
 
 response=
@@ -37,16 +37,13 @@ fi
 case "$response" in
       [yY][eE][sS]|[yY])
       #csv files:
-	  irsync -r -v ${LOCAL} i:${REMOTE}
+	  gocmd sync --progress --no_hash --show_path ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
-	  imkdir -pv ${DIR_PATH_CYVERSE}
-	  irsync -r -v ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+	  gocmd -c ~/go-cmd-binary/config.yaml mkdir -p ${DIR_PATH_CYVERSE}
+	  gocmd -c ~/go-cmd-binary/config.yaml sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
-#	##Starting the rsync upload process
-#	sudo sh -c "echo 'rsync transfer starting' > /etc/libpanda.d/logMessage"
-#	#sleep 10
-#	rsync -advz /var/panda/CyverseData/JmscslgroupData/ mvtpi@ransom:~/mvtData/$HOSTNAME/
+#	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
 	;;
       *)
           echo "Exiting" 
@@ -55,3 +52,5 @@ case "$response" in
 else
 	echo "You have not set your VIN...exiting."
 fi
+
+/usr/local/sbin/local_data_size_maintenance

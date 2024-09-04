@@ -148,6 +148,8 @@ cd ~/${MISMATCHFILES}
 sudo cp check_VIN_before_upload.sh /usr/local/sbin/check_VIN_before_upload
 sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 
+sudo cp /home/circles/libpanda/scripts/local_data_size_maintenance.sh /usr/local/sbin/local_data_size_maintenance
+sudo chmod +x /usr/local/sbin/local_data_size_maintenance
 
 
 #if [ ! -d ~/irods-icommands-debs ]; then
@@ -164,8 +166,18 @@ sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 # enable persisten journalctl logging:
 sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 
+# install GoCMD
+if [ ! -d ~/go-cmd-binary ]; then
+	mkdir -p ~/go-cmd-binary
 
+	GOCMD_VER=$(curl -L -s https://raw.githubusercontent.com/cyverse/gocommands/main/VERSION.txt)
+	curl -L -s https://github.com/cyverse/gocommands/releases/download/${GOCMD_VER}/gocmd-${GOCMD_VER}-linux-arm64.tar.gz | tar zxvf - -C ~/go-cmd-binary
+	cd ~/go-cmd-binary
+	sudo cp gocmd /usr/local/bin/
 
+else
+	echo "gocommands already installed."
+fi
 
 
 # Install ROS:

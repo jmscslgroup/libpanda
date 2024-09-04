@@ -45,8 +45,10 @@ cd ../..
 # Install configuration files and welcome msg
 cd scripts/
 #cp irsyncCyverse.sh /home/${SUDO_USER}/irsyncCyverse.sh
-cp irsyncCyverse.sh /home/$PI_USER/irsyncCyverse.sh
-sudo cp irsyncCyverse.sh /usr/local/sbin/irsyncCyverse
+#cp irsyncCyverse.sh /home/$PI_USER/irsyncCyverse.sh
+#sudo cp irsyncCyverse.sh /usr/local/sbin/irsyncCyverse
+cp gosyncCyverse.sh /home/$PI_USER/gosyncCyverse.sh
+sudo cp gosyncCyverse.sh /usr/local/sbin/gosyncCyverse
 
 #cp setVin.sh /home/${SUDO_USER}/setVin.sh
 sudo cp 99-libpanda.sh /etc/profile.d/99-libpanda.sh
