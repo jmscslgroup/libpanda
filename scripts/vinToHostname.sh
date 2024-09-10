@@ -31,6 +31,12 @@ then
 	fi
 
 	echo "vinToHostname: This is a new VIN!  Need to reboot to apply"
+
+	echo "Moving data from previous VIN"
+	mkdir -p ~/previousVins/$VIN_CURRENT
+	mv /var/panda/CyverseData/JmscslgroupData/PandaData ~/previousVins/$VIN_CURRENT/
+	mv /var/panda/CyverseData/JmscslgroupData/bagfiles ~/previousVins/$VIN_CURRENT/
+
 	if ping -q -c 1 -W 1 8.8.8.8 > /dev/null;then
 		echo "trying vinParser"
 		python3 /usr/sbin/vinParser.py
