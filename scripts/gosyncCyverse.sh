@@ -10,7 +10,7 @@ LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData/
 REMOTE=/iplant/home/sprinkjm/private-ndd/${VIN}/libpanda
 
 # For rosbagfiles:
-DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-ndd/${VIN}/bagfiles/"
+DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-ndd/${VIN}/"
 DIR_PATH_LOCAL="/var/panda/CyverseData/JmscslgroupData/bagfiles/"
 
 response=
@@ -40,8 +40,9 @@ case "$response" in
 	  gocmd sync --progress --no_hash --show_path ${LOCAL} i:${REMOTE}
 	  
 	  # rosbag files:
-	  gocmd -c ~/go-cmd-binary/config.yaml mkdir -p ${DIR_PATH_CYVERSE}
-	  gocmd -c ~/go-cmd-binary/config.yaml sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
+#	  gocmd -c ~/go-cmd-binary/config.yaml mkdir -p ${DIR_PATH_CYVERSE}
+#	  gocmd mkdir -p ${DIR_PATH_CYVERSE}
+	  gocmd sync --progress --no_hash ${DIR_PATH_LOCAL} i:${DIR_PATH_CYVERSE}
           
 #	  /usr/local/sbin/local_data_size_maintenance ##keeping data size in check
 	;;
@@ -54,3 +55,4 @@ else
 fi
 
 /usr/local/sbin/local_data_size_maintenance
+/usr/local/sbin/local_bagfile_maintenance

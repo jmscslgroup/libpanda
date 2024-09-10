@@ -151,6 +151,9 @@ sudo chmod +x /usr/local/sbin/check_VIN_before_upload
 sudo cp /home/circles/libpanda/scripts/local_data_size_maintenance.sh /usr/local/sbin/local_data_size_maintenance
 sudo chmod +x /usr/local/sbin/local_data_size_maintenance
 
+sudo cp /home/circles/libpanda/scripts/local_bagfile_maintenance.sh /usr/local/sbin/local_bagfile_maintenance
+sudo chmod +x /usr/local/sbin/local_bagfile_maintenance
+
 
 #if [ ! -d ~/irods-icommands-debs ]; then
 #	tar xzf ~/libpanda/scripts/irods-icommands-debs.tgz -C ~/
