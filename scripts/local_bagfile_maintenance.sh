@@ -46,8 +46,8 @@ for file in $local_files; do
         if [[ "$name" == "$remote_basename" ]]; then
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE --DONE
             remote_size_str=$(gocmd ls -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
-            #len_str=$(( ${#remote_size_str} / 2))
-            #remote_size=${remote_size_str:0:$len_str}
+            len_str=$(( ${#remote_size_str} / 2))
+            remote_size_str=${remote_size_str:0:$len_str}
             remote_size=$remote_size_str
 	echo "remote size is $remote_size, local size is $local_size"
           if [[ "$local_size" == "$remote_size" ]]; then
@@ -94,8 +94,8 @@ for file in $local_files; do
           if [[ "$name" == "$remote_basename" ]]; then
 	##TODO ACCOUNT FOR SWITCH TO NDD DATASTORE -- DONE
             remote_size_str=$(gocmd ls -l "$remote_path/$date_directory/$remote_basename" | awk '{printf$4}')
-            #len_str=$(( ${#remote_size_str} / 2))
-            #remote_size=${remote_size_str:0:$len_str}
+            len_str=$(( ${#remote_size_str} / 2))
+            remote_size_str=${remote_size_str:0:$len_str}
             remote_size=$remote_size_str
 	if awk -v local="$local_size" -v remote="$remote_size" 'BEGIN { if (local >= remote) exit 0; exit 1 }'; then
               status="Uploaded"
