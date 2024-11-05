@@ -5,12 +5,18 @@
 VINFILE=/etc/libpanda.d/vin
 VIN=$(cat ${VINFILE})
 
+CYVERSE_DEST_DIR_FILE=/etc/libpanda.d/cyverse_dest_dir
+CYVERSE_DEST_DIR=$(cat ${CYVERSE_DEST_DIR_FILE})
+
+LIBPANDA_USR=$(cat /etc/libpanda.d/libpanda_usr)
+GO_CFG_DIR=/home/${LIBPANDA_USR}/.irods
+
 # csv files:
 LOCAL=/var/panda/CyverseData/JmscslgroupData/PandaData/
-REMOTE=/iplant/home/sprinkjm/private-ndd/${VIN}/libpanda
+REMOTE=${CYVERSE_DEST_DIR}/${VIN}/libpanda
 
 # For rosbagfiles:
-DIR_PATH_CYVERSE="/iplant/home/sprinkjm/private-ndd/${VIN}/"
+DIR_PATH_CYVERSE="${CYVERSE_DEST_DIR}/${VIN}/"
 DIR_PATH_LOCAL="/var/panda/CyverseData/JmscslgroupData/bagfiles/"
 
 response=
@@ -26,6 +32,11 @@ while getopts “hfy” opt; do
     y) response=y;;
   esac
 done
+
+if ! gocmd ls -c ${GO_CFG_DIR} > /dev/null 2>&1; then
+	echo "Unable to conenct to CyVerse!  Invalid credentials?  try: gocmd init"
+	exit 1
+fi
 
 if [ -s ${VINFILE} ]
 then

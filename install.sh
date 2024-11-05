@@ -170,6 +170,9 @@ sudo chmod +x /usr/local/sbin/local_bagfile_maintenance
 sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 
 # install GoCMD
+if [ ! -f /etc/libpanda.d/cyverse_dest_dir ]; then
+	sudo sh -c "echo /iplant/home/sprinkjm/private-ndd > /etc/libpanda.d/cyverse_dest_dir"
+fi
 if [ ! -d ~/go-cmd-binary ]; then
 	mkdir -p ~/go-cmd-binary
 
