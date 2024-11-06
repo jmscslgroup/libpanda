@@ -2,8 +2,12 @@
 #!/bin/bash
 VIN=$(cat /etc/libpanda.d/vin)
 local_path=/var/panda/CyverseData/JmscslgroupData/PandaData/
+
+CYVERSE_DEST_DIR_FILE=/etc/libpanda.d/cyverse_dest_dir
+CYVERSE_DEST_DIR=$(cat ${CYVERSE_DEST_DIR_FILE})
+
 FILE=/home/circles/upload_status.csv
-remote_path=/iplant/home/sprinkjm/private-ndd/$VIN/libpanda/PandaData
+remote_path=${CYVERSE_DEST_DIR}/$VIN/libpanda/PandaData
 #remote_path=/iplant/home/sprinkjm/private-circles/$VIN/libpanda
 
 

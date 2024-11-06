@@ -2,9 +2,14 @@
 #!/bin/bash
 VIN=$(cat /etc/libpanda.d/vin)
 local_path=/var/panda/CyverseData/JmscslgroupData/bagfiles
+
+CYVERSE_DEST_DIR_FILE=/etc/libpanda.d/cyverse_dest_dir
+CYVERSE_DEST_DIR=$(cat ${CYVERSE_DEST_DIR_FILE})
+
 FILE=/home/circles/upload_status_bagfile.csv
-remote_path=/iplant/home/sprinkjm/private-ndd/$VIN/bagfiles
+remote_path=${CYVERSE_DEST_DIR}/$VIN/bagfiles
 #remote_path=/iplant/home/sprinkjm/private-circles/$VIN/libpanda
+
 
 
 # creating index file if it does not already exist
