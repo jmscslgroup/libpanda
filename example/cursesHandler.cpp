@@ -319,6 +319,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	double alpha = 0.95;
     if(!isnan(handler.getGps().getData().motion.course)) {
         double gpsHeading = M_PI/180.0 * handler.getGps().getData().motion.course;
+	gpsHeading = 0;	// HACK temp to disable heading updates
         //	static double gpsHeading;
         //	gpsHeading += 0.1;
         if (gpsHeading != 0) {	// HACK
