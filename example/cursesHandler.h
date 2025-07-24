@@ -79,6 +79,9 @@ private:
 	double SNRHistory[1000];
 	int numSNRHistory;
 
+	double SNRTopHistory[1000];
+	int numSNRTopHistory;
+
 public:
 	// Singleton:
 	static CursesHandler* getInstance();

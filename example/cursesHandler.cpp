@@ -82,6 +82,11 @@ CursesHandler::CursesHandler()
 	for(int i = 0; i < numSNRHistory; i++) {
 		SNRHistory[i] = 0;
 	}
+
+	numSNRTopHistory = 100;
+	for(int i = 0; i < numSNRTopHistory; i++) {
+		SNRTopHistory[i] = 0;
+	}
 }
 
 CursesHandler* CursesHandler::getInstance() {
@@ -540,6 +545,11 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 //	SNRHistory[numSNRHistory-1] = topSNRSum/(double)validCount;
 	SNRHistory[numSNRHistory-1] = score;
 
+	for(int i = 0; i < numSNRTopHistory-1; i++) {
+		SNRTopHistory[i] = SNRTopHistory[i+1];
+	}
+	SNRTopHistory[numSNRTopHistory-1] = topSNR[0];
+	
 
 	
 	int graphx = mapX + mapWidth + 1;
@@ -575,6 +585,33 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
  	        ln2(pt1, pt2);
        		attroff(COLOR_PAIR(colorPair));
 	}
+
+	for(int i = 0; i < numSNRTopHistory-1; i++) {
+		pt1.x = graphx + i;
+		pt1.y = graphy + graphHeight-graphHeightScale*SNRTopHistory[i];
+		pt2.x = graphx + i+1;
+		pt2.y = graphy + graphHeight-graphHeightScale*SNRTopHistory[i+1];
+		int colorPair = (SNRTopHistory[i+1] / 17)+1;
+                colorPair = colorPair > 4 ? 4 : colorPair;
+		attron(A_DIM);
+		attron(COLOR_PAIR(colorPair));
+ 	        ln2(pt1, pt2);
+       		attroff(COLOR_PAIR(colorPair));
+		attroff(A_DIM);
+	}
+	int colorPair = (SNRTopHistory[0] / 17)+1;
+        colorPair = colorPair > 4 ? 4 : colorPair;
+	attron(COLOR_PAIR(colorPair));
+        mvprintw(graphy + graphHeight-graphHeightScale*SNRTopHistory[0]-1, graphx, "Top");
+	attroff(COLOR_PAIR(colorPair));
+
+	colorPair = (SNRHistory[0] / 17)+1;
+        colorPair = colorPair > 4 ? 4 : colorPair;
+	attron(COLOR_PAIR(colorPair));
+        mvprintw(graphy + graphHeight-graphHeightScale*SNRHistory[0]-1, graphx, "Score");
+	attroff(COLOR_PAIR(colorPair));
+
+
 
 	for(int i = 0; i <= maxGraphY; i+=5) {
 		mvprintw(graphy  + graphHeight -graphHeightScale*i, graphx+numSNRHistory-1, "%2d", i);
