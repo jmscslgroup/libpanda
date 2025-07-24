@@ -75,6 +75,10 @@ private:
 	
 	double heading;	// This is heavily filtered
 
+
+	double SNRHistory[1000];
+	int numSNRHistory;
+
 public:
 	// Singleton:
 	static CursesHandler* getInstance();

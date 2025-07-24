@@ -77,6 +77,11 @@ CursesHandler::CursesHandler()
 	for (int i = 0; i < sizeof(highlightField); i++) {
 		highlightField[i] = 0;
 	}
+
+	numSNRHistory = 100;
+	for(int i = 0; i < numSNRHistory; i++) {
+		SNRHistory[i] = 0;
+	}
 }
 
 CursesHandler* CursesHandler::getInstance() {
@@ -310,6 +315,7 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 //	int satHeight = 17;
 	int numSatellites = handler.getGps().getData().satellitesGps.size() + handler.getGps().getData().satellitesGlonass.size();
 	int satHeight = numSatellites > 12 ? numSatellites + 4 : 16;
+	satHeight += 2;
 
 	int statX = satX + satWidth;
 	int statY = satY;
@@ -464,6 +470,9 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 	mvprintw(row,satX + 18,"Elev");
 	mvprintw(row++,satX + 24,"SNR");
 	attroff(A_BOLD);
+//	double maxSNR = 0;
+	const int numTopSNR = 8;
+	double topSNR[numTopSNR] = {0, 0, 0, 0, 0};
 	const std::map<int,Panda::GpsSatellite>* satellites[2] = {&handler.getGps().getData().satellitesGps, &handler.getGps().getData().satellitesGlonass};
 	for (int i = 0; i < 2; i++) {
 		for (std::map<int,Panda::GpsSatellite>::const_iterator it = satellites[i]->begin(); it != satellites[i]->end(); it++) {
@@ -487,8 +496,91 @@ void CursesHandler::drawGps( Panda::Handler& handler ) {
 			if(!it->second.visible) {
 				attroff(A_DIM);
 			}
+
+			if(it->second.visible) {
+				if(topSNR[numTopSNR-1] < it->second.SNR) {
+					int index = 0;
+					for( int j = numTopSNR-2; j >= 0; j-- ) {
+						if(topSNR[j] >= it->second.SNR) {
+							index = j + 1;
+							break;
+						}
+						index = j;
+					}
+					for(int k = numTopSNR-2; k >= index; k--) {
+						topSNR[k+1] = topSNR[k];
+					}
+					topSNR[index] = it->second.SNR;
+
+				}
+			}
 		}
 	}
+	double topfiveSNRAvg = 0;
+
+//	for(int i = 0; i < numTopSNR; i++) {
+//		mvprintw(row,satX + 1 + i*4,"%2d", (int)topSNR[i]);
+//	}
+//	row++;
+	double topSNRSum = 0;
+	int validCount = 0;
+	for(int i = 0; i < numTopSNR; i++) {
+		topSNRSum += topSNR[i];
+		if(topSNR[i] != 0) {
+			validCount++;
+		}
+	}
+	mvprintw(row++,satX + 1, "Average top %2d %0.1f", validCount, topSNRSum/(double)validCount);
+	double score = topSNRSum/(double)numTopSNR;
+	mvprintw(row++,satX + 1, "         Score %0.1f", topSNRSum/(double)numTopSNR);
+
+	for(int i = 0; i < numSNRHistory-1; i++) {
+		SNRHistory[i] = SNRHistory[i+1];
+	}
+//	SNRHistory[numSNRHistory-1] = topSNRSum/(double)validCount;
+	SNRHistory[numSNRHistory-1] = score;
+
+
+	
+	int graphx = mapX + mapWidth + 1;
+	int graphy = mapY;
+	int graphHeight = 45;
+	int graphWidth = numSNRHistory;
+	int maxGraphY = 45;
+
+
+	double graphHeightScale = (double)graphHeight/(double)maxGraphY;
+
+	Coordinates2D pt1, pt2;
+
+	attron(A_DIM);
+	for(int i = 0; i <= maxGraphY; i+=5) {
+		pt1.x = graphx;
+		pt1.y = graphy + graphHeight -graphHeightScale*i;
+		pt2.x = graphx + graphWidth;
+		pt2.y = pt1.y;
+		ln2(pt1, pt2);
+	}
+	attroff(A_DIM);
+
+
+	for(int i = 0; i < numSNRHistory-1; i++) {
+		pt1.x = graphx + i;
+		pt1.y = graphy + graphHeight-graphHeightScale*SNRHistory[i];
+		pt2.x = graphx + i+1;
+		pt2.y = graphy + graphHeight-graphHeightScale*SNRHistory[i+1];
+		int colorPair = (SNRHistory[i+1] / 17)+1;
+                colorPair = colorPair > 4 ? 4 : colorPair;
+		attron(COLOR_PAIR(colorPair));
+ 	        ln2(pt1, pt2);
+       		attroff(COLOR_PAIR(colorPair));
+	}
+
+	for(int i = 0; i <= maxGraphY; i+=5) {
+		mvprintw(graphy  + graphHeight -graphHeightScale*i, graphx+numSNRHistory-1, "%2d", i);
+	}
+
+
 
 
 	// Satellite map just for kicks!
