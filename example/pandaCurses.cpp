@@ -238,7 +238,8 @@ int main(int argc, char **argv) {
 		pandaHandler.getCan().saveToCsvFile(canFilename);
 	}
 	
-	pandaHandler.initialize();
+//	if(!fakeData)
+	pandaHandler.initialize((const unsigned char *)"2T3MWRFVXLW056972");
 	
 	// faking can data for debugging, if enabled
 	Panda::CanFrame newFrame;
