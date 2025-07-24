@@ -41,10 +41,10 @@ void Panda::printVersions() {
 Handler::Handler()
 :vModel(VEHICLE_MODEL_OTHER), vRegion(VEHICLE_REGION_OTHER), vMake(VEHICLE_MANUFACTURE_OTHER), vYear(0)
 {
-	mCan.setUsb(&mUsb);
+//	mCan.setUsb(&mUsb);
 	mGps.setUsb(&mUsb);
 	
-	mUsb.addObserver(&mCan);
+//	mUsb.addObserver(&mCan);
 	mUsb.addObserver(&mGps);
 	
 	mHeartbeatHelper = new HeartbeatHelper(this);
@@ -58,14 +58,14 @@ Handler::~Handler() {
 
 void Handler::initialize(const unsigned char* forceVin) {
 	mUsb.initialize();
-	mHeartbeatHelper->start();
-	mCan.initialize();
+//	mHeartbeatHelper->start();
+//	mCan.initialize();
 	mGps.initialize();
 
 	mUsb.startRecording();
 	mGps.startParsing();
-	mCan.startParsing();
-	
+//	mCan.startParsing();
+//	return;
 	if (forceVin == NULL) {
 		requestVin();
 	} else {

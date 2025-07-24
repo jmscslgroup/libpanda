@@ -858,13 +858,13 @@ void Gps::initialize() {
 
 	if ( !usbHandler->hasGpsSupport() ) {
 		std::cerr << "WARNING: Gps::initialize(): Panda does not support GPS!" << std::endl;
-		std::cerr << "       : Gps::initialize(): Attempting to open /dev/ttyACM0 instead" << std::endl;
+		std::cerr << "       : Gps::initialize(): Attempting to open /dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00 instead" << std::endl;
 		
 		struct termios newtio;
-		if ((fidGps = open("/dev/ttyACM0", O_RDWR | O_NOCTTY )) < 0) {
+		if ((fidGps = open("/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00", O_RDWR | O_NOCTTY )) < 0) {
 			// std::cerr << "device open error: " << field << std::endl;
 			
-			std::cerr << "       : Gps::initialize(): /dev/ttyACM0  Does not exist" << std::endl;
+			std::cerr << "       : Gps::initialize(): /dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00  Does not exist" << std::endl;
 			return;
 		}
 		
@@ -884,10 +884,10 @@ void Gps::initialize() {
 		int reOpenCount = 0;
 		while (reOpenCount++ < 10) {
 			usleep(500000);
-			if ((fidGps = open("/dev/ttyACM0", O_RDWR | O_NOCTTY )) < 0) {
+			if ((fidGps = open("/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00", O_RDWR | O_NOCTTY )) < 0) {
 				// std::cerr << "device open error: " << field << std::endl;
 
-				std::cerr << "       : Gps::initialize(): Waiting for /dev/ttyACM0" << std::endl;
+				std::cerr << "       : Gps::initialize(): Waiting for /dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00" << std::endl;
 				continue;
 			}
 			std::cerr << "       : Gps::initialize(): Success!" << std::endl;

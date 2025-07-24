@@ -94,7 +94,8 @@ void Usb::initialize() {
 				if (failureToOpen == true) {	// ALREADY FAILED ONCE, MUST NOT BE CONNECTED
 					std::cerr << "FAILED to open \"comma.ai\", is it plugged in?" << std::endl;
 					std::cerr << " - May need root privileges if failed to open" << std::endl;
-					exit(EXIT_FAILURE);
+					//exit(EXIT_FAILURE);
+					return;
 				}
 				failureToOpen = true;
 				// Let's reset the
