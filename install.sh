@@ -173,7 +173,7 @@ sudo sed -i 's/#Storage.*/Storage=persistent/' /etc/systemd/journald.conf
 if [ ! -f /etc/libpanda.d/cyverse_dest_dir ]; then
 	sudo sh -c "echo /iplant/home/sprinkjm/private-ndd > /etc/libpanda.d/cyverse_dest_dir"
 fi
-if [ ! -d ~/go-cmd-binary ]; then
+if [ ! -f /usr/local/bin/gocmd ]; then
 	mkdir -p ~/go-cmd-binary
 
 	GOCMD_VER=$(curl -L -s https://raw.githubusercontent.com/cyverse/gocommands/main/VERSION.txt)
